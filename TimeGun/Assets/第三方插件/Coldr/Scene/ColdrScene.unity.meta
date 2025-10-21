@@ -1,0 +1,14 @@
+fileFormatVersion: 2
+guid: 69a85ba0fd977894cbd062679b415397
+DefaultImporter:
+  externalObjects: {}
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 328208
+  packageName: "Coldr \u2013 Folder Colorizer for Unity"
+  packageVersion: 0.1
+  assetPath: Assets/Coldr/Scene/ColdrScene.unity
+  uploadId: 776924

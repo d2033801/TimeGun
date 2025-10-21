@@ -1,0 +1,15 @@
+fileFormatVersion: 2
+guid: fe74910f1bc8350458dfd51b638a6b41
+NativeFormatImporter:
+  externalObjects: {}
+  mainObjectFileID: 2100000
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 322712
+  packageName: Batch Renamer & Organize
+  packageVersion: 1.0
+  assetPath: Assets/Batch Renamer & Organize/ExampleAssets/DemoMaterial.mat
+  uploadId: 767565

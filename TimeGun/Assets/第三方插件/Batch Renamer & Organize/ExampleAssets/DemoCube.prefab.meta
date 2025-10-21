@@ -1,0 +1,14 @@
+fileFormatVersion: 2
+guid: c7dd047ce2faf12438d92573914aa9b6
+PrefabImporter:
+  externalObjects: {}
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 322712
+  packageName: Batch Renamer & Organize
+  packageVersion: 1.0
+  assetPath: Assets/Batch Renamer & Organize/ExampleAssets/DemoCube.prefab
+  uploadId: 767565

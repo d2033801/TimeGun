@@ -1,0 +1,14 @@
+fileFormatVersion: 2
+guid: a9a7e7790cb6a6546b1fbdb184382f09
+PrefabImporter:
+  externalObjects: {}
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 322712
+  packageName: Batch Renamer & Organize
+  packageVersion: 1.0
+  assetPath: Assets/Batch Renamer & Organize/ExampleAssets/OldPrefab.prefab
+  uploadId: 767565
