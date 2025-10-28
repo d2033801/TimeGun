@@ -1,4 +1,5 @@
 using System;
+using Unity.Cinemachine;
 using UnityEngine;
 using UnityEngine.AI;
 using UnityEngine.Serialization;
@@ -8,8 +9,11 @@ public class Enemy : MonoBehaviour
     // 移动与寻路
     public Transform[] patrolPoints;
     private int currentPointIndex = 0;
-    public float moveSpeed = 3f;
-    private Rigidbody rb;
+    public float waitTime = 2f;
+    
+    private NavMeshAgent navMeshAgent;
+    private float waitCounter = 0f;
+    private bool waiting = false;
 
     // 视线检测
     public float viewAngle = 90f;
@@ -36,7 +40,8 @@ public class Enemy : MonoBehaviour
 
     void Start()
     {
-        rb = GetComponent<Rigidbody>();
+        navMeshAgent = GetComponent<NavMeshAgent>();
+        navMeshAgent.autoBraking = false;
         player = GameObject.FindGameObjectWithTag("Player").transform;
         if (player != null)
         {
@@ -54,37 +59,32 @@ public class Enemy : MonoBehaviour
         if (patrolPoints.Length == 0)
             return;
 
-        PatrolToCurrentPoint();
+        if (waiting)
+        {
+            waitCounter -= Time.deltaTime;
+            if (waitCounter <= 0f)
+            {
+                waiting = false;
+                GoToNextPoint();
+            }
+        }
+        else if (!navMeshAgent.pathPending && navMeshAgent.remainingDistance < 0.5f)
+        {
+            // 到达巡逻点
+            waiting = true;
+            waitCounter = waitTime;
+        }
+
         CanSeePlayer();
     }
 
-    void PatrolToCurrentPoint()
+    void GoToNextPoint()
     {
-        Transform targetPoint = patrolPoints[currentPointIndex];
-        Vector3 targetPosition = targetPoint.position;
+        if(patrolPoints.Length == 0)
+            return;
 
-        Vector3 moveDirection = new Vector3(
-            targetPosition.x - transform.position.x,
-            0,
-            targetPosition.z - transform.position.z
-            ).normalized;
-
-        rb.linearVelocity = new Vector3(
-            moveDirection.x * moveSpeed,
-            rb.linearVelocity.y,
-            moveDirection.z * moveSpeed
-        );
-
-        if (moveDirection != Vector3.zero)
-        {
-            transform.rotation = Quaternion.LookRotation(moveDirection);
-        }
-
-        float distanceToPoint = Vector3.Distance(transform.position, targetPosition);
-        if (distanceToPoint < 0.5f)
-        {
-            currentPointIndex = (currentPointIndex + 1) % patrolPoints.Length;
-        }
+        navMeshAgent.destination = patrolPoints[currentPointIndex].position;
+        currentPointIndex = (currentPointIndex + 1) % patrolPoints.Length;
     }
 
     public bool CanSeePlayer()
