@@ -1,0 +1,33 @@
+Begin Object Class=/Script/Engine.PhysicsAsset Name="Balaclava_04_Physics" ExportPath="/Script/Engine.PhysicsAsset'/Game/LowPoly_Soldiers/Characters/Addons/Balaclava_04_Physics.Balaclava_04_Physics'"
+   Begin Object Class=/Script/Engine.PhysicsConstraintTemplate Name="PhysicsConstraintTemplate_0" ExportPath="/Script/Engine.PhysicsConstraintTemplate'/Game/LowPoly_Soldiers/Characters/Addons/Balaclava_04_Physics.Balaclava_04_Physics:PhysicsConstraintTemplate_0'"
+   End Object
+   Begin Object Class=/Script/UnrealEd.SceneThumbnailInfo Name="SceneThumbnailInfo_0" ExportPath="/Script/UnrealEd.SceneThumbnailInfo'/Game/LowPoly_Soldiers/Characters/Addons/Balaclava_04_Physics.Balaclava_04_Physics:SceneThumbnailInfo_0'"
+   End Object
+   Begin Object Class=/Script/Engine.SkeletalBodySetup Name="SkeletalBodySetup_0" ExportPath="/Script/Engine.SkeletalBodySetup'/Game/LowPoly_Soldiers/Characters/Addons/Balaclava_04_Physics.Balaclava_04_Physics:SkeletalBodySetup_0'"
+   End Object
+   Begin Object Class=/Script/Engine.SkeletalBodySetup Name="SkeletalBodySetup_1" ExportPath="/Script/Engine.SkeletalBodySetup'/Game/LowPoly_Soldiers/Characters/Addons/Balaclava_04_Physics.Balaclava_04_Physics:SkeletalBodySetup_1'"
+   End Object
+   Begin Object Name="PhysicsConstraintTemplate_0" ExportPath="/Script/Engine.PhysicsConstraintTemplate'/Game/LowPoly_Soldiers/Characters/Addons/Balaclava_04_Physics.Balaclava_04_Physics:PhysicsConstraintTemplate_0'"
+      DefaultInstance=(JointName="head",ConstraintBone1="head",ConstraintBone2="spine_03",Pos2=(X=22.498930,Y=3.670905,Z=-0.000004),PriAxis2=(X=0.990268,Y=0.139173,Z=-0.000001),SecAxis2=(X=-0.139173,Y=0.990268,Z=0.000068),ProfileInstance=(ConeLimit=(Swing1Motion=ACM_Limited,Swing2Motion=ACM_Limited),TwistLimit=(TwistMotion=ACM_Limited)))
+   End Object
+   Begin Object Name="SceneThumbnailInfo_0" ExportPath="/Script/UnrealEd.SceneThumbnailInfo'/Game/LowPoly_Soldiers/Characters/Addons/Balaclava_04_Physics.Balaclava_04_Physics:SceneThumbnailInfo_0'"
+   End Object
+   Begin Object Name="SkeletalBodySetup_0" ExportPath="/Script/Engine.SkeletalBodySetup'/Game/LowPoly_Soldiers/Characters/Addons/Balaclava_04_Physics.Balaclava_04_Physics:SkeletalBodySetup_0'"
+      AggGeom=(SphylElems=((Center=(X=14.354023,Y=6.332259,Z=-0.004052),Rotation=(Pitch=0.000000,Yaw=-155.200638,Roll=-89.746101),Radius=11.404881,Length=14.079118)))
+      BoneName="spine_03"
+      CollisionTraceFlag=CTF_UseSimpleAsComplex
+   End Object
+   Begin Object Name="SkeletalBodySetup_1" ExportPath="/Script/Engine.SkeletalBodySetup'/Game/LowPoly_Soldiers/Characters/Addons/Balaclava_04_Physics.Balaclava_04_Physics:SkeletalBodySetup_1'"
+      AggGeom=(SphylElems=((Center=(X=10.149488,Y=2.817499,Z=-0.097201),Rotation=(Pitch=7.830750,Yaw=-173.348343,Roll=-90.000008),Radius=13.439376,Length=13.645431)))
+      BoneName="head"
+      CollisionTraceFlag=CTF_UseSimpleAsComplex
+   End Object
+   PreviewSkeletalMesh="/Game/LowPoly_Soldiers/Characters/Addons/Balaclava_04_SK.Balaclava_04_SK"
+   BoundsBodies(0)=0
+   BoundsBodies(1)=1
+   SkeletalBodySetups(0)="/Script/Engine.SkeletalBodySetup'SkeletalBodySetup_0'"
+   SkeletalBodySetups(1)="/Script/Engine.SkeletalBodySetup'SkeletalBodySetup_1'"
+   ConstraintSetup(0)="/Script/Engine.PhysicsConstraintTemplate'PhysicsConstraintTemplate_0'"
+   SolverSettings=(CullDistance=1.000000,bUseLinearJointSolver=False)
+   ThumbnailInfo="/Script/UnrealEd.SceneThumbnailInfo'SceneThumbnailInfo_0'"
+End Object
