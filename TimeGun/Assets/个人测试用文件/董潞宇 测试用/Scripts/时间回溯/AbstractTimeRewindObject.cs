@@ -5,7 +5,8 @@ using UnityEditor;
 using UnityEngine;
 using Utility;
 
-namespace TimeGun
+
+namespace TimeRewind
 {
     /// <summary>
     /// 作为所有可时停物体的基抽象类, 提供时停功能的基本框架。
