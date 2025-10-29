@@ -1,0 +1,18 @@
+Begin Object Class=/Script/Engine.PhysicsAsset Name="Balaclava_02_Physics" ExportPath="/Script/Engine.PhysicsAsset'/Game/LowPoly_Soldiers/Characters/Addons/Balaclava_02_Physics.Balaclava_02_Physics'"
+   Begin Object Class=/Script/UnrealEd.SceneThumbnailInfo Name="SceneThumbnailInfo_0" ExportPath="/Script/UnrealEd.SceneThumbnailInfo'/Game/LowPoly_Soldiers/Characters/Addons/Balaclava_02_Physics.Balaclava_02_Physics:SceneThumbnailInfo_0'"
+   End Object
+   Begin Object Class=/Script/Engine.SkeletalBodySetup Name="SkeletalBodySetup_0" ExportPath="/Script/Engine.SkeletalBodySetup'/Game/LowPoly_Soldiers/Characters/Addons/Balaclava_02_Physics.Balaclava_02_Physics:SkeletalBodySetup_0'"
+   End Object
+   Begin Object Name="SceneThumbnailInfo_0" ExportPath="/Script/UnrealEd.SceneThumbnailInfo'/Game/LowPoly_Soldiers/Characters/Addons/Balaclava_02_Physics.Balaclava_02_Physics:SceneThumbnailInfo_0'"
+   End Object
+   Begin Object Name="SkeletalBodySetup_0" ExportPath="/Script/Engine.SkeletalBodySetup'/Game/LowPoly_Soldiers/Characters/Addons/Balaclava_02_Physics.Balaclava_02_Physics:SkeletalBodySetup_0'"
+      AggGeom=(SphylElems=((Center=(X=20.925323,Y=7.483438,Z=-0.059864),Rotation=(Pitch=0.000007,Yaw=38.569996,Roll=-89.014450),Radius=13.127498,Length=16.892557)))
+      BoneName="spine_03"
+      CollisionTraceFlag=CTF_UseSimpleAsComplex
+   End Object
+   PreviewSkeletalMesh="/Game/LowPoly_Soldiers/Characters/Addons/Balaclava_02_SK.Balaclava_02_SK"
+   BoundsBodies(0)=0
+   SkeletalBodySetups(0)="/Script/Engine.SkeletalBodySetup'SkeletalBodySetup_0'"
+   SolverSettings=(CullDistance=1.000000,bUseLinearJointSolver=False)
+   ThumbnailInfo="/Script/UnrealEd.SceneThumbnailInfo'SceneThumbnailInfo_0'"
+End Object
