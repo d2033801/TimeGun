@@ -1,7 +1,7 @@
 ﻿using Unity.VisualScripting;
 using UnityEngine;
 using Utility;
-namespace TimeGun
+namespace TimeRewind
 {
     /// <summary>
     /// 作为所有刚体时停物体的基抽象类, 提供刚体时停功能的基本框架。继承自 <see cref="AbstractTimeRewindObject"/> 。

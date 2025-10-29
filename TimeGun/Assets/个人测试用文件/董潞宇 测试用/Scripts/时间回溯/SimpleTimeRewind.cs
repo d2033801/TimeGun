@@ -1,4 +1,4 @@
-﻿using TimeGun;
+﻿using TimeRewind;
 using UnityEngine;
 
 public class SimpleTimeRewind : AbstractTimeRewindRigidBody

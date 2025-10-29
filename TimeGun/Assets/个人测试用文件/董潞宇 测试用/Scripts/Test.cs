@@ -30,8 +30,8 @@ namespace TEST
         // Update is called once per frame
         void Update()
         {
-            o.transform.Translate(Vector3.right * 1f * Time.deltaTime);
-            o.transform.Rotate(Vector3.right * 30f * Time.deltaTime);
+            o.transform.Translate(1f * Time.deltaTime * Vector3.right);
+            o.transform.Rotate(30f * Time.deltaTime * Vector3.right);
         }
 
         public void StartRecord()
