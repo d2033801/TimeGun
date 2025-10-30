@@ -1,6 +1,5 @@
 ﻿using System;
 using UnityEngine;
-using UnityEngine;
 using UnityEngine.InputSystem;
 
 namespace TimeGun
@@ -14,6 +13,7 @@ namespace TimeGun
     ///   若由本脚本驱动视角，请在 Cinemachine 中禁用其自身输入，避免相互争抢旋转。
     /// </summary>
     [RequireComponent(typeof(CharacterController))]
+    [RequireComponent(typeof(WeaponManager))]
     [AddComponentMenu("TimeGun/Player Control")]
     public class PlayerController : MonoBehaviour
     {
@@ -22,6 +22,7 @@ namespace TimeGun
         [Header("References")]
         public Transform cameraTransform; // 通常使用 Camera.main.transform
         public Transform cameraRoot;      // Cinemachine Follow/LookAt 目标（挂在角色身上：胸口/头部附近）
+        [SerializeField,Tooltip("武器管理器, 正常情况下挂载在角色身上")] private WeaponManager weaponManager;
 
         [Header("Movement")]
         public float moveSpeed = 5f;      // 普通移动速度（m/s）
@@ -51,12 +52,22 @@ namespace TimeGun
         [Tooltip("俯仰角限制范围")] public Vector2 pitchClamp = new Vector2(-40f, 80f); // 俯仰夹角
 
         [Header("Input (New Input System)")]
+        [Tooltip("移动输入（Vector2）。通常映射为 WASD / 左摇杆，x: 右/左, y: 前/后")]
         public InputActionReference moveAction;
+        [Tooltip("跳跃按键。按下触发（仅在地面且未蹲下时生效）")]
         public InputActionReference jumpAction;
+        [Tooltip("冲刺按键。按住并有移动输入时生效，增加移动速度")]
         public InputActionReference sprintAction;
+        [Tooltip("蹲下/站立。根据 holdToCrouch 决定为按住（Hold）或切换（Toggle）")]
         public InputActionReference crouchAction;
+        [Tooltip("瞄准（ADS）按键。按住进入瞄准状态，会影响朝向与射击行为")]
         public InputActionReference aimAction;
+        [Tooltip("视角输入（鼠标 / 右摇杆）。x: 偏航 (yaw), y: 俯仰 (pitch)")]
         public InputActionReference lookAction;
+        [Tooltip("投掷/发射榴弹输入。触发时由 WeaponManager 处理投掷逻辑")]
+        public InputActionReference grenadeLaunchAction;
+        [Tooltip("开火输入。触发当前武器的 Fire()（短按/长按行为由武器实现）")]
+        public InputActionReference fireAction;
 
         #endregion
 
@@ -79,7 +90,7 @@ namespace TimeGun
         private readonly RaycastHit[] _ceilingHits = new RaycastHit[2];
 
         // 缓存后的输入动作（避免每帧从 Reference 间接取用）
-        private InputAction _move, _jump, _sprint, _crouch, _aim, _look;
+        private InputAction _move, _jump, _sprint, _crouch, _aim, _look, _grendeLaunch, _fire;
 
         #endregion
 
@@ -99,12 +110,16 @@ namespace TimeGun
             _crouch = crouchAction ? crouchAction.action : null;
             _aim = aimAction ? aimAction.action : null;
             _look = lookAction ? lookAction.action : null;
+            _grendeLaunch = grenadeLaunchAction? grenadeLaunchAction.action : null;
+            _fire = fireAction? fireAction : null;
 
             // cameraTransform 统一回退，避免每帧判空（若需运行时替换可自行赋值覆盖）
             if (cameraTransform == null) cameraTransform = transform;
 
             // 初始化 CharacterController 为站立尺寸，并同步 cameraRoot 局部位置
             ApplyControllerDimensionsInstant();
+
+            weaponManager = weaponManager ? weaponManager : GetComponent<WeaponManager>();
 
             // 初始化相机朝向（与角色朝向对齐）
             if (cameraRoot != null)
@@ -128,6 +143,8 @@ namespace TimeGun
             EnableAction(_crouch);
             EnableAction(_aim);
             EnableAction(_look);
+            EnableAction(_grendeLaunch);
+            EnableAction(_fire);
         }
 
         /// <summary>
@@ -141,6 +158,8 @@ namespace TimeGun
             DisableAction(_crouch);
             DisableAction(_aim);
             DisableAction(_look);
+            DisableAction(_grendeLaunch);
+            DisableAction(_fire);
         }
 
         /// <summary>
@@ -163,8 +182,9 @@ namespace TimeGun
             HandleCrouch(crouchPressed, crouchHeld, dt);
             HandleMovement(move, wantsSprint, dt);
             HandleRotation(move, dt);
-            
-           
+            HandleWeapon();
+
+
         }
 
         private void LateUpdate()
@@ -173,6 +193,7 @@ namespace TimeGun
             float dt = Time.deltaTime;
             // 相机根节点旋转（由本脚本外部驱动）
             CameraRootRot(lookDelta, dt);
+            weaponManager.UpdateWeaponPitch( _cameraPitch);
         }
 
         #endregion
@@ -199,7 +220,7 @@ namespace TimeGun
 
         #endregion
 
-        #region 角色移动与姿态（蹲下/移动/旋转/尺寸初始化）
+        #region 角色移动、姿态（蹲下/移动/旋转/尺寸初始化）、射击
 
         /// <summary>
         /// 处理蹲下逻辑（支持按住或切换）
@@ -326,7 +347,19 @@ namespace TimeGun
         }
 
         /// <summary>
-        /// 立即将 CharacterController 设置为站立尺寸（用于初始化）。
+        /// 处理开火/扔榴弹等武器相关动作
+        /// </summary>
+        private void HandleWeapon()
+        {
+            Debug.Log(_fire.IsPressed());
+            if (_fire.IsPressed())
+            {
+                weaponManager.TryFireWeapon();
+            }
+        }
+
+        /// <summary>
+        /// 立即将 CharacterController 设置为站立时参数（用于初始化）。
         /// </summary>
         private void ApplyControllerDimensionsInstant()
         {

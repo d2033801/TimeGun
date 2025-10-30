@@ -9,24 +9,14 @@ namespace TimeGun
     {
         [Tooltip("手的位置"), SerializeField]private Transform handTransform;
         [Tooltip("时间枪预制件"), SerializeField] public GameObject gunPrefab;
-        [Tooltip("榴弹发射位置"), SerializeField] public Transform grenadeLaunchPoint;
-        [Tooltip("榴弹预制件"), SerializeField] public GameObject grenadePrefab;
-        
 
-        private AbstractWeaponBase currentAbstractWeapon;
+        private AbstractWeaponBase currentAbstractWeapon;           // 获取武器后会自动初始化
 
         void Start()
         {
             EquipWeapon(gunPrefab);
         }
 
-        void Update()
-        {
-            if (Input.GetKeyDown(KeyCode.G))
-            {
-                ThrowGrenade();
-            }
-        }
 
         void EquipWeapon(GameObject weaponPrefab)
         {
@@ -38,14 +28,30 @@ namespace TimeGun
             currentAbstractWeapon.Initialize(this);     // 调用武器系统自身的初始化方法
         }
 
-        /// <summary>
-        /// 投掷榴弹 TODO: 现在实现的是手榴弹，需要改成枪榴弹
-        /// </summary>
-        void ThrowGrenade()
+
+
+        #region 外部接口
+        public void TryFireWeapon()
         {
-            GameObject grenade = Instantiate(grenadePrefab, grenadeLaunchPoint.position + transform.forward, Quaternion.identity);       // 在本地坐标系下前方生成榴弹
-            Rigidbody rb = grenade.GetComponent<Rigidbody>();
-            rb.AddForce(transform.forward * 10f + Vector3.up * 3f, ForceMode.Impulse);
+            if (currentAbstractWeapon != null)
+            {
+                currentAbstractWeapon.Fire();
+            }
         }
+
+        public void TryThrow()
+        {
+            if (currentAbstractWeapon is IThrowable throwable)
+            {
+                throwable.Throw();
+            }
+        }
+
+        public void UpdateWeaponPitch(float pitch)
+        {
+            currentAbstractWeapon?.UpdatePitchRotation(pitch);
+        }
+
+        #endregion
     }
 }

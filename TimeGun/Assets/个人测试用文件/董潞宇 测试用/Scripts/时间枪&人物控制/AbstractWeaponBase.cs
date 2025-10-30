@@ -4,7 +4,11 @@ namespace TimeGun
 {
     public abstract class AbstractWeaponBase : MonoBehaviour
     {
-        protected WeaponManager manager;
+
+        [SerializeField, Tooltip("枪口位置")] protected Transform muzzlePoint;
+
+        protected WeaponManager manager;        // 不知道获取有什么用反正先获取了
+        
 
         public virtual void Initialize(WeaponManager wm)
         {
@@ -12,6 +16,14 @@ namespace TimeGun
         }
 
         public abstract void Fire();
+
+        public void UpdatePitchRotation(float pitch)
+        {
+            // 只修改竖直方向
+            Vector3 euler = transform.localEulerAngles;
+            euler.x = pitch;
+            transform.localEulerAngles = euler;
+        }
     }
 
 }
