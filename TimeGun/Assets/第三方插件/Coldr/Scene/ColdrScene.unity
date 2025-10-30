@@ -429,7 +429,6 @@ MonoBehaviour:
   m_ScreenCoordScaleBias: {x: 0, y: 0, z: 0, w: 0}
   m_RequiresDepthTexture: 0
   m_RequiresColorTexture: 0
-  m_Version: 2
   m_TaaSettings:
     m_Quality: 3
     m_FrameInfluence: 0.1
@@ -437,6 +436,7 @@ MonoBehaviour:
     m_MipBias: 0
     m_VarianceClampScale: 0.9
     m_ContrastAdaptiveSharpening: 0
+  m_Version: 2
 --- !u!1 &1705021375
 GameObject:
   m_ObjectHideFlags: 0
@@ -498,38 +498,37 @@ MonoBehaviour:
 
     1. Select any folder in the Project window
 
-    2.
-    Press **F1** to cycle through colors
+    2. Press
+    **F1** to cycle through colors
 
-    3. Use right-click menu: `Assets >
-    Coldr > Cycle Folder Color
+    3. Use right-click menu: `Assets > Coldr
+    > Cycle Folder Color
 
-    
+
 
     Customizing Colors
 
-    1. Go to `Edit
-    > Preferences > Coldr`
+    1. Go to `Edit > Preferences
+    > Coldr`
 
     2. Modify existing colors or add new ones
 
-    3.
-    Use "Reset to Original Colors" to restore defaults
+    3. Use "Reset to
+    Original Colors" to restore defaults
 
-    4. Use "Clear All Folder
-    Colors" to remove all colors
+    4. Use "Clear All Folder Colors" to
+    remove all colors
 
-    
+
 
     Changing Shortcut
 
-    1. Go to `Edit
-    > Shortcuts`
+    1. Go to `Edit > Shortcuts`
 
-    2. Search for "Coldr/Cycle Folder Color"
+    2.
+    Search for "Coldr/Cycle Folder Color"
 
-    3. Set your
-    preferred shortcut'
+    3. Set your preferred shortcut'
   m_isRightToLeft: 0
   m_fontAsset: {fileID: 11400000, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
   m_sharedMaterial: {fileID: 2180264, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}

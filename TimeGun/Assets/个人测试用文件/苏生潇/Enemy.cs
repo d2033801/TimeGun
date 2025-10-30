@@ -1,20 +1,18 @@
+using System;
 using UnityEngine;
 using UnityEngine.AI;
 
 [RequireComponent(typeof(NavMeshAgent))]
 public class Enemy : MonoBehaviour
 {
-    // 【巡逻配置】
     [Header("巡逻设置")]
     public Transform[] patrolPoints; // 巡逻点数组
     public float waitTime = 2f; // 每个巡逻点停留时间
 
-    // 【动画配置】
     [Header("动画设置")]
     public Animator modelAnimator;
     public float smoothTime = 0.1f;
 
-    // 【视野配置】
     [Header("视野设置")]
     public float viewAngle = 90f;
     public float viewRadius = 10f;
@@ -22,23 +20,25 @@ public class Enemy : MonoBehaviour
     public LayerMask playerMask; // 玩家图层
     public LayerMask obstacleMask; // 障碍物图层
 
+    [Header("死亡触发设置")]
+    internal bool isDead = false; // 死亡状态
+    private const float crushForceThreshold = 1f;
+
     // 【状态机与状态实例】
     internal EnemyStateMachine stateMachine; // 状态机（internal允许状态类访问）
     internal EnemyIdleState idleState;
     internal EnemyPatrolState patrolState;
-    /*
     internal EnemyAlertState alertState;
+    internal EnemyDeathState deathState;
+    /*
     internal EnemyAttackState attackState;
     */
 
-    // 【内部数据（供状态类访问）】
     internal NavMeshAgent navMeshAgent; // 导航组件
     internal Transform player; // 玩家引用
     internal float stateTimer; // 状态计时器（如Idle的等待时间）
-    internal bool isDead; // 死亡状态
     internal int currentPointIndex = -1; // 当前巡逻点索引
 
-    // 【动画平滑参数】
     private float _currentSpeed;
     private float _speedVelocity;
 
@@ -63,8 +63,8 @@ public class Enemy : MonoBehaviour
         stateMachine = new EnemyStateMachine();
         idleState = new EnemyIdleState();
         patrolState = new EnemyPatrolState();
-        /*
         alertState = new EnemyAlertState();
+        /*
         attackState = new EnemyAttackState();
         */
 
@@ -74,7 +74,8 @@ public class Enemy : MonoBehaviour
 
     void Update()
     {
-        if (isDead || patrolPoints.Length == 0) return;
+        if (isDead || patrolPoints.Length == 0) 
+            return;
 
         // 状态机更新（核心：调用当前状态的逻辑）
         stateMachine.Update(this);
@@ -120,6 +121,70 @@ public class Enemy : MonoBehaviour
             return false;
 
         return true;
+    }
+
+    public void OnCollisionEnter(Collision collision)
+    {
+        Debug.Log($"{gameObject.name} 碰撞到 {collision.gameObject.name}, impulse={collision.impulse.magnitude}");
+
+        // 如果已经死亡则忽略
+        if (isDead) 
+            return;
+
+        // 忽略地面等轻微碰撞
+        if (collision.impulse.magnitude < crushForceThreshold)
+            return;
+
+        Debug.Log(collision.impulse.magnitude);
+
+        // 如果撞上来的是带刚体的重物
+        if (collision.rigidbody != null)
+        {
+            Debug.Log($"{gameObject.name} 被 {collision.gameObject.name} 的冲击力砸死！");
+            Die();
+        }
+    }
+
+    public void Die()
+    {
+        if (isDead) 
+            return; // 防止重复死亡
+
+        isDead = true;
+
+        Debug.Log($"{gameObject.name} 死亡");
+
+        // 关闭寻路
+        if (navMeshAgent != null)
+        {
+            navMeshAgent.isStopped = true;
+            navMeshAgent.enabled = false;
+        }
+
+        // 禁用所有碰撞体（防止继续触发）
+        Collider[] colliders = GetComponentsInChildren<Collider>();
+        foreach (var col in colliders)
+            col.enabled = false;
+
+        /*
+        // 停止物理运动（如果带刚体）
+        Rigidbody rb = GetComponent<Rigidbody>();
+        if (rb != null)
+        {
+            rb.velocity = Vector3.zero;
+            rb.angularVelocity = Vector3.zero;
+            rb.isKinematic = true;
+        }
+        */
+
+        // 播放死亡动画
+        modelAnimator?.SetTrigger("Die");
+
+        /*
+        // 切换状态机（如果你在用）
+        if (stateMachine != null && deathState != null)
+            stateMachine.ChangeState(deathState, this);
+        */
     }
 
     // 【Gizmos：Scene窗口绘制视野范围】
