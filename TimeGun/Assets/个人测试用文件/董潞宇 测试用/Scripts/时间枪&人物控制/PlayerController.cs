@@ -1,4 +1,6 @@
-﻿using UnityEngine;
+﻿using System;
+using UnityEngine;
+using UnityEngine;
 using UnityEngine.InputSystem;
 
 namespace TimeGun
@@ -70,8 +72,8 @@ namespace TimeGun
         private const float _cameraRootVerticalOffset = 0.3f;  // 摄像机朝向根节点的站立状态额外垂直偏移
 
         // 相机旋转相关（记录 cameraRoot 的世界旋转角）
-        private float _cameraYaw;                              // 世界坐标下的相机偏航角
-        private float _cameraPitch;                            // 世界坐标下的相机俯仰角
+        private float _cameraYaw;       // 世界坐标下的相机偏航角
+        private float _cameraPitch;     // 世界坐标下的相机俯仰角
 
         // 顶部检测的临时缓存，使用 NonAlloc API 避免 GC
         private readonly RaycastHit[] _ceilingHits = new RaycastHit[2];
@@ -155,16 +157,22 @@ namespace TimeGun
             bool wantsSprint = _sprint != null && _sprint.IsPressed() && hasMoveInput;
             bool crouchPressed = _crouch != null && _crouch.WasPressedThisFrame();
             bool crouchHeld = _crouch != null && _crouch.IsPressed();
-            Vector2 lookDelta = _look != null ? _look.ReadValue<Vector2>() : Vector2.zero;
             IsAiming = _aim != null && _aim.IsPressed();
-
-            // 相机根节点旋转（由本脚本外部驱动）
-            CameraRootRot(lookDelta, dt);
 
             // 依次处理：蹲下、移动、旋转（传入同一帧时基，行为更可预测）
             HandleCrouch(crouchPressed, crouchHeld, dt);
             HandleMovement(move, wantsSprint, dt);
             HandleRotation(move, dt);
+            
+           
+        }
+
+        private void LateUpdate()
+        {
+            Vector2 lookDelta = _look != null ? _look.ReadValue<Vector2>() : Vector2.zero;
+            float dt = Time.deltaTime;
+            // 相机根节点旋转（由本脚本外部驱动）
+            CameraRootRot(lookDelta, dt);
         }
 
         #endregion
@@ -441,6 +449,8 @@ namespace TimeGun
             // 直接设置“世界旋转”，Unity 会换算为 localRotation
             cameraRoot.rotation = Quaternion.Euler(_cameraPitch, _cameraYaw, 0f);
         }
+
+
 
         #endregion
     }
