@@ -19,13 +19,11 @@ public class EnemyPatrolState : IEnemyState
             enemy.stateMachine.ChangeState(enemy.idleState, enemy);
         }
 
-        /*
         // 检测到玩家 → 切换到警戒
         if (enemy.CanSeePlayer())
         {
             enemy.stateMachine.ChangeState(enemy.alertState, enemy);
         }
-        */
     }
 
     // 退出Patrol：无特殊操作
