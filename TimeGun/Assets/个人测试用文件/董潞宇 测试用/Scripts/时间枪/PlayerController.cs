@@ -13,7 +13,7 @@ namespace TimeGun
     /// </summary>
     [RequireComponent(typeof(CharacterController))]
     [AddComponentMenu("TimeGun/Player Control")]
-    public class PlayerControl : MonoBehaviour
+    public class PlayerController : MonoBehaviour
     {
         #region 检视器参数（Inspector）
 

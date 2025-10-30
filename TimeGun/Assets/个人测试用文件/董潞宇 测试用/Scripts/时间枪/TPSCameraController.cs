@@ -21,13 +21,13 @@ namespace TimeGun
 
         [Header("Player")]
         [SerializeField, Tooltip("玩家 Player")]
-        private PlayerControl player;
+        private PlayerController player;
 
         private void Start()
         {
             if (!player)
             {
-                player = FindFirstObjectByType<PlayerControl>();
+                player = FindFirstObjectByType<PlayerController>();
             }
             if (!cameraRoot) cameraRoot = player?.cameraRoot ?? transform;
             // 检查配置
