@@ -16,19 +16,21 @@ namespace TimeRewind
     {
         #region 显示在检视器上的数据
         [Header("Config")]
-        [Min(0), SerializeField, Tooltip("录制时长, 0为默认值6秒")]private int recordSecondsConfig = 0;
+        [Min(0), SerializeField, Tooltip("录制时长, 0为默认值20秒")]private int recordSecondsConfig = 0;
         [Min(0), SerializeField, Tooltip("每秒录制帧率(0为默认值)")] private int recordFPSConfig = 0;
         [Range(0,10), SerializeField, Tooltip("回溯速度倍率")] private float rewindSpeedConfig = 2;
         #endregion
         #region 内部数据与结构体
-        // 最大录制时长, 若为0则使用默认6秒
-        protected int recordSeconds => recordSecondsConfig == 0 ? 6 : recordSecondsConfig;
+        // 最大录制时长, 若为0则使用默认20秒
+        protected int recordSeconds => recordSecondsConfig == 0 ? 20 : recordSecondsConfig;
 
         // 每秒录制帧率, 若为0则使用默认1/Time.deltaTime
         protected int recordFPS => recordFPSConfig == 0 ? (int)(1f / Time.deltaTime) : recordFPSConfig;
 
         // 回溯速度倍率
-        protected float rewindSpeed => rewindSpeedConfig;
+        private float? _runtimeRewindSpeed = null; // 这是个运行时可空的回溯速度, 若不为null则使用该值
+        protected float rewindSpeed => Mathf.Max(0f, _runtimeRewindSpeed ?? rewindSpeedConfig);
+        
 
         RingBuffer<TransformValuesSnapshot> TransformHistory;           // transform组件值的记录
         float recordInterval;                                           // 每次记录间隔
@@ -153,6 +155,10 @@ namespace TimeRewind
             };
             TransformHistory.Push(snap);
         }
+
+        /// <summary>
+        /// 回溯一次固定步长
+        /// </summary>
         protected virtual void RewindFixedStep()
         {
             // 用 fixedDeltaTime * rewindSpeed 推进回溯进度，可能一帧回退多步
@@ -168,9 +174,7 @@ namespace TimeRewind
                     return;
                 }
 
-                RewindOneStep();
-
-
+                RewindOneSnap();
 
                 // 子类可在 Pop 后做额外处理（例如 velocity 回写）
                 OnAppliedSnapshotDuringRewind();
@@ -180,7 +184,7 @@ namespace TimeRewind
         /// <summary>
         /// 记录一个快照, 子类可重写以记录更多数据, 注意要调用基类方法记录Transform数据
         /// </summary>
-        protected virtual void RewindOneStep()
+        protected virtual void RewindOneSnap()
         {
             // 取出最新快照并应用，然后 pop
             var snap = TransformHistory.PopBack();
@@ -237,16 +241,30 @@ namespace TimeRewind
 
 
         /// <summary>
-        /// 供外部调用的方法。如果倒带过程尚未激活，则启动倒带过程。
+        /// 供外部调用的方法。如果回溯过程尚未激活，则启动倒带过程。使用默认配置的回溯速度。
         /// </summary>
-        /// <remarks>此方法将倒带状态设置为激活，并重置倒带计时器。它还会
+        /// <remarks>此方法将回溯状态设置为激活，并重置倒带计时器。它还会
         /// 触发 <see cref="OnStartRewind"/> 方法以处理与启动倒带过程相关的任何附加逻辑。</remarks>
         public virtual void StartRewind()
         {
+            StartRewind(rewindSpeed);
+        }
+
+        /// <summary>
+        /// 按照指定速度启动回溯过程的重载方法。如果回溯过程尚未激活，则启动倒带过程。
+        /// TODO: 此处耦合了运行时速度修改的功能, 但或许应该拆分出去? 这样会导致每次实际上都在调用 _runtimeRewindSpeed, 并在回溯完毕再修改回去
+        /// TODO: 另外, 或许应该加一个指定回溯时长的功能
+        /// TODO: 实际上速度只在这里被使用的话, 其实可以尝试直接控制rewindSpeed, 在这里直接赋值就行了
+        /// </summary>
+        /// <param name="speed">指定回溯速度</param>
+        public virtual void StartRewind(float speed)
+        {
             if (isRewinding) return;
+            _runtimeRewindSpeed = speed;
             isRewinding = true;
             rewindTimer = 0f;
             OnStartRewind();
+
         }
 
         /// <summary>
@@ -256,6 +274,7 @@ namespace TimeRewind
         public virtual void StopRewind()
         {
             if (!isRewinding) return;
+            _runtimeRewindSpeed = null;
             isRewinding = false;
             OnStopRewind();
         }
@@ -278,7 +297,7 @@ namespace TimeRewind
             for (int i = 0; i < frames; i++)
             {
                 if (frameCount == 0) break;
-                RewindOneStep();
+                RewindOneSnap();
             }
         }
 

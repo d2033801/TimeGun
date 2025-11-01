@@ -20,7 +20,8 @@ namespace TimeGun
         #region 检视器参数（Inspector）
 
         [Header("References")]
-        public Transform cameraTransform; // 通常使用 Camera.main.transform
+        [Tooltip("计算射击目标的相机, 通常用主相机")]
+        public Camera shootCamera; // 通常使用 Camera.main
         public Transform cameraRoot;      // Cinemachine Follow/LookAt 目标（挂在角色身上：胸口/头部附近）
         [SerializeField,Tooltip("武器管理器, 正常情况下挂载在角色身上")] private WeaponManager weaponManager;
 
@@ -81,6 +82,8 @@ namespace TimeGun
         private CharacterController _characterController;
         private float _verticalVelocity;                       // y 方向速度（用于重力与跳跃）
         private const float _cameraRootVerticalOffset = 0.3f;  // 摄像机朝向根节点的站立状态额外垂直偏移
+        private Transform _shootCameraTransform; // 通常使用 Camera.main.transform
+        private int _maxShootPointRange = 1000;                 // 最大射击点距离, 用于射线检测, 超出这个距离则改为瞄准相机正前方
 
         // 相机旋转相关（记录 cameraRoot 的世界旋转角）
         private float _cameraYaw;       // 世界坐标下的相机偏航角
@@ -91,6 +94,7 @@ namespace TimeGun
 
         // 缓存后的输入动作（避免每帧从 Reference 间接取用）
         private InputAction _move, _jump, _sprint, _crouch, _aim, _look, _grendeLaunch, _fire;
+      
 
         #endregion
 
@@ -113,8 +117,9 @@ namespace TimeGun
             _grendeLaunch = grenadeLaunchAction? grenadeLaunchAction.action : null;
             _fire = fireAction? fireAction : null;
 
-            // cameraTransform 统一回退，避免每帧判空（若需运行时替换可自行赋值覆盖）
-            if (cameraTransform == null) cameraTransform = transform;
+            // _shootCameraTransform 统一回退，避免每帧判空（若需运行时替换可自行赋值覆盖）
+            if (shootCamera == null) shootCamera = Camera.main;
+            _shootCameraTransform = shootCamera?.transform?? transform;    // 若存在主相机则使用主相机，否则使用自身Transform
 
             // 初始化 CharacterController 为站立尺寸，并同步 cameraRoot 局部位置
             ApplyControllerDimensionsInstant();
@@ -128,8 +133,8 @@ namespace TimeGun
                 cameraRoot.rotation = Quaternion.Euler(_cameraPitch, _cameraYaw, 0f);
             }
 
-            Cursor.lockState = CursorLockMode.Locked;
-            Cursor.visible = false;
+            UnityEngine.Cursor.lockState = CursorLockMode.Locked;
+            UnityEngine.Cursor.visible = false;
         }
 
         /// <summary>
@@ -274,8 +279,8 @@ namespace TimeGun
         private void HandleMovement(Vector2 move, bool wantsSprint, float dt)
         {
             // 依据摄像机方向决定前后左右向量（投影到水平面）
-            Vector3 camForward = cameraTransform.forward;
-            Vector3 camRight = cameraTransform.right;
+            Vector3 camForward = _shootCameraTransform.forward;
+            Vector3 camRight = _shootCameraTransform.right;
 
             camForward.y = 0f;
             camRight.y = 0f;
@@ -347,15 +352,19 @@ namespace TimeGun
         }
 
         /// <summary>
-        /// 处理开火/扔榴弹等武器相关动作
+        /// 处理开火/扔榴弹等武器相关动作 
         /// </summary>
         private void HandleWeapon()
         {
-            Debug.Log(_fire.IsPressed());
-            if (_fire.IsPressed())
-            {
-                weaponManager.TryFireWeapon();
-            }
+            if (!IsAiming) return;
+
+            var target = ShootTargetPoint;
+
+            if (_fire?.IsPressed() == true)
+                weaponManager.TryFireWeapon(target);
+
+            if (_grendeLaunch?.IsPressed() == true)
+                weaponManager.TryThrow(target);
         }
 
         /// <summary>
@@ -427,6 +436,25 @@ namespace TimeGun
             }
 
             return true;
+        }
+
+        /// <summary>
+        /// 获取射击目标点
+        /// </summary>
+        private Vector3 ShootTargetPoint
+        {
+            get
+            {
+
+                var origin = _shootCameraTransform?.position ?? transform.position;
+                var dir = _shootCameraTransform?.forward ?? transform.forward;
+                
+                if (Physics.Raycast(origin, dir, out var hit, _maxShootPointRange, ~0, QueryTriggerInteraction.Ignore))
+                {
+                    return hit.point;
+                }
+                return origin + dir * _maxShootPointRange;
+            }
         }
 
         #endregion

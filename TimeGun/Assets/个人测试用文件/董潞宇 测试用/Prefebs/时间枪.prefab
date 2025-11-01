@@ -143,8 +143,10 @@ MonoBehaviour:
   grenadeLaunchPoint: {fileID: 4311936464823221693}
   grenadePrefab: {fileID: 4954844983062401583, guid: 440a1689ade92c64b93a4489bbb53b5c, type: 3}
   bulletPrefab: {fileID: 5079446126904241230, guid: 8590c39336a248747a612c0389436d6a, type: 3}
-  bulletSpeed: 50
+  bulletSpeed: 200
   bulletFireInterval: 0.5
+  grenadeSpeed: 20
+  grenadeFireInterval: 1
 --- !u!1 &8291320709736376045
 GameObject:
   m_ObjectHideFlags: 0

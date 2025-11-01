@@ -10,43 +10,70 @@ namespace TimeGun
         [Tooltip("枪榴弹预制件"), SerializeField] private GameObject grenadePrefab;
         [Tooltip("子弹预制件"), SerializeField] private GameObject bulletPrefab;
 
-        [Header("设置项 Configs")]
-        [Tooltip("子弹发射速度"), SerializeField] private float bulletSpeed = 50f;
-        [Tooltip("子弹发射间隔"), SerializeField] private float bulletFireInterval  = 0.5f;
+        [Header("子弹设置项 Bullets Configs")]
+        [Tooltip("子弹发射速度"), SerializeField] private float bulletSpeed = 100f;         // 此处子弹质量为0.01
+        [Tooltip("子弹发射间隔"), SerializeField] private float bulletFireInterval = 0.5f;
+        [Header("枪榴弹设置项 Grenade Configs")]
+        [Tooltip("枪榴弹发射速度"), SerializeField] private float grenadeSpeed = 30f;
+        [Tooltip("枪榴弹发射间隔"), SerializeField] private float grenadeFireInterval = 1f;
 
-
-        private float bulletIntervalTimer = 0f;
+        private float bulletIntervalTimer = 0f;             // 计时器，记录子弹发射间隔时间
+        private float grenadeIntervalTimer = 0f;             // 计时器，记录榴弹发射间隔时间
 
         private void Update()
         {
-            bulletIntervalTimer += Time.deltaTime;
-        }
-
-        public override void Fire()
-        {
-            if (bulletIntervalTimer > bulletFireInterval)
-            {
-                bulletIntervalTimer = 0;
-                GameObject grenade = Instantiate(bulletPrefab, muzzlePoint.position + transform.forward, Quaternion.identity);       // 在本地坐标系下前方生成榴弹
-                Rigidbody rb = grenade.GetComponent<Rigidbody>();
-                rb.AddForce(transform.forward * 50f, ForceMode.Impulse);
-            }
-            
+            float dt= Time.deltaTime;
+            bulletIntervalTimer += dt;
+            grenadeIntervalTimer += dt;
         }
 
         /// <summary>
-        /// 投掷榴弹 
+        /// 开火
         /// </summary>
-
-        public void Throw()
+        /// <param name="targetPoint">目标点</param>
+        public override void Fire(Vector3 targetPoint)
         {
+            if (!TryConsume(ref bulletIntervalTimer, bulletFireInterval)) return;
+            var dir = (targetPoint - muzzlePoint.position).normalized;
+            Rigidbody rb = InstantiateAmmoRigidbody(bulletPrefab, muzzlePoint.position, Quaternion.LookRotation(dir,Vector3.up));
+            
+            rb.AddForce(dir * bulletSpeed, ForceMode.VelocityChange);
 
-            GameObject grenade = Instantiate(grenadePrefab, grenadeLaunchPoint.position + transform.forward, Quaternion.identity);       // 在本地坐标系下前方生成榴弹
-            Rigidbody rb = grenade.GetComponent<Rigidbody>();
-            rb.AddForce(transform.forward * 10f + Vector3.up * 3f, ForceMode.Impulse);
-
+        }
+        /// <summary>
+        /// 开火, 对准枪正前方
+        /// </summary>
+        public override void Fire()
+        {
+            Fire(muzzlePoint.forward);
         }
 
 
+
+        /// <summary>
+        /// 投掷榴弹, 向着发射口正前方 
+        /// </summary>
+        public void Throw()
+        {
+            Throw(grenadeLaunchPoint.forward);
+        }
+
+        /// <summary>
+        /// 投掷榴弹, 朝向目标点
+        /// </summary>
+        /// <param name="targetPoint">瞄准的目标位置</param>
+
+        public void Throw(Vector3 targetPoint)
+        {
+
+            if(!TryConsume(ref grenadeIntervalTimer, grenadeFireInterval)) return;
+            
+            Rigidbody rb = InstantiateAmmoRigidbody(grenadePrefab, grenadeLaunchPoint.position ,
+                Quaternion.identity);
+            var dir = (targetPoint - grenadeLaunchPoint.position).normalized;
+            rb.AddForce(dir * grenadeSpeed + Vector3.up * 2f, ForceMode.VelocityChange);
+            //rb.linearVelocity = dir * 80f + Vector3.up * 5f;
+
+        }
     }
 }

@@ -41,9 +41,9 @@ namespace TimeRewind
             rigidBodyHistory.Push(snap);
         }
 
-        protected override void RewindOneStep()
+        protected override void RewindOneSnap()
         {
-            base.RewindOneStep();
+            base.RewindOneSnap();
             // 取出最新快照并应用，然后 pop
             var snap = rigidBodyHistory.PopBack();
             rb.linearVelocity = snap.Velocity;
