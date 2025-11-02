@@ -32,7 +32,7 @@ namespace TimeRewind
         protected float rewindSpeed => Mathf.Max(0f, _runtimeRewindSpeed ?? rewindSpeedConfig);
         
 
-        RingBuffer<TransformValuesSnapshot> TransformHistory;           // transform组件值的记录
+        RingBuffer<TransformValuesSnapshot> transformHistory;           // transform组件值的记录
         float recordInterval;                                           // 每次记录间隔
 
         /// <summary>
@@ -61,7 +61,7 @@ namespace TimeRewind
         /// 由于正常来说每个历史文件中的帧数是固定的, 所以这里用一个计数器记录当前剩了多少帧, 以便实现复用代码
         /// 子类或许也可以改写这个？
         /// </summary>
-        protected int frameCount => TransformHistory?.Count ?? 0;
+        protected int frameCount => transformHistory?.Count ?? 0;
 
         /// <summary>
         /// 用于保存 Transform 的快照数据（位置、旋转与缩放）。
@@ -110,7 +110,7 @@ namespace TimeRewind
         /// </summary>
         protected virtual void MainInit()
         {
-            TransformHistory = RewindInit<TransformValuesSnapshot>(out recordInterval);
+            transformHistory = RewindInit<TransformValuesSnapshot>(out recordInterval);
         }
         #endregion
 
@@ -153,7 +153,7 @@ namespace TimeRewind
                 Rotation = transform.rotation,
                 Scale = transform.localScale
             };
-            TransformHistory.Push(snap);
+            transformHistory.Push(snap);
         }
 
         /// <summary>
@@ -187,7 +187,7 @@ namespace TimeRewind
         protected virtual void RewindOneSnap()
         {
             // 取出最新快照并应用，然后 pop
-            var snap = TransformHistory.PopBack();
+            var snap = transformHistory.PopBack();
             transform.position = snap.Position;
             transform.rotation = snap.Rotation;
             transform.localScale = snap.Scale;

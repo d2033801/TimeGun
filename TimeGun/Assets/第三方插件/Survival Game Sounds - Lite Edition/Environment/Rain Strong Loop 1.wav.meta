@@ -1,0 +1,30 @@
+fileFormatVersion: 2
+guid: 8e8d91ee2a114468e829dc319769f2cb
+AudioImporter:
+  externalObjects: {}
+  serializedVersion: 6
+  defaultSettings:
+    loadType: 0
+    sampleRateSetting: 0
+    sampleRateOverride: 44100
+    compressionFormat: 1
+    quality: 1
+    conversionMode: 0
+  platformSettingOverrides: {}
+  forceToMono: 0
+  normalize: 1
+  preloadAudioData: 1
+  loadInBackground: 0
+  ambisonic: 0
+  3D: 1
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 310958
+  packageName: Survival Game Sounds Pack - Lite Edition
+  packageVersion: 1.0
+  assetPath: Assets/Survival Game Sounds - Lite Edition/Environment/Rain Strong Loop
+    1.wav
+  uploadId: 732214
