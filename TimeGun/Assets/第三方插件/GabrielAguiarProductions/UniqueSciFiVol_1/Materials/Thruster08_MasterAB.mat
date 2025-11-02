@@ -121,11 +121,13 @@ Material:
     - _DissolveAmount: 1.23
     - _DistortionAmount: 0
     - _DstBlend: 10
+    - _DstBlendAlpha: 10
     - _MasterIntensity: 4
     - _QueueControl: 0
     - _QueueOffset: 0
     - _SoftParticle: 20
     - _SrcBlend: 5
+    - _SrcBlendAlpha: 1
     - _Surface: 1
     - _Tex01Intensity: 3
     - _Tex02Intensity: 5
