@@ -7,14 +7,14 @@ public class EnemyIdleState : IEnemyState
     {
         enemy.navMeshAgent.isStopped = true;
         enemy.navMeshAgent.velocity = Vector3.zero;
-        enemy.stateTimer = enemy.waitTime; // 使用敌人配置的等待时间
+        enemy.StateTimer = enemy.waitTime; // 使用敌人配置的等待时间
     }
 
     // 每帧更新：计时结束切换到巡逻，看到玩家切换到警戒
     public void Update(Enemy enemy)
     {
-        enemy.stateTimer -= Time.deltaTime;
-        if (enemy.stateTimer <= 0)
+        enemy.StateTimer -= Time.deltaTime;
+        if (enemy.StateTimer <= 0)
         {
             // 切换到巡逻状态（通过状态机）
             enemy.stateMachine.ChangeState(enemy.patrolState, enemy);

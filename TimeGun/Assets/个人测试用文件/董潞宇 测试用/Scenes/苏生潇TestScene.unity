@@ -623,6 +623,7 @@ MonoBehaviour:
   obstacleMask:
     serializedVersion: 2
     m_Bits: 1
+  seePlayerTimer: 0
 --- !u!195 &1371308622
 NavMeshAgent:
   m_ObjectHideFlags: 0
@@ -683,9 +684,9 @@ MonoBehaviour:
   recordSecondsConfig: 0
   recordFPSConfig: 0
   rewindSpeedConfig: 2
-  _agent: {fileID: 1371308622}
-  _anim: {fileID: 2467568054268473333}
-  _enemy: {fileID: 1371308621}
+  agent: {fileID: 1371308622}
+  anim: {fileID: 2467568054268473333}
+  enemy: {fileID: 1371308621}
 --- !u!1 &1910007435
 GameObject:
   m_ObjectHideFlags: 0

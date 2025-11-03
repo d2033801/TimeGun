@@ -1,4 +1,4 @@
-using UnityEngine;
+﻿using UnityEngine;
 
 public class EnemyAlertState : IEnemyState
 {
@@ -6,7 +6,7 @@ public class EnemyAlertState : IEnemyState
     public void Enter(Enemy enemy)
     {
         enemy.navMeshAgent.isStopped = true;
-        enemy.seePlayerTimer = 0f;
+        enemy.SeePlayerTimer = 0f;
         enemy.modelAnimator?.SetBool("isAiming", true);
     }
 
@@ -16,11 +16,11 @@ public class EnemyAlertState : IEnemyState
 
         if (canSee)
         {
-            enemy.seePlayerTimer += Time.deltaTime;
-            if (enemy.seePlayerTimer >= attack_Threshold)
+            enemy.SeePlayerTimer += Time.deltaTime;
+            if (enemy.SeePlayerTimer >= attack_Threshold)
             {
                 // enemy.stateMachine.ChangeState(enemy.attackState, enemy);
-                enemy.seePlayerTimer = 0f;
+                enemy.SeePlayerTimer = 0f;
             }
         }
         else
@@ -31,7 +31,7 @@ public class EnemyAlertState : IEnemyState
 
     public void Exit(Enemy enemy)
     {
-        enemy.seePlayerTimer = 0f;
+        enemy.SeePlayerTimer = 0f;
         enemy.modelAnimator?.SetBool("isAiming", false);
     }
 }
