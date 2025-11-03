@@ -80,6 +80,8 @@ namespace TimeRewind
             // 速度平滑字段（直接访问 public 属性）
             public float CurrentSpeed;
             public float SpeedVelocity;
+
+            public float SeePlayerTimer;
         }
 
         // 轻量状态枚举：用于"识别/切换"状态实例，避免直接序列化引用

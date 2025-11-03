@@ -65,43 +65,77 @@ public class Enemy : MonoBehaviour
     internal Transform player; // 玩家引用
     internal NavMeshAgent navMeshAgent; // 导航组件
 
-    // 外部调用接口
+    /// <summary>
+    /// 获取或设置敌人的死亡状态。
+    /// </summary>
+    /// <value>
+    /// 如果敌人已死亡则为 <c>true</c>；否则为 <c>false</c>。
+    /// </value>
     public bool IsDead
     {
         get => isDead;
         internal set => isDead = value;
     }
 
+    /// <summary>
+    /// 获取或设置发现玩家后的持续观察计时器（秒）。
+    /// </summary>
+    /// <value>
+    /// 观察时间剩余秒数，值越大表示警戒状态持续越久。
+    /// </value>
     public float SeePlayerTimer
     {
         get => seePlayerTimer;
         set => seePlayerTimer = value;
     }
 
+    /// <summary>
+    /// 获取或设置 SmoothDamp 内部使用的速度变化率。
+    /// </summary>
+    /// <value>
+    /// 用于平滑过渡动画速度参数的辅助变量。
+    /// </value>
     public float SpeedVelocity
     {
         get => _speedVelocity;
         set => _speedVelocity = value;
     }
 
+    /// <summary>
+    /// 获取或设置当前平滑后的移动速度（用于驱动动画）。
+    /// </summary>
+    /// <value>
+    /// 经过平滑处理的速度值，会传递给 Animator 的 Speed 参数。
+    /// </value>
     public float CurrentSpeed
     {
         get => _currentSpeed;
         set => _currentSpeed = value;
     }
 
+    /// <summary>
+    /// 获取或设置当前巡逻点索引。
+    /// </summary>
+    /// <value>
+    /// 当前目标巡逻点在 <see cref="patrolPoints"/> 数组中的索引，-1 表示未初始化。
+    /// </value>
     internal int CurrentPointIndex
     {
         get => currentPointIndex;
         set => currentPointIndex = value;
     }
 
+    /// <summary>
+    /// 获取或设置状态计时器（用于状态持续时间计算）。
+    /// </summary>
+    /// <value>
+    /// 当前状态的计时器（秒），例如 Idle 状态的等待时间或 Alert 状态的追踪时间。
+    /// </value>
     internal float StateTimer
     {
         get => stateTimer;
         set => stateTimer = value;
     }
-
     void Start()
     {
         // 初始化导航组件
