@@ -1,20 +1,26 @@
-using UnityEngine;
+ï»¿using UnityEngine;
 
 public class EnemyStateMachine
 {
-    private IEnemyState _currentState; // µ±Ç°¼¤»îµÄ×´Ì¬
+    private IEnemyState _currentState; // å½“å‰æ¿€æ´»çš„çŠ¶æ€
 
-    // ÇĞ»»µ½ĞÂ×´Ì¬£¨ÏÈÍË³öµ±Ç°×´Ì¬£¬ÔÙ½øÈëĞÂ×´Ì¬£©
-    public void ChangeState(IEnemyState newState, Enemy enemy)
+    public IEnemyState CurrentState
     {
-        _currentState?.Exit(enemy); // ÍË³öµ±Ç°×´Ì¬£¨?. ±ÜÃâ¿ÕÒıÓÃ£©
-        _currentState = newState;   // ¸üĞÂµ±Ç°×´Ì¬
-        _currentState?.Enter(enemy); // ½øÈëĞÂ×´Ì¬
+        get => _currentState;
+        set => _currentState = value;
     }
 
-    // Ã¿Ö¡¸üĞÂµ±Ç°×´Ì¬µÄÂß¼­
+    // åˆ‡æ¢åˆ°æ–°çŠ¶æ€ï¼ˆå…ˆé€€å‡ºå½“å‰çŠ¶æ€ï¼Œå†è¿›å…¥æ–°çŠ¶æ€ï¼‰
+    public void ChangeState(IEnemyState newState, Enemy enemy)
+    {
+        CurrentState?.Exit(enemy); // é€€å‡ºå½“å‰çŠ¶æ€ï¼ˆ?. é¿å…ç©ºå¼•ç”¨ï¼‰
+        CurrentState = newState;   // æ›´æ–°å½“å‰çŠ¶æ€
+        CurrentState?.Enter(enemy); // è¿›å…¥æ–°çŠ¶æ€
+    }
+
+    // æ¯å¸§æ›´æ–°å½“å‰çŠ¶æ€çš„é€»è¾‘
     public void Update(Enemy enemy)
     {
-        _currentState?.Update(enemy); // µ÷ÓÃµ±Ç°×´Ì¬µÄUpdate
+        CurrentState?.Update(enemy); // è°ƒç”¨å½“å‰çŠ¶æ€çš„Update
     }
 }

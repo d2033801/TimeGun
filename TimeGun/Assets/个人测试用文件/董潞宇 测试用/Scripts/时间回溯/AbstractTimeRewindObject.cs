@@ -44,7 +44,7 @@ namespace TimeRewind
         /// <summary>
         /// 是否处于回溯状态（true 表示正在回放历史快照，false 表示正常录制）。
         /// </summary>
-        bool isRewinding = false;
+        protected bool isRewinding = false;
 
         /// <summary>
         /// 是否处于录制状态（true 表示正在录制历史快照，false 表示暂停录制）。
@@ -294,10 +294,13 @@ namespace TimeRewind
             }
             int frames = Mathf.RoundToInt(seconds / recordInterval);            // 计算需要回溯的帧数
             frames = Mathf.Clamp(frames, 0, frameCount);                  // 限制在已有记录范围内
+
+            // TODO: 这里可以优化掉, 直接循环也太弱智了, 应该可以直接跳转到对应帧
             for (int i = 0; i < frames; i++)
             {
                 if (frameCount == 0) break;
                 RewindOneSnap();
+                OnAppliedSnapshotDuringRewind();
             }
         }
 

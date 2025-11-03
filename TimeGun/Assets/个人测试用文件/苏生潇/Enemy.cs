@@ -1,4 +1,4 @@
-using System;
+ï»¿using System;
 using UnityEngine;
 using UnityEngine.AI;
 using UnityEngine.Android;
@@ -6,76 +6,135 @@ using UnityEngine.Android;
 [RequireComponent(typeof(NavMeshAgent))]
 public class Enemy : MonoBehaviour
 {
-    [Header("Ñ²ÂßÉèÖÃ")]
-    public Transform[] patrolPoints; // Ñ²ÂßµãÊı×é
-    public float waitTime = 2f; // Ã¿¸öÑ²ÂßµãÍ£ÁôÊ±¼ä
+    [Header("å·¡é€»è®¾ç½®")]
+    [Tooltip("æ•Œäººå·¡é€»çš„è·¯å¾„ç‚¹æ•°ç»„ï¼ŒæŒ‰é¡ºåºå¾ªç¯å·¡é€»")]
+    public Transform[] patrolPoints;
 
-    [Header("¶¯»­ÉèÖÃ")]
+    [Tooltip("æ•Œäººåœ¨æ¯ä¸ªå·¡é€»ç‚¹çš„åœç•™æ—¶é—´ï¼ˆç§’ï¼‰")]
+    public float waitTime = 2f;
+
+    [Header("åŠ¨ç”»è®¾ç½®")]
+    [Tooltip("æ•Œäººæ¨¡å‹ä¸Šçš„Animatorç»„ä»¶ï¼Œç”¨äºæ§åˆ¶åŠ¨ç”»æ’­æ”¾")]
     public Animator modelAnimator;
+
+    [Tooltip("é€Ÿåº¦å¹³æ»‘è¿‡æ¸¡æ—¶é—´ï¼Œå€¼è¶Šå°è¿‡æ¸¡è¶Šå¿«")]
     public float smoothTime = 0.1f;
 
-    [Header("ÊÓÒ°ÉèÖÃ")]
+    [Header("è§†é‡è®¾ç½®")]
+    [Tooltip("æ•Œäººçš„è§†é‡è§’åº¦ï¼ˆåº¦ï¼‰ï¼Œä»¥å‰æ–¹ä¸ºä¸­å¿ƒçš„æ‰‡å½¢è§’åº¦")]
     public float viewAngle = 90f;
+
+    [Tooltip("æ•Œäººçš„è§†é‡åŠå¾„ï¼ˆç±³ï¼‰ï¼Œè¶…å‡ºæ­¤è·ç¦»æ— æ³•çœ‹åˆ°ç©å®¶")]
     public float viewRadius = 10f;
-    public Transform headTransform; // ÊÓÏßÆğµã£¨Í·²¿£©
-    public LayerMask playerMask; // Íæ¼ÒÍ¼²ã
-    public LayerMask obstacleMask; // ÕÏ°­ÎïÍ¼²ã
-    public float seePlayerTimer; /*TODO : ĞèÒª»ØËİ*/
 
-    [Header("ËÀÍö´¥·¢ÉèÖÃ")]
-    
-    internal bool isDead = false; // ËÀÍö×´Ì¬ /*TODO : ĞèÒª»ØËİ*/
-    private const float crushForceThreshold = 1f;
+    [Tooltip("æ•Œäººå¤´éƒ¨Transformï¼Œä½œä¸ºè§†çº¿æ£€æµ‹çš„èµ·ç‚¹")]
+    public Transform headTransform;
 
-    // ¡¾×´Ì¬»úÓë×´Ì¬ÊµÀı¡¿
-    internal EnemyStateMachine stateMachine; // ×´Ì¬»ú£¨internalÔÊĞí×´Ì¬Àà·ÃÎÊ£©
+    [Tooltip("ç©å®¶æ‰€åœ¨çš„å›¾å±‚é®ç½©ï¼Œç”¨äºè§†çº¿æ£€æµ‹")]
+    public LayerMask playerMask;
+
+    [Tooltip("éšœç¢ç‰©å›¾å±‚é®ç½©ï¼Œç”¨äºåˆ¤æ–­è§†çº¿æ˜¯å¦è¢«é®æŒ¡")]
+    public LayerMask obstacleMask;
+
+    [SerializeField, Tooltip("å‘ç°ç©å®¶åçš„æŒç»­è§‚å¯Ÿæ—¶é—´")]
+    private float seePlayerTimer;
+
+    [Header("æ­»äº¡è§¦å‘è®¾ç½®")]
+    [Tooltip("æ•Œäººæ˜¯å¦å·²æ­»äº¡")]
+    private bool isDead = false;
+
+    [Tooltip("è§¦å‘æ­»äº¡æ‰€éœ€çš„æœ€å°å†²å‡»åŠ›é˜ˆå€¼")]
+    private const float crushForceThreshold = 50f;
+
+
+
+    // ã€çŠ¶æ€æœºä¸çŠ¶æ€å®ä¾‹ã€‘
+    internal EnemyStateMachine stateMachine; // çŠ¶æ€æœºï¼ˆinternalå…è®¸çŠ¶æ€ç±»è®¿é—®ï¼‰
     internal EnemyIdleState idleState;
     internal EnemyPatrolState patrolState;
     internal EnemyAlertState alertState;
     internal EnemyDeathState deathState;
 
-    internal float stateTimer; // ×´Ì¬¼ÆÊ±Æ÷£¨ÈçIdleµÄµÈ´ıÊ±¼ä£©/TODO : *ĞèÒª»ØËİ*/
-    internal int currentPointIndex = -1; // µ±Ç°Ñ²ÂßµãË÷Òı /TODO : *ĞèÒª»ØËİ*/
+    internal float stateTimer; // çŠ¶æ€è®¡æ—¶å™¨ï¼ˆå¦‚Idleçš„ç­‰å¾…æ—¶é—´ï¼‰
+    internal int currentPointIndex = -1; // å½“å‰å·¡é€»ç‚¹ç´¢å¼•
 
-    private float _currentSpeed; /*TODO : ĞèÒª»ØËİ*/
-    private float _speedVelocity; /*TODO : ĞèÒª»ØËİ*/
+    private float _currentSpeed; // å½“å‰å¹³æ»‘åçš„ç§»åŠ¨é€Ÿåº¦
+    private float _speedVelocity; // SmoothDampå†…éƒ¨ä½¿ç”¨çš„é€Ÿåº¦å˜åŒ–ç‡
 
 
-    internal Transform player; // Íæ¼ÒÒıÓÃ
-    internal NavMeshAgent navMeshAgent; // µ¼º½×é¼ş
+    internal Transform player; // ç©å®¶å¼•ç”¨
+    internal NavMeshAgent navMeshAgent; // å¯¼èˆªç»„ä»¶
+
+    // å¤–éƒ¨è°ƒç”¨æ¥å£
+    public bool IsDead
+    {
+        get => isDead;
+        internal set => isDead = value;
+    }
+
+    public float SeePlayerTimer
+    {
+        get => seePlayerTimer;
+        set => seePlayerTimer = value;
+    }
+
+    public float SpeedVelocity
+    {
+        get => _speedVelocity;
+        set => _speedVelocity = value;
+    }
+
+    public float CurrentSpeed
+    {
+        get => _currentSpeed;
+        set => _currentSpeed = value;
+    }
+
+    internal int CurrentPointIndex
+    {
+        get => currentPointIndex;
+        set => currentPointIndex = value;
+    }
+
+    internal float StateTimer
+    {
+        get => stateTimer;
+        set => stateTimer = value;
+    }
+
     void Start()
     {
-        // ³õÊ¼»¯µ¼º½×é¼ş
+        // åˆå§‹åŒ–å¯¼èˆªç»„ä»¶
         navMeshAgent = GetComponent<NavMeshAgent>();
         navMeshAgent.autoBraking = true;
-        navMeshAgent.updateRotation = false; // ½ûÓÃ×Ô¶¯Ğı×ª
+        navMeshAgent.updateRotation = false; // ç¦ç”¨è‡ªåŠ¨æ—‹è½¬
 
-        // ³õÊ¼»¯¶¯»­×é¼ş
+        // åˆå§‹åŒ–åŠ¨ç”»ç»„ä»¶
         if (modelAnimator == null)
         {
             modelAnimator = GetComponentInChildren<Animator>();
         }
 
-        // ³õÊ¼»¯Íæ¼ÒÒıÓÃ
+        // åˆå§‹åŒ–ç©å®¶å¼•ç”¨
         player = GameObject.FindGameObjectWithTag("Player")?.transform;
-        if (player == null) Debug.LogWarning("Î´ÕÒµ½Player±êÇ©µÄ¶ÔÏó£¡");
+        if (player == null) Debug.LogWarning("æœªæ‰¾åˆ°Playeræ ‡ç­¾çš„å¯¹è±¡ï¼");
 
-        // ³õÊ¼»¯×´Ì¬»úºÍ×´Ì¬
+        // åˆå§‹åŒ–çŠ¶æ€æœºå’ŒçŠ¶æ€
         stateMachine = new EnemyStateMachine();
         idleState = new EnemyIdleState();
         patrolState = new EnemyPatrolState();
         alertState = new EnemyAlertState();
 
-        // ³õÊ¼×´Ì¬£ºIdle
+        // åˆå§‹çŠ¶æ€ï¼šIdle
         stateMachine.ChangeState(idleState, this);
     }
 
     void Update()
     {
-        if (isDead || patrolPoints.Length == 0) 
+        if (IsDead || patrolPoints.Length == 0)
             return;
 
-        // ×´Ì¬»ú¸üĞÂ£¨ºËĞÄ£ºµ÷ÓÃµ±Ç°×´Ì¬µÄÂß¼­£©
+        // çŠ¶æ€æœºæ›´æ–°ï¼ˆæ ¸å¿ƒï¼šè°ƒç”¨å½“å‰çŠ¶æ€çš„é€»è¾‘ï¼‰
         stateMachine.Update(this);
 
 
@@ -94,7 +153,7 @@ public class Enemy : MonoBehaviour
 
     internal void GoToNextPoint()
     {
-        if (patrolPoints.Length == 0) 
+        if (patrolPoints.Length == 0)
             return;
         currentPointIndex = (currentPointIndex + 1) % patrolPoints.Length;
         navMeshAgent.SetDestination(patrolPoints[currentPointIndex].position);
@@ -107,14 +166,14 @@ public class Enemy : MonoBehaviour
         Vector3 dirToPlayer = (player.position - headTransform.position).normalized;
         float distToPlayer = Vector3.Distance(headTransform.position, player.position);
 
-        // ¾àÀë
+        // è·ç¦»
         if (distToPlayer > viewRadius) return false;
 
-        // ½Ç¶È
+        // è§’åº¦
         float angle = Vector3.Angle(headTransform.forward, dirToPlayer);
         if (angle > viewAngle / 2) return false;
 
-        // ÕÚµ²
+        // é®æŒ¡
         if (Physics.Raycast(headTransform.position, dirToPlayer, distToPlayer, obstacleMask))
             return false;
 
@@ -123,86 +182,86 @@ public class Enemy : MonoBehaviour
 
     public void OnCollisionEnter(Collision collision)
     {
-        Debug.Log($"{gameObject.name} Åö×²µ½ {collision.gameObject.name}, impulse={collision.impulse.magnitude}");
+        Debug.Log($"{gameObject.name} ç¢°æ’åˆ° {collision.gameObject.name}, impulse={collision.impulse.magnitude}");
 
-        // Èç¹ûÒÑ¾­ËÀÍöÔòºöÂÔ
-        if (isDead)
+        // å¦‚æœå·²ç»æ­»äº¡åˆ™å¿½ç•¥
+        if (IsDead)
             return;
 
-        // ºöÂÔµØÃæµÈÇáÎ¢Åö×²
+        // å¿½ç•¥åœ°é¢ç­‰è½»å¾®ç¢°æ’
         if (collision.impulse.magnitude < crushForceThreshold)
             return;
 
         Debug.Log(collision.impulse.magnitude);
 
-        // Èç¹û×²ÉÏÀ´µÄÊÇ´ø¸ÕÌåµÄÖØÎï
+        // å¦‚æœæ’ä¸Šæ¥çš„æ˜¯å¸¦åˆšä½“çš„é‡ç‰©
         if (collision.rigidbody != null)
         {
-            Debug.Log($"{gameObject.name} ±» {collision.gameObject.name} µÄ³å»÷Á¦ÔÒËÀ£¡");
+            Debug.Log($"{gameObject.name} è¢« {collision.gameObject.name} çš„å†²å‡»åŠ›ç ¸æ­»ï¼");
             Die();
         }
     }
 
     public void Die()
     {
-        if (isDead) 
-            return; // ·ÀÖ¹ÖØ¸´ËÀÍö
+        if (IsDead)
+            return; // é˜²æ­¢é‡å¤æ­»äº¡
 
-        isDead = true;
+        IsDead = true;
 
-        Debug.Log($"{gameObject.name} ËÀÍö");
+        Debug.Log($"{gameObject.name} æ­»äº¡");
 
-        // ¹Ø±ÕÑ°Â·
+        // å…³é—­å¯»è·¯
         if (navMeshAgent != null)
         {
             navMeshAgent.isStopped = true;
             navMeshAgent.enabled = false;
         }
 
-        // ½ûÓÃËùÓĞÅö×²Ìå£¨·ÀÖ¹¼ÌĞø´¥·¢£©
+        // ç¦ç”¨æ‰€æœ‰ç¢°æ’ä½“ï¼ˆé˜²æ­¢ç»§ç»­è§¦å‘ï¼‰
         Collider[] colliders = GetComponentsInChildren<Collider>();
         foreach (var col in colliders)
             col.enabled = false;
 
 
-        // ²¥·ÅËÀÍö¶¯»­
+        // æ’­æ”¾æ­»äº¡åŠ¨ç”»
         modelAnimator?.SetTrigger("Die");
 
         /*
-        // ÇĞ»»×´Ì¬»ú
+        // åˆ‡æ¢çŠ¶æ€æœº
         if (stateMachine != null && deathState != null)
             stateMachine.ChangeState(deathState, this);
         */
     }
 
-    // ¡¾Gizmos£ºScene´°¿Ú»æÖÆÊÓÒ°·¶Î§¡¿
+    // ã€Gizmosï¼šSceneçª—å£ç»˜åˆ¶è§†é‡èŒƒå›´ã€‘
     private void OnDrawGizmosSelected()
     {
         if (headTransform == null) return;
 
-        // ÊÓÒ°°ë¾¶
+        // è§†é‡åŠå¾„
         Gizmos.color = Color.yellow;
         Gizmos.DrawWireSphere(headTransform.position, viewRadius);
 
-        // ÊÓÒ°½Ç¶È£¨×¶ĞÎ£©
+        // è§†é‡è§’åº¦ï¼ˆé”¥å½¢ï¼‰
         Vector3 left = DirFromAngle(-viewAngle / 2);
         Vector3 right = DirFromAngle(viewAngle / 2);
         Gizmos.color = new Color(0, 1, 1, 0.5f);
         Gizmos.DrawLine(headTransform.position, headTransform.position + left * viewRadius);
         Gizmos.DrawLine(headTransform.position, headTransform.position + right * viewRadius);
 
-        // Èç¹û Scene ÔËĞĞÖĞÇÒÄÜ¿´µ½Íæ¼Ò£¬Ôò»­Ò»ÌõºìÏßÖ¸ÏòÍæ¼Ò
+        // å¦‚æœ Scene è¿è¡Œä¸­ä¸”èƒ½çœ‹åˆ°ç©å®¶ï¼Œåˆ™ç”»ä¸€æ¡çº¢çº¿æŒ‡å‘ç©å®¶
         if (Application.isPlaying && player != null)
         {
-            if (CanSeePlayer()) 
-            { 
-                Gizmos.color = Color.red; 
+            if (CanSeePlayer())
+            {
+                Gizmos.color = Color.red;
                 Gizmos.DrawLine(headTransform.position, player.position);
             }
         }
     }
 
-    // ¼ÆËãÊÓÒ°±ß½ç·½Ïò
+    // è®¡ç®—è§†é‡è¾¹ç•Œæ–¹å‘
     private Vector3 DirFromAngle(float angleDeg)
     {
         angleDeg += headTransform.eulerAngles.y;
