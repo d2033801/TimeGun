@@ -8,21 +8,34 @@ namespace TimeGun
         [Header("榴弹设定 Grenade Settings")]
         [SerializeField, Tooltip("引信时间")] public float fuseSeconds = 2.0f;        // 引信时间
         [SerializeField, Tooltip("爆炸半径")] public float explosionRadius = 4f;
+        [SerializeField, Tooltip("爆炸类型")] private GrenadeExplosionMode explosionMode = GrenadeExplosionMode.OnImpact;
         [Header("特效 Effect References")]
         [SerializeField, Tooltip("爆炸特效")] private GameObject explosionEffectPrefab;
 
+        enum GrenadeExplosionMode
+        {
+            /// <summary>
+            /// 碰撞时立即爆炸
+            /// </summary>
+            OnImpact,
+            /// <summary>
+            /// 碰撞后延时引爆
+            /// </summary>
+            Timed
+        }
         private bool _isExploded = false;               // 是否已爆炸
         private bool _hasBeenTriggered = false;         // 是否已被碰撞触发过
 
         /// <summary>
         /// 引信倒计时协程
         /// </summary>
+        /// <param name="seconds">触发引信多久后爆炸</param>
         /// <returns></returns>
-        private IEnumerator FuseRoutine()
+        private IEnumerator FuseRoutine(float seconds)
         {
             // 若不希望受 Time.timeScale 影响，改用 WaitForSecondsRealtime(fuseSeconds)
-            yield return new WaitForSeconds(fuseSeconds);       // 等待引信时间后再次调用函数
-            if (!_isExploded) Explode();
+            yield return new WaitForSeconds(seconds);       // 等待引信时间后再次调用函数
+            Explode();
         }
 
         /// <summary>
@@ -30,6 +43,12 @@ namespace TimeGun
         /// </summary>
         private void Explode()
         {
+            if (_isExploded)
+            {
+                return;
+            }
+            _isExploded = true;
+
 
             Vector3 center = transform.position;
             if (explosionEffectPrefab != null)
@@ -54,12 +73,22 @@ namespace TimeGun
         protected override void HandleHit(Collision hitCollision)
         {
             if (_hasBeenTriggered) return;
-            StartCoroutine(FuseRoutine());
+            _hasBeenTriggered = true;
+            switch (explosionMode)
+            {
+                
+                case GrenadeExplosionMode.OnImpact:
+                    StartCoroutine(FuseRoutine(0.1f));      // 碰撞后短暂延时以确保物理稳定
+                    break;
+                case GrenadeExplosionMode.Timed:
+                    StartCoroutine(FuseRoutine(fuseSeconds));
+                    break;
+            }
         }
 
         protected override void OnLifeExpired()
         {
-            if (!_isExploded) Explode();
+            Explode();
         }
 
         // ==== Editor Gizmos ====

@@ -1,7 +1,5 @@
-﻿using System;
-using UnityEngine;
+﻿using UnityEngine;
 using UnityEngine.AI;
-using UnityEngine.Android;
 
 [RequireComponent(typeof(NavMeshAgent))]
 public class Enemy : MonoBehaviour
@@ -65,6 +63,7 @@ public class Enemy : MonoBehaviour
     internal Transform player; // 玩家引用
     internal NavMeshAgent navMeshAgent; // 导航组件
 
+    #region 暴露给回溯组件的变量
     /// <summary>
     /// 获取或设置敌人的死亡状态。
     /// </summary>
@@ -136,6 +135,7 @@ public class Enemy : MonoBehaviour
         get => stateTimer;
         set => stateTimer = value;
     }
+    #endregion
     void Start()
     {
         // 初始化导航组件
@@ -244,6 +244,15 @@ public class Enemy : MonoBehaviour
         IsDead = true;
 
         Debug.Log($"{gameObject.name} 死亡");
+
+        // 停止录制并禁用回溯组件 TODO: 耦合性较高，如果有未来的话考虑一下怎么优化
+        var rewindComponent = GetComponent<TimeRewind.EnemyTimeRewind>();
+        if (rewindComponent != null)
+        {
+            rewindComponent.StopRewind(); // 停止回溯(重置动画机之类的状态)
+            rewindComponent.enabled = false; // 禁用组件（停止 FixedUpdate）
+            Debug.Log($"{gameObject.name} 已停止时间回溯录制");
+        }
 
         // 关闭寻路
         if (navMeshAgent != null)

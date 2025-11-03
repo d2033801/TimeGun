@@ -257,7 +257,7 @@ BoxCollider:
   m_LayerOverridePriority: 0
   m_IsTrigger: 0
   m_ProvidesContacts: 0
-  m_Enabled: 1
+  m_Enabled: 0
   serializedVersion: 3
   m_Size: {x: 1, y: 1, z: 1}
   m_Center: {x: 0, y: 0, z: 0}
@@ -341,7 +341,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 292647276}
-  m_Layer: 3
+  m_Layer: 0
   m_Name: "\u6B66\u5668\u751F\u6210\u70B9"
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -399,7 +399,7 @@ BoxCollider:
   m_LayerOverridePriority: 0
   m_IsTrigger: 0
   m_ProvidesContacts: 0
-  m_Enabled: 1
+  m_Enabled: 0
   serializedVersion: 3
   m_Size: {x: 1, y: 1, z: 1}
   m_Center: {x: 0, y: 0, z: 0}
@@ -1489,7 +1489,7 @@ GameObject:
   - component: {fileID: 867655220738442892}
   - component: {fileID: 1893798748038184573}
   - component: {fileID: 3895821002171596363}
-  m_Layer: 3
+  m_Layer: 0
   m_Name: "\u9F3B\u5B50"
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -1695,7 +1695,7 @@ MonoBehaviour:
   AimCollisionFilter:
     serializedVersion: 2
     m_Bits: 1
-  IgnoreTag: 
+  IgnoreTag: Player
   AimDistance: 200
   NoiseCancellation: 1
 --- !u!114 &1438440717917017359
@@ -1764,7 +1764,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 1791835574474388260}
-  m_Layer: 3
+  m_Layer: 0
   m_Name: Is Dead
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -2063,7 +2063,7 @@ GameObject:
   - component: {fileID: 1533314969259191986}
   - component: {fileID: 1438440717917017359}
   - component: {fileID: 4884090520614248060}
-  m_Layer: 3
+  m_Layer: 0
   m_Name: Player
   m_TagString: Player
   m_Icon: {fileID: 0}
@@ -2235,7 +2235,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 8511785181943367592, guid: 440a1689ade92c64b93a4489bbb53b5c, type: 3}
       propertyPath: m_LocalPosition.y
-      value: -2.411
+      value: -2.36
       objectReference: {fileID: 0}
     - target: {fileID: 8511785181943367592, guid: 440a1689ade92c64b93a4489bbb53b5c, type: 3}
       propertyPath: m_LocalPosition.z
@@ -2270,7 +2270,8 @@ PrefabInstance:
       value: 0
       objectReference: {fileID: 0}
     m_RemovedComponents: []
-    m_RemovedGameObjects: []
+    m_RemovedGameObjects:
+    - {fileID: 6925296559089464694, guid: 440a1689ade92c64b93a4489bbb53b5c, type: 3}
     m_AddedGameObjects: []
     m_AddedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: 440a1689ade92c64b93a4489bbb53b5c, type: 3}
@@ -2401,7 +2402,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 8910183009755935407}
-  m_Layer: 3
+  m_Layer: 0
   m_Name: CameraRoot
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -2420,7 +2421,7 @@ GameObject:
   - component: {fileID: 3700085483220999790}
   - component: {fileID: 4153134845699927212}
   - component: {fileID: 3298291433796807553}
-  m_Layer: 3
+  m_Layer: 0
   m_Name: "\u5DE6\u773C"
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -2610,7 +2611,7 @@ GameObject:
   - component: {fileID: 8806905452225830897}
   - component: {fileID: 7212014074195564171}
   - component: {fileID: 5538648677054100337}
-  m_Layer: 3
+  m_Layer: 0
   m_Name: "\u53F3\u773C"
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -3185,6 +3186,34 @@ PrefabInstance:
     - target: {fileID: 5079446126904241230, guid: 8590c39336a248747a612c0389436d6a, type: 3}
       propertyPath: m_Name
       value: "\u5B50\u5F39"
+      objectReference: {fileID: 0}
+    - target: {fileID: 7464742530675779873, guid: 8590c39336a248747a612c0389436d6a, type: 3}
+      propertyPath: m_Parameters.colorGradient.ctime0
+      value: 27499
+      objectReference: {fileID: 0}
+    - target: {fileID: 7464742530675779873, guid: 8590c39336a248747a612c0389436d6a, type: 3}
+      propertyPath: m_Parameters.colorGradient.key0.b
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 7464742530675779873, guid: 8590c39336a248747a612c0389436d6a, type: 3}
+      propertyPath: m_Parameters.colorGradient.key0.g
+      value: 0.7027993
+      objectReference: {fileID: 0}
+    - target: {fileID: 7464742530675779873, guid: 8590c39336a248747a612c0389436d6a, type: 3}
+      propertyPath: m_Parameters.colorGradient.key0.r
+      value: 0.24213827
+      objectReference: {fileID: 0}
+    - target: {fileID: 7464742530675779873, guid: 8590c39336a248747a612c0389436d6a, type: 3}
+      propertyPath: m_Parameters.colorGradient.key1.b
+      value: 0.33018857
+      objectReference: {fileID: 0}
+    - target: {fileID: 7464742530675779873, guid: 8590c39336a248747a612c0389436d6a, type: 3}
+      propertyPath: m_Parameters.colorGradient.key1.g
+      value: 0.5376988
+      objectReference: {fileID: 0}
+    - target: {fileID: 7464742530675779873, guid: 8590c39336a248747a612c0389436d6a, type: 3}
+      propertyPath: m_Parameters.colorGradient.key1.r
+      value: 1
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []

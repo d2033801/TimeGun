@@ -295,12 +295,30 @@ namespace TimeRewind
             int frames = Mathf.RoundToInt(seconds / recordInterval);            // 计算需要回溯的帧数
             frames = Mathf.Clamp(frames, 0, frameCount);                  // 限制在已有记录范围内
 
+            bool wasRewinding = isRewinding; // 记录原始状态
+
+            // 这里的核心在于如果已经在渐进回溯中, 则不需要重复调用 OnStartRewind 和 OnStopRewind
+            if (!wasRewinding)
+            {
+                // 如果之前没在回溯，启动回溯状态（冻结 NavMeshAgent 等）
+                isRewinding = true;
+                OnStartRewind();
+            }
+
             // TODO: 这里可以优化掉, 直接循环也太弱智了, 应该可以直接跳转到对应帧
-            for (int i = 0; i < frames; i++)
+                for (int i = 0; i < frames; i++)
             {
                 if (frameCount == 0) break;
                 RewindOneSnap();
                 OnAppliedSnapshotDuringRewind();
+            }
+
+            // 这里的核心在于如果已经在渐进回溯中, 则不需要重复调用 OnStartRewind 和 OnStopRewind
+            if (!wasRewinding)
+            {
+                // 如果是我们启动的回溯，恢复状态（解冻 NavMeshAgent 等）
+                isRewinding = false;
+                OnStopRewind(); // ✅ 关键：调用 StopRewind 恢复组件状态
             }
         }
 

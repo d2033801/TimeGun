@@ -71,7 +71,7 @@ namespace TimeGun
             Rigidbody rb = InstantiateAmmoRigidbody(grenadePrefab, grenadeLaunchPoint.position ,
                 Quaternion.identity);
             var dir = (targetPoint - grenadeLaunchPoint.position).normalized;
-            rb.AddForce(dir * grenadeSpeed + Vector3.up * 2f, ForceMode.VelocityChange);
+            rb.AddForce(dir * grenadeSpeed + Vector3.up * 5f, ForceMode.VelocityChange);
             //rb.linearVelocity = dir * 80f + Vector3.up * 5f;
 
         }

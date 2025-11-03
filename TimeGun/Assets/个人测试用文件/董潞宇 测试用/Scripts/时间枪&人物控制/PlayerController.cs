@@ -83,7 +83,7 @@ namespace TimeGun
         private float _verticalVelocity;                       // y 方向速度（用于重力与跳跃）
         private const float _cameraRootVerticalOffset = 0.3f;  // 摄像机朝向根节点的站立状态额外垂直偏移
         private Transform _shootCameraTransform; // 通常使用 Camera.main.transform
-        private int _maxShootPointRange = 1000;                 // 最大射击点距离, 用于射线检测, 超出这个距离则改为瞄准相机正前方
+        private int _maxShootPointRange = 100;                 // 最大射击点距离, 用于射线检测, 超出这个距离则改为瞄准相机正前方
 
         // 相机旋转相关（记录 cameraRoot 的世界旋转角）
         private float _cameraYaw;       // 世界坐标下的相机偏航角
@@ -507,6 +507,7 @@ namespace TimeGun
             _cameraPitch += lookDelta.y * ySign * sens;
             _cameraPitch = Mathf.Clamp(_cameraPitch, pitchClamp.x, pitchClamp.y);
 
+            
             // 直接设置“世界旋转”，Unity 会换算为 localRotation
             cameraRoot.rotation = Quaternion.Euler(_cameraPitch, _cameraYaw, 0f);
         }

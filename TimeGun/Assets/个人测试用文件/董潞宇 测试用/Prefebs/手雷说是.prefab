@@ -31,7 +31,7 @@ Transform:
   m_GameObject: {fileID: 4954844983062401583}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: -0, y: 0, z: 0}
+  m_LocalPosition: {x: -0.36867443, y: 0, z: 0}
   m_LocalScale: {x: 0.1, y: 0.1, z: 0.1}
   m_ConstrainProportionsScale: 1
   m_Children: []
@@ -114,6 +114,7 @@ MonoBehaviour:
   rewindMode: 1
   fuseSeconds: 1
   explosionRadius: 8
+  explosionMode: 0
   explosionEffectPrefab: {fileID: 5010538147874347424, guid: 6adfa711e32444b4498a74b9d0b03275, type: 3}
   drawExplosionGizmo: 1
   explosionGizmoColor: {r: 1, g: 0.6, b: 0, a: 0.15}
@@ -126,8 +127,8 @@ Rigidbody:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 4954844983062401583}
   serializedVersion: 5
-  m_Mass: 0.5
-  m_LinearDamping: 0.1
+  m_Mass: 0.25
+  m_LinearDamping: 1
   m_AngularDamping: 0.05
   m_CenterOfMass: {x: 0, y: 0, z: 0}
   m_InertiaTensor: {x: 1, y: 1, z: 1}
@@ -144,7 +145,7 @@ Rigidbody:
   m_IsKinematic: 0
   m_Interpolate: 0
   m_Constraints: 0
-  m_CollisionDetection: 0
+  m_CollisionDetection: 3
 --- !u!135 &-5664995577846984210
 SphereCollider:
   m_ObjectHideFlags: 0
@@ -192,7 +193,7 @@ TrailRenderer:
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
-  - {fileID: 10754, guid: 0000000000000000f000000000000000, type: 0}
+  - {fileID: 2100000, guid: 44cd3726f7cf022459267d37ed2c4ba4, type: 2}
   m_StaticBatchInfo:
     firstSubMesh: 0
     subMeshCount: 0
@@ -214,7 +215,7 @@ TrailRenderer:
   m_SortingLayerID: 0
   m_SortingLayer: 0
   m_SortingOrder: 0
-  m_Time: 0.1
+  m_Time: 0.3
   m_PreviewTimeScale: 1
   m_Parameters:
     serializedVersion: 3
@@ -224,27 +225,36 @@ TrailRenderer:
       m_Curve:
       - serializedVersion: 3
         time: 0
-        value: 0.022556305
+        value: 0.12782669
         inSlope: 0
         outSlope: 0
         tangentMode: 0
         weightedMode: 0
         inWeight: 0.33333334
         outWeight: 0.33333334
+      - serializedVersion: 3
+        time: 1
+        value: 0
+        inSlope: 0
+        outSlope: 0
+        tangentMode: 0
+        weightedMode: 0
+        inWeight: 0
+        outWeight: 0
       m_PreInfinity: 2
       m_PostInfinity: 2
       m_RotationOrder: 4
     colorGradient:
       serializedVersion: 2
-      key0: {r: 0, g: 0.60952187, b: 1, a: 1}
-      key1: {r: 1, g: 0.3116907, b: 0, a: 1}
-      key2: {r: 0, g: 0, b: 0, a: 0}
+      key0: {r: 0.5691823, g: 0.8310519, b: 1, a: 1}
+      key1: {r: 1, g: 0.71133304, b: 0.58176094, a: 1}
+      key2: {r: 0, g: 0, b: 0, a: 0.2509804}
       key3: {r: 0, g: 0, b: 0, a: 0}
       key4: {r: 0, g: 0, b: 0, a: 0}
       key5: {r: 0, g: 0, b: 0, a: 0}
       key6: {r: 0, g: 0, b: 0, a: 0}
       key7: {r: 0, g: 0, b: 0, a: 0}
-      ctime0: 27885
+      ctime0: 0
       ctime1: 65535
       ctime2: 0
       ctime3: 0
@@ -253,8 +263,8 @@ TrailRenderer:
       ctime6: 0
       ctime7: 0
       atime0: 0
-      atime1: 65535
-      atime2: 0
+      atime1: 64379
+      atime2: 65535
       atime3: 0
       atime4: 0
       atime5: 0
@@ -263,7 +273,7 @@ TrailRenderer:
       m_Mode: 0
       m_ColorSpace: 0
       m_NumColorKeys: 2
-      m_NumAlphaKeys: 2
+      m_NumAlphaKeys: 3
     numCornerVertices: 0
     numCapVertices: 0
     alignment: 0
