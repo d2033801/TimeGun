@@ -2,12 +2,11 @@ using UnityEngine;
 
 public class EnemyAlertState : IEnemyState
 {
-    private float seePlayerTimer;
     private const float attack_Threshold = 2.0f;
     public void Enter(Enemy enemy)
     {
         enemy.navMeshAgent.isStopped = true;
-        seePlayerTimer = 0f;
+        enemy.seePlayerTimer = 0f;
         enemy.modelAnimator?.SetBool("isAiming", true);
     }
 
@@ -17,11 +16,11 @@ public class EnemyAlertState : IEnemyState
 
         if (canSee)
         {
-            seePlayerTimer += Time.deltaTime;
-            if (seePlayerTimer >= attack_Threshold)
+            enemy.seePlayerTimer += Time.deltaTime;
+            if (enemy.seePlayerTimer >= attack_Threshold)
             {
                 // enemy.stateMachine.ChangeState(enemy.attackState, enemy);
-                seePlayerTimer = 0f;
+                enemy.seePlayerTimer = 0f;
             }
         }
         else
@@ -32,7 +31,7 @@ public class EnemyAlertState : IEnemyState
 
     public void Exit(Enemy enemy)
     {
-        seePlayerTimer = 0f;
+        enemy.seePlayerTimer = 0f;
         enemy.modelAnimator?.SetBool("isAiming", false);
     }
 }

@@ -1,6 +1,7 @@
 using System;
 using UnityEngine;
 using UnityEngine.AI;
+using UnityEngine.Android;
 
 [RequireComponent(typeof(NavMeshAgent))]
 public class Enemy : MonoBehaviour
@@ -19,9 +20,11 @@ public class Enemy : MonoBehaviour
     public Transform headTransform; // 视线起点（头部）
     public LayerMask playerMask; // 玩家图层
     public LayerMask obstacleMask; // 障碍物图层
+    public float seePlayerTimer; /*TODO : 需要回溯*/
 
     [Header("死亡触发设置")]
-    internal bool isDead = false; // 死亡状态
+    
+    internal bool isDead = false; // 死亡状态 /*TODO : 需要回溯*/
     private const float crushForceThreshold = 1f;
 
     // 【状态机与状态实例】
@@ -30,18 +33,16 @@ public class Enemy : MonoBehaviour
     internal EnemyPatrolState patrolState;
     internal EnemyAlertState alertState;
     internal EnemyDeathState deathState;
-    /*
-    internal EnemyAttackState attackState;
-    */
 
-    internal NavMeshAgent navMeshAgent; // 导航组件
+    internal float stateTimer; // 状态计时器（如Idle的等待时间）/TODO : *需要回溯*/
+    internal int currentPointIndex = -1; // 当前巡逻点索引 /TODO : *需要回溯*/
+
+    private float _currentSpeed; /*TODO : 需要回溯*/
+    private float _speedVelocity; /*TODO : 需要回溯*/
+
+
     internal Transform player; // 玩家引用
-    internal float stateTimer; // 状态计时器（如Idle的等待时间）
-    internal int currentPointIndex = -1; // 当前巡逻点索引
-
-    private float _currentSpeed;
-    private float _speedVelocity;
-
+    internal NavMeshAgent navMeshAgent; // 导航组件
     void Start()
     {
         // 初始化导航组件
@@ -64,9 +65,6 @@ public class Enemy : MonoBehaviour
         idleState = new EnemyIdleState();
         patrolState = new EnemyPatrolState();
         alertState = new EnemyAlertState();
-        /*
-        attackState = new EnemyAttackState();
-        */
 
         // 初始状态：Idle
         stateMachine.ChangeState(idleState, this);
@@ -128,7 +126,7 @@ public class Enemy : MonoBehaviour
         Debug.Log($"{gameObject.name} 碰撞到 {collision.gameObject.name}, impulse={collision.impulse.magnitude}");
 
         // 如果已经死亡则忽略
-        if (isDead) 
+        if (isDead)
             return;
 
         // 忽略地面等轻微碰撞
@@ -166,22 +164,12 @@ public class Enemy : MonoBehaviour
         foreach (var col in colliders)
             col.enabled = false;
 
-        /*
-        // 停止物理运动（如果带刚体）
-        Rigidbody rb = GetComponent<Rigidbody>();
-        if (rb != null)
-        {
-            rb.velocity = Vector3.zero;
-            rb.angularVelocity = Vector3.zero;
-            rb.isKinematic = true;
-        }
-        */
 
         // 播放死亡动画
         modelAnimator?.SetTrigger("Die");
 
         /*
-        // 切换状态机（如果你在用）
+        // 切换状态机
         if (stateMachine != null && deathState != null)
             stateMachine.ChangeState(deathState, this);
         */
