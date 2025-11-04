@@ -8,6 +8,12 @@ EditorBuildSettings:
   - enabled: 1
     path: "Assets/Scenes/\u4E3B\u573A\u666F.unity"
     guid: 99c9720ab356a0642a771bea13969a05
+  - enabled: 0
+    path: "Assets/\u4E2A\u4EBA\u6D4B\u8BD5\u7528\u6587\u4EF6/\u82CF\u751F\u6F47/MenuScene.unity"
+    guid: 34550b34608c80740845932ab7e3fa25
+  - enabled: 0
+    path: "Assets/\u4E2A\u4EBA\u6D4B\u8BD5\u7528\u6587\u4EF6/\u82CF\u751F\u6F47/GameScene.unity"
+    guid: 4f2ca24fe4f3455409a1c3a3eb096b30
   m_configObjects:
     com.unity.adaptiveperformance.loader_settings: {fileID: 11400000, guid: 22b3841e6045cb5479b92ef0d418144b, type: 2}
     com.unity.adaptiveperformance.simulator.provider_settings: {fileID: 11400000, guid: 81babe9ba181a1143b15124355ecbbe4, type: 2}
