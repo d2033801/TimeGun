@@ -16,9 +16,14 @@ namespace TimeRewind
     {
         //==================== 组件缓存 ====================
         // 通过 [SerializeField] 允许在 Inspector 手动绑定（可减少 GetComponent 开销），也支持运行时懒加载
-        [SerializeField, Tooltip("敌人身上的NavMeshAgent")] private NavMeshAgent agent;
-        [SerializeField, Tooltip("敌人身上的Animator组件")] private Animator anim;
-        [SerializeField, Tooltip("敌人的Enemy控制脚本")] private Enemy enemy;
+        [SerializeField, Tooltip("敌人身上的NavMeshAgent")]
+        private NavMeshAgent agent;
+
+        [SerializeField, Tooltip("敌人身上的Animator组件")]
+        private Animator anim;
+
+        [SerializeField, Tooltip("敌人的Enemy控制脚本")]
+        private Enemy enemy;
 
         private NavMeshAgent Agent => agent ??= GetComponent<NavMeshAgent>();
         private Animator Anim => anim ??= GetComponent<Animator>();
@@ -43,18 +48,18 @@ namespace TimeRewind
         /// </summary>
         private struct AgentRuntimeFlags
         {
-            public bool hadAgent;           // 回溯启动时是否存在 Agent（用于判断 StopRewind 时是否需要恢复）
+            public bool hadAgent; // 回溯启动时是否存在 Agent（用于判断 StopRewind 时是否需要恢复）
             public bool origUpdatePosition; // 回溯前的原始 updatePosition（恢复时用）
             public bool origUpdateRotation; // 回溯前的原始 updateRotation（恢复时用）
-            public bool origIsStopped;      // 回溯前的原始 isStopped（恢复时用）
-            public bool origAutoBraking;    // 回溯前的原始 autoBraking（恢复时用）
+            public bool origIsStopped; // 回溯前的原始 isStopped（恢复时用）
+            public bool origAutoBraking; // 回溯前的原始 autoBraking（恢复时用）
         }
 
         private AgentRuntimeFlags _agentFlags;
         private float _animOriginalSpeed = 1f; // 回溯前 Animator 的原始播放速度（恢复时用）
 
         private bool _enemyHadComponent; // 回溯启动时是否存在 Enemy 组件（用于判断 StopRewind 时是否需要恢复）
-        private bool _enemyWasEnabled;   // 回溯前 Enemy.enabled 的原始值（恢复时用）
+        private bool _enemyWasEnabled; // 回溯前 Enemy.enabled 的原始值（恢复时用）
 
         /// <summary>
         /// NavMeshAgent 的运行快照（仅涉及可回放的"配置/目标值"，真实位置由 Transform 快照恢复）
@@ -62,11 +67,11 @@ namespace TimeRewind
         /// </summary>
         private struct AgentSnapshot
         {
-            public bool IsStopped;      // 导航是否停止（影响 Agent 是否继续寻路）
-            public bool AutoBraking;    // 是否自动减速（影响到达目标点时的行为）
-            public float Speed;         // 移动速度（单位：米/秒，影响移动快慢）
-            public float AngularSpeed;  // 转向速度（单位：度/秒，影响转身快慢）
-            public float Acceleration;  // 加速度（单位：米/秒²，影响加速/减速过程）
+            public bool IsStopped; // 导航是否停止（影响 Agent 是否继续寻路）
+            public bool AutoBraking; // 是否自动减速（影响到达目标点时的行为）
+            public float Speed; // 移动速度（单位：米/秒，影响移动快慢）
+            public float AngularSpeed; // 转向速度（单位：度/秒，影响转身快慢）
+            public float Acceleration; // 加速度（单位：米/秒²，影响加速/减速过程）
             public Vector3 Destination; // 导航目标点（寻路系统的目的地坐标）
         }
 
@@ -76,16 +81,16 @@ namespace TimeRewind
         /// </summary>
         private struct EnemySnapshot
         {
-            public bool IsDead;             // 敌人是否死亡（影响状态机行为与动画）
-            public float StateTimer;        // 当前状态的计时器（用于状态持续时间，如 Idle 等待时间）
-            public int CurrentPointIndex;   // 当前巡逻点索引（影响巡逻路径，-1 表示未初始化）
-            public EnemyStateId StateId;    // 当前状态机状态的 ID（用于切换到对应状态实例）
+            public bool IsDead; // 敌人是否死亡（影响状态机行为与动画）
+            public float StateTimer; // 当前状态的计时器（用于状态持续时间，如 Idle 等待时间）
+            public int CurrentPointIndex; // 当前巡逻点索引（影响巡逻路径，-1 表示未初始化）
+            public EnemyStateId StateId; // 当前状态机状态的 ID（用于切换到对应状态实例）
 
             // 速度平滑相关（直接访问 public 属性）
-            public float CurrentSpeed;      // 当前平滑后的移动速度（用于驱动 Animator 的 Speed 参数）
-            public float SpeedVelocity;     // SmoothDamp 内部使用的速度变化率（用于平滑过渡）
+            public float CurrentSpeed; // 当前平滑后的移动速度（用于驱动 Animator 的 Speed 参数）
+            public float SpeedVelocity; // SmoothDamp 内部使用的速度变化率（用于平滑过渡）
 
-            public float SeePlayerTimer;    // 发现玩家后的持续观察时间（影响警戒状态持续时长）
+            public float SeePlayerTimer; // 发现玩家后的持续观察时间（影响警戒状态持续时长）
         }
 
         // 轻量状态枚举：用于"识别/切换"状态实例，避免直接序列化引用
@@ -150,8 +155,8 @@ namespace TimeRewind
                     StateTimer = TheEnemy.StateTimer,
                     CurrentPointIndex = TheEnemy.CurrentPointIndex,
                     StateId = GetCurrentStateId(TheEnemy),
-                    CurrentSpeed = TheEnemy.CurrentSpeed,      // 直接访问 public 属性
-                    SpeedVelocity = TheEnemy.SpeedVelocity,    // 直接访问 public 属性
+                    CurrentSpeed = TheEnemy.CurrentSpeed, // 直接访问 public 属性
+                    SpeedVelocity = TheEnemy.SpeedVelocity, // 直接访问 public 属性
                     SeePlayerTimer = TheEnemy.SeePlayerTimer
                 };
 
@@ -198,7 +203,7 @@ namespace TimeRewind
             if (Agent != null && Agent.enabled && Agent.isOnNavMesh && !Agent.updatePosition)
             {
                 Agent.nextPosition = transform.position; // 令内部寻路位置跟随 Transform
-                Agent.velocity = Vector3.zero;           // 清零速度，避免残留速度影响
+                Agent.velocity = Vector3.zero; // 清零速度，避免残留速度影响
             }
         }
 
@@ -211,16 +216,16 @@ namespace TimeRewind
             // 暂停 NavMesh 自动行为，记录原始配置
             if (Agent != null)
             {
-                    _agentFlags.hadAgent = true;
-                    _agentFlags.origIsStopped = Agent.isStopped;
-                    _agentFlags.origUpdatePosition = Agent.updatePosition;
-                    _agentFlags.origUpdateRotation = Agent.updateRotation;
-                    _agentFlags.origAutoBraking = Agent.autoBraking;
+                _agentFlags.hadAgent = true;
+                _agentFlags.origIsStopped = Agent.isStopped;
+                _agentFlags.origUpdatePosition = Agent.updatePosition;
+                _agentFlags.origUpdateRotation = Agent.updateRotation;
+                _agentFlags.origAutoBraking = Agent.autoBraking;
 
-                    // 仅在 Agent 可用且位于 NavMesh 时设置 isStopped，避免报错
-                    SafeSetStopped(Agent, true);
-                    Agent.updatePosition = false; // 我们手动回写位置
-                    Agent.updateRotation = false; // 我们手动回写旋转（随 Transform）
+                // 仅在 Agent 可用且位于 NavMesh 时设置 isStopped，避免报错
+                SafeSetStopped(Agent, true);
+                Agent.updatePosition = false; // 我们手动回写位置
+                Agent.updateRotation = false; // 我们手动回写旋转（随 Transform）
             }
 
             // 暂停 Animator（speed=0，仍可通过 Play+Update(0) 立即切换）
@@ -460,39 +465,111 @@ namespace TimeRewind
         #region Animator Recorder（集中封装，便于未来拆分）
 
         /// <summary>
-            /// Animator 的历史录制与回放封装：
-            /// - Snapshot：每层 fullPathHash + normalizedTime + 所有非 Trigger 参数
-            /// - RecordOneSnap：捕获层状态与参数
-            /// - RewindOneSnap：Play 到目标状态并 Update(0) 强制评估，使得 animator.speed=0 也能即时生效
+        /// Animator 的历史录制与回放封装（已优化内存占用）：
+        /// - 元数据分离：参数的 Hash 和 Type 仅在初始化时构建一次，所有快照共享
+        /// - Union 压缩：参数值使用 FieldOffset 重叠存储，从 12 字节/参数降至 4 字节/参数
+        /// - 总体优化：相比原方案节省约 80% 内存（120 KB → 24 KB，以 5 参数 × 1200 帧为例）
+        /// </summary>
+        private sealed class AnimatorRecorder
+        {
+            /// <summary>
+            /// 【优化】快照仅存储动态数据（层状态 + 参数值），元数据在初始化时提取
             /// </summary>
-            private sealed class AnimatorRecorder
+            public sealed class Snapshot
             {
-                public sealed class Snapshot
+                public int[] LayerStateHashes; // 每层的动画状态哈希
+                public float[] LayerNormalizedTimes; // 每层的归一化播放时间
+                public ParamValue[] ParameterValues; // 参数值数组（仅存值，不存 Hash/Type）
+            }
+
+            /// <summary>
+            /// 【优化】参数元数据结构（仅初始化时构建一次，所有快照共享）
+            /// </summary>
+            private struct ParamMetadata
+            {
+                public int Hash; // 参数哈希值（用于 Get/Set）
+                public AnimatorControllerParameterType Type; // 参数类型（Float/Int/Bool）
+            }
+
+            /// <summary>
+            /// 【Union 优化】
+            /// 魔改C#的结构体使得功能类似C++的union联合体
+            /// 参数值使用显式内存布局，三个字段共享同一内存地址。
+            /// 由于每个参数只能是 Float/Int/Bool 之一，使用 union 可节省内存。
+            /// </summary>
+            /// <remarks>
+            /// 原理是将每个存储位置的偏移值强制设为0，使得它们重叠存储。
+            /// 内存布局对比：
+            /// - 原方案（独立存储）：float(4) + int(4) + bool(4对齐) = 12 字节
+            /// - Union方案（重叠存储）：max(float, int, bool) = 4 字节
+            /// - 节省：67% 内存/参数
+            /// 
+            /// 类型安全保证：
+            /// - 通过 ParamMetadata.Type 确保读写字段一致（录制和回放使用相同类型）
+            /// - 编译器会自动处理内存对齐，无需手动计算偏移量
+            /// </remarks>
+            [System.Runtime.InteropServices.StructLayout(
+                System.Runtime.InteropServices.LayoutKind.Explicit)]
+            public struct ParamValue
+            {
+                [System.Runtime.InteropServices.FieldOffset(0)]
+                public float F; // Float 类型参数值（与 I/B 共享内存地址 0）
+
+                [System.Runtime.InteropServices.FieldOffset(0)]
+                public int I; // Int 类型参数值（与 F/B 共享内存地址 0）
+
+                [System.Runtime.InteropServices.FieldOffset(0)]
+                public bool B; // Bool 类型参数值（与 F/I 共享内存地址 0）
+            }
+
+            private readonly Animator _anim;
+            private readonly RingBuffer<Snapshot> _history;
+
+            // 【核心优化】参数元数据仅构建一次，所有快照共享（避免每帧重复分配）
+            private readonly ParamMetadata[] _paramMetadata;
+
+            public int Count => _history?.Count ?? 0;
+
+            /// <summary>
+            /// 构造函数：初始化 Recorder 并提取参数元数据
+            /// </summary>
+            public AnimatorRecorder(Animator anim, RingBuffer<Snapshot> buffer)
+            {
+                _anim = anim;
+                _history = buffer;
+
+                // 【一次性构建】提取所有非 Trigger 参数的元数据（Hash + Type）
+                _paramMetadata = BuildParamMetadata(anim);
+            }
+
+            /// <summary>
+            /// 【一次性构建】提取所有非 Trigger 参数的元数据（仅在构造时调用）
+            /// </summary>
+            /// <remarks>
+            /// 元数据包含动画机参数的名字hash和对应的数据类型
+            /// 忽略 Trigger 类型的原因：
+            /// - Trigger 在设置后会自动重置，录制和回放会导致重复触发
+            /// - 仅录制持久性参数（Float/Int/Bool）可确保回放一致性
+            /// </remarks>
+            private static ParamMetadata[] BuildParamMetadata(Animator anim)
+            {
+                if (anim == null) return Array.Empty<ParamMetadata>();
+
+                var parameters = anim.parameters;
+                var list = new List<ParamMetadata>(parameters.Length);
+
+                foreach (var p in parameters)
                 {
-                    public int[] LayerStateHashes;
-                    public float[] LayerNormalizedTimes;
-                    public Param[] Parameters;
+                    if (p.type == AnimatorControllerParameterType.Trigger) continue;
+                    list.Add(new ParamMetadata
+                    {
+                        Hash = p.nameHash,
+                        Type = p.type
+                    });
                 }
 
-                public struct Param
-                {
-                    public int Hash;
-                    public AnimatorControllerParameterType Type;
-                    public float F;
-                    public int I;
-                    public bool B;
-                }
-
-                private readonly Animator _anim;
-                private readonly RingBuffer<Snapshot> _history;
-
-                public int Count => _history?.Count ?? 0;
-
-                public AnimatorRecorder(Animator anim, RingBuffer<Snapshot> buffer)
-                {
-                    _anim = anim;
-                    _history = buffer;
-                }
+                return list.ToArray();
+            }
 
             /// <summary>
             /// 录制当前帧的 Animator 状态快照。
@@ -503,29 +580,33 @@ namespace TimeRewind
             /// 1. 每层的当前状态哈希（fullPathHash）
             /// 2. 每层的归一化播放时间（normalizedTime）
             /// 3. 所有参数的值（Float/Int/Bool，忽略 Trigger）
+            /// 
+            /// 优化点：
+            /// - 参数元数据仅在构造时提取一次（避免每帧遍历 anim.parameters）
+            /// - 参数值使用 Union 压缩存储（节省 67% 内存）
             /// </remarks>
             public void RecordOneSnap()
+            {
+                if (_anim == null) return;
+
+                int layerCount = _anim.layerCount;
+                var snap = new Snapshot
                 {
-                    if (_anim == null) return;
+                    LayerStateHashes = new int[layerCount],
+                    LayerNormalizedTimes = new float[layerCount],
+                    ParameterValues = CaptureParameterValues(_anim, _paramMetadata) // 【优化】复用元数据
+                };
 
-                    int layerCount = _anim.layerCount;
-                    var snap = new Snapshot
-                    {
-                        LayerStateHashes = new int[layerCount],
-                        LayerNormalizedTimes = new float[layerCount],
-                        Parameters = CaptureParameters(_anim)
-                    };
-
-                    // 捕获每层的当前状态与归一化时间
-                    for (int layer = 0; layer < layerCount; layer++)
-                    {
-                        var st = _anim.GetCurrentAnimatorStateInfo(layer);
-                        snap.LayerStateHashes[layer] = st.fullPathHash;
-                        snap.LayerNormalizedTimes[layer] = st.normalizedTime;
-                    }
-
-                    _history.Push(snap);
+                // 捕获每层的当前状态与归一化时间
+                for (int layer = 0; layer < layerCount; layer++)
+                {
+                    var st = _anim.GetCurrentAnimatorStateInfo(layer);
+                    snap.LayerStateHashes[layer] = st.fullPathHash;
+                    snap.LayerNormalizedTimes[layer] = st.normalizedTime;
                 }
+
+                _history.Push(snap);
+            }
 
             /// <summary>
             /// 回放一帧 Animator 快照。
@@ -539,92 +620,98 @@ namespace TimeRewind
             /// 4. 调用 Update(0) 强制立即评估，确保即使 Animator.speed=0 也能即时生效
             /// </remarks>
             public void RewindOneSnap()
+            {
+                if (_anim == null || _history.Count == 0) return;
+
+                var snap = _history.PopBack();
+
+                // 回放每层动画状态到指定 normalizedTime
+                var layerLen = Mathf.Min(_anim.layerCount, snap.LayerStateHashes.Length);
+                for (int layer = 0; layer < layerLen; layer++)
                 {
-                    if (_anim == null || _history.Count == 0) return;
-
-                    var snap = _history.PopBack();
-
-                    // 回放每层动画状态到指定 normalizedTime
-                    var layerLen = Mathf.Min(_anim.layerCount, snap.LayerStateHashes.Length);
-                    for (int layer = 0; layer < layerLen; layer++)
-                    {
-                        _anim.Play(snap.LayerStateHashes[layer], layer, snap.LayerNormalizedTimes[layer]);
-                    }
-
-                    // 恢复 Animator 参数（Float/Int/Bool）
-                    ApplyParameters(_anim, snap.Parameters);
-
-                    // 立即评估一帧，确保切换立刻生效（即便 animator.speed=0）
-                    _anim.Update(0f);
+                    _anim.Play(snap.LayerStateHashes[layer], layer, snap.LayerNormalizedTimes[layer]);
                 }
 
+                // 【优化】使用元数据 + 值数组恢复参数
+                ApplyParameters(_anim, _paramMetadata, snap.ParameterValues);
+
+                // 立即评估一帧，确保切换立刻生效（即便 animator.speed=0）
+                _anim.Update(0f);
+            }
+
             /// <summary>
-            /// 捕获 Animator 所有参数的当前值（不包括 Trigger 类型）。
+            /// 【优化】基于预构建的元数据捕获参数值（避免每帧重新遍历 anim.parameters）
             /// </summary>
-            /// <param name="anim">要捕获参数的 Animator 组件。</param>
-            /// <returns>参数快照数组，包含所有非 Trigger 参数的哈希、类型和值。</returns>
             /// <remarks>
-            /// 忽略 Trigger 类型的原因：
-            /// Trigger 在设置后会自动重置，录制和回放会导致重复触发，破坏动画逻辑。
-            /// 因此仅录制持久性参数（Float/Int/Bool）。
+            /// 优化原理：
+            /// - 元数据（Hash/Type）在构造时提取一次，录制时仅读取值
+            /// - 避免每帧分配 List 和遍历 Trigger 类型参数
+            /// - 使用 Union 存储，三个字段共享内存（F/I/B 仅一个有效）
             /// </remarks>
-            private static Param[] CaptureParameters(Animator anim)
+            private static ParamValue[] CaptureParameterValues(Animator anim, ParamMetadata[] metadata)
+            {
+                if (metadata == null || metadata.Length == 0)
+                    return Array.Empty<ParamValue>();
+
+                var values = new ParamValue[metadata.Length];
+
+                for (int i = 0; i < metadata.Length; i++)
                 {
-                    var parameters = anim.parameters;
-                    var list = new List<Param>(parameters.Length);
-                    foreach (var p in parameters)
+                    var meta = metadata[i];
+
+                    // 【Union 特性】根据类型写入对应字段，三者共享同一内存地址
+                    switch (meta.Type)
                     {
-                        if (p.type == AnimatorControllerParameterType.Trigger) continue; // 忽略触发器，避免错误重复触发
-                        var pr = new Param { Hash = p.nameHash, Type = p.type };
-                        switch (p.type)
-                        {
-                            case AnimatorControllerParameterType.Float:
-                                pr.F = anim.GetFloat(p.nameHash);
-                                break;
-                            case AnimatorControllerParameterType.Int:
-                                pr.I = anim.GetInteger(p.nameHash);
-                                break;
-                            case AnimatorControllerParameterType.Bool:
-                                pr.B = anim.GetBool(p.nameHash);
-                                break;
-                        }
-
-                        list.Add(pr);
+                        case AnimatorControllerParameterType.Float:
+                            values[i].F = anim.GetFloat(meta.Hash);
+                            break;
+                        case AnimatorControllerParameterType.Int:
+                            values[i].I = anim.GetInteger(meta.Hash);
+                            break;
+                        case AnimatorControllerParameterType.Bool:
+                            values[i].B = anim.GetBool(meta.Hash);
+                            break;
                     }
-
-                    return list.ToArray();
                 }
 
+                return values;
+            }
+
             /// <summary>
-            /// 将参数快照应用到 Animator，恢复所有参数的值。
+            /// 【优化】基于元数据 + 值数组恢复参数（确保类型安全）
             /// </summary>
-            /// <param name="anim">目标 Animator 组件。</param>
-            /// <param name="ps">要应用的参数快照数组。</param>
             /// <remarks>
-            /// 根据每个参数的类型（Float/Int/Bool）调用对应的 Set 方法。
-            /// 使用哈希值而非字符串名称，提高性能。
+            /// 类型安全保证：
+            /// - 录制时根据 meta.Type 写入对应字段（F/I/B）
+            /// - 回放时根据相同的 meta.Type 读取对应字段
+            /// - Union 虽然允许访问任意字段，但通过元数据控制确保读写一致性
             /// </remarks>
-            private static void ApplyParameters(Animator anim, Param[] ps)
+            private static void ApplyParameters(Animator anim, ParamMetadata[] metadata, ParamValue[] values)
+            {
+                if (metadata == null || values == null) return;
+
+                int count = Mathf.Min(metadata.Length, values.Length);
+                for (int i = 0; i < count; i++)
                 {
-                    if (ps == null) return;
-                    for (int i = 0; i < ps.Length; i++)
+                    var meta = metadata[i];
+                    var val = values[i];
+
+                    // 【Union 特性】根据类型读取对应字段（必须与录制时使用的字段一致）
+                    switch (meta.Type)
                     {
-                        var p = ps[i];
-                        switch (p.Type)
-                        {
-                            case AnimatorControllerParameterType.Float:
-                                anim.SetFloat(p.Hash, p.F);
-                                break;
-                            case AnimatorControllerParameterType.Int:
-                                anim.SetInteger(p.Hash, p.I);
-                                break;
-                            case AnimatorControllerParameterType.Bool:
-                                anim.SetBool(p.Hash, p.B);
-                                break;
-                        }
+                        case AnimatorControllerParameterType.Float:
+                            anim.SetFloat(meta.Hash, val.F);
+                            break;
+                        case AnimatorControllerParameterType.Int:
+                            anim.SetInteger(meta.Hash, val.I);
+                            break;
+                        case AnimatorControllerParameterType.Bool:
+                            anim.SetBool(meta.Hash, val.B);
+                            break;
                     }
                 }
             }
+        }
 
         #endregion
     }

@@ -12,6 +12,31 @@ namespace TimeGun
     public class WeaponManager : MonoBehaviour
     {
         /// <summary>
+        /// 武器管理模式
+        /// </summary>
+        public enum WeaponMode
+        {
+            /// <summary>
+            /// 固定武器模式：使用外部直接提供的武器实例，不可切换
+            /// </summary>
+            FixedWeapon,
+
+            /// <summary>
+            /// 动态装备模式：可通过预制体动态装备和切换武器
+            /// </summary>
+            DynamicEquip
+        }
+
+        [Header("武器管理模式")]
+        [Tooltip("选择武器管理模式：\n- FixedWeapon: 使用固定的武器实例\n- DynamicEquip: 可动态装备预制体武器")]
+        [SerializeField] private WeaponMode weaponMode = WeaponMode.DynamicEquip;
+
+        [Header("固定武器模式设置")]
+        [Tooltip("固定武器模式下使用的武器实例（需在场景中手动放置）")]
+        [SerializeField] private AbstractWeaponBase fixedWeapon;
+
+        [Header("动态装备模式设置")]
+        /// <summary>
         /// 手部挂点（作为武器实例的父节点）。
         /// </summary>
         [Tooltip("手的位置"), SerializeField] private Transform handTransform;
@@ -19,7 +44,7 @@ namespace TimeGun
         /// <summary>
         /// 默认装备的时间枪预制体。
         /// </summary>
-        [Tooltip("时间枪预制件"), SerializeField] public GameObject gunPrefab;
+        [Tooltip("时间枪预制件"), SerializeField] private GameObject gunPrefab;
 
         /// <summary>
         /// 当前已装备的武器实例（抽象基类）。
@@ -27,11 +52,35 @@ namespace TimeGun
         private AbstractWeaponBase currentAbstractWeapon; // 获取武器后会自动初始化
 
         /// <summary>
-        /// 启动时自动装备默认武器 <see cref="gunPrefab"/>。
+        /// 启动时根据模式初始化武器。
         /// </summary>
         private void Start()
         {
-            EquipWeapon(gunPrefab);
+            switch (weaponMode)
+            {
+                case WeaponMode.FixedWeapon:
+                    InitializeFixedWeapon();
+                    break;
+
+                case WeaponMode.DynamicEquip:
+                    EquipWeapon(gunPrefab);
+                    break;
+            }
+        }
+
+        /// <summary>
+        /// 初始化固定武器模式
+        /// </summary>
+        private void InitializeFixedWeapon()
+        {
+            if (fixedWeapon == null)
+            {
+                Debug.LogError($"[WeaponManager] 固定武器模式下未指定武器实例！");
+                return;
+            }
+
+            currentAbstractWeapon = fixedWeapon;
+            currentAbstractWeapon.Initialize(this);
         }
 
         /// <summary>
@@ -42,7 +91,13 @@ namespace TimeGun
         /// <param name="weaponPrefab">要装备的武器预制体（需包含 <see cref="AbstractWeaponBase"/> 组件）。</param>
         private void EquipWeapon(GameObject weaponPrefab)
         {
-            if (currentAbstractWeapon != null)
+            if (weaponMode != WeaponMode.DynamicEquip)
+            {
+                Debug.LogWarning($"[WeaponManager] 当前为固定武器模式，无法动态装备武器！");
+                return;
+            }
+
+            if (currentAbstractWeapon != null && weaponMode == WeaponMode.DynamicEquip)
                 Destroy(currentAbstractWeapon.gameObject);
 
             var weaponObj = Instantiate(weaponPrefab, handTransform);
