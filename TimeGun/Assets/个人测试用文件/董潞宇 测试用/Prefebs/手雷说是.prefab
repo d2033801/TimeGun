@@ -110,11 +110,16 @@ MonoBehaviour:
   hitLayers:
     serializedVersion: 2
     m_Bits: 4294967295
+  impactSound: {fileID: 8300000, guid: b9ab6a96692956b49a916bac4af58a0c, type: 3}
+  soundVolume: 1
   rewindSecondsOnHit: 1
+  rewindSpeedOnHit: 2
   rewindMode: 1
   fuseSeconds: 1
   explosionRadius: 8
   explosionMode: 0
+  effectMode: 1
+  pauseDuration: 3
   explosionEffectPrefab: {fileID: 5010538147874347424, guid: 6adfa711e32444b4498a74b9d0b03275, type: 3}
   drawExplosionGizmo: 1
   explosionGizmoColor: {r: 1, g: 0.6, b: 0, a: 0.15}

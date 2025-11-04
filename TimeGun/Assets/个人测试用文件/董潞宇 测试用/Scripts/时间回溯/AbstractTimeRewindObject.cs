@@ -19,7 +19,18 @@ namespace TimeRewind
         [Min(0), SerializeField, Tooltip("录制时长, 0为默认值20秒")]private int recordSecondsConfig = 0;
         [Min(0), SerializeField, Tooltip("每秒录制帧率(0为默认值)")] private int recordFPSConfig = 0;
         [Range(0,10), SerializeField, Tooltip("回溯速度倍率")] private float rewindSpeedConfig = 2;
+
+        [Header("特效 Effects (可选)")]
+        [Tooltip("回溯时播放的特效预制件"), SerializeField] 
+        private GameObject rewindEffectPrefab;
+        
+        [Tooltip("暂停时播放的特效预制件"), SerializeField] 
+        private GameObject pauseEffectPrefab;
+
+        [Tooltip("特效生成点（留空则使用物体自身位置）"), SerializeField]
+        private Transform effectSpawnPoint;
         #endregion
+        
         #region 内部数据与结构体
         // 最大录制时长, 若为0则使用默认20秒
         protected int recordSeconds => recordSecondsConfig == 0 ? 20 : recordSecondsConfig;
@@ -52,6 +63,11 @@ namespace TimeRewind
         private bool isRecording = true;
 
         /// <summary>
+        /// 是否处于暂停状态（独立于回溯系统，用于冻结物体行为)
+        /// </summary>
+        private bool isPaused = false;
+
+        /// <summary>
         /// 录制进度计时器（秒）。在录制模式下按 <see cref="Time.fixedDeltaTime"/> 累加，
         /// 用于当累计时间达到 <see cref="recordInterval"/> 时触发一次采样。
         /// </summary>
@@ -62,6 +78,21 @@ namespace TimeRewind
         /// 子类或许也可以改写这个？
         /// </summary>
         protected int frameCount => transformHistory?.Count ?? 0;
+
+        /// <summary>
+        /// 当前正在播放的回溯特效实例
+        /// </summary>
+        private GameObject _activeRewindEffect;
+
+        /// <summary>
+        /// 当前正在播放的暂停特效实例
+        /// </summary>
+        private GameObject _activePauseEffect;
+
+        /// <summary>
+        /// 特效生成点（若用户未配置则使用物体自身）
+        /// </summary>
+        private Transform EffectSpawnPoint => effectSpawnPoint != null ? effectSpawnPoint : transform;
 
         /// <summary>
         /// 用于保存 Transform 的快照数据（位置、旋转与缩放）。
@@ -117,6 +148,8 @@ namespace TimeRewind
         #region 主记录/回溯方法
         protected virtual void FixedUpdate()
         {
+            // ✅ 暂停时既不录制也不回溯
+            if (isPaused) return;
             
             if (isRewinding)
             {
@@ -216,9 +249,102 @@ namespace TimeRewind
 
 
         /// <summary>
+        /// 子类扩展, 在暂停开始时触发
+        /// </summary>
+        /// <remarks>
+        /// 暂停时应冻结所有影响物体行为的组件(如Rigidbody、NavMeshAgent、Animator等)。
+        /// 示例：rb.isKinematic = true; agent.isStopped = true; animator.speed = 0;
+        /// </remarks>
+        protected virtual void OnStartPause()
+        {
+        }
+
+        /// <summary>
+        /// 子类扩展, 在暂停结束时触发
+        /// </summary>
+        /// <remarks>
+        /// 应恢复OnStartPause中冻结的所有组件状态。
+        /// 示例：rb.isKinematic = originalValue; agent.isStopped = false; animator.speed = 1;
+        /// </remarks>
+        protected virtual void OnStopPause()
+        {
+        }
+
+
+        /// <summary>
         /// 子类在每次应用 snapshot 后可重写处理额外状态
         /// </summary>
         protected virtual void OnAppliedSnapshotDuringRewind() { }
+
+        #endregion
+
+        #region 特效管理
+
+        /// <summary>
+        /// 播放回溯特效（在指定生成点创建特效实例）
+        /// </summary>
+        private void PlayRewindEffect()
+        {
+            if (rewindEffectPrefab == null) return;
+
+            // 清理已存在的回溯特效
+            StopRewindEffect();
+
+            // 在特效生成点创建新的回溯特效
+            _activeRewindEffect = Instantiate(
+                rewindEffectPrefab, 
+                EffectSpawnPoint.position, 
+                EffectSpawnPoint.rotation
+            );
+            
+            // 设置父物体为生成点，跟随生成点移动和旋转
+            _activeRewindEffect.transform.SetParent(EffectSpawnPoint);
+        }
+
+        /// <summary>
+        /// 停止回溯特效
+        /// </summary>
+        private void StopRewindEffect()
+        {
+            if (_activeRewindEffect != null)
+            {
+                Destroy(_activeRewindEffect);
+                _activeRewindEffect = null;
+            }
+        }
+
+        /// <summary>
+        /// 播放暂停特效（在指定生成点创建特效实例）
+        /// </summary>
+        private void PlayPauseEffect()
+        {
+            if (pauseEffectPrefab == null) return;
+
+            // 清理已存在的暂停特效
+            StopPauseEffect();
+
+            // 在特效生成点创建新的暂停特效
+            _activePauseEffect = Instantiate(
+                pauseEffectPrefab, 
+                EffectSpawnPoint.position, 
+                EffectSpawnPoint.rotation
+            );
+            
+            // 设置父物体为生成点，跟随生成点移动和旋转
+            _activePauseEffect.transform.SetParent(EffectSpawnPoint);
+        }
+
+        /// <summary>
+        /// 停止暂停特效
+        /// </summary>
+        private void StopPauseEffect()
+        {
+            if (_activePauseEffect != null)
+            {
+                Destroy(_activePauseEffect);
+                _activePauseEffect = null;
+            }
+        }
 
         #endregion
 
@@ -263,8 +389,11 @@ namespace TimeRewind
             _runtimeRewindSpeed = speed;
             isRewinding = true;
             rewindTimer = 0f;
+            
+            // ✅ 播放回溯特效
+            PlayRewindEffect();
+            
             OnStartRewind();
-
         }
 
         /// <summary>
@@ -276,6 +405,10 @@ namespace TimeRewind
             if (!isRewinding) return;
             _runtimeRewindSpeed = null;
             isRewinding = false;
+            
+            // ✅ 停止回溯特效
+            StopRewindEffect();
+            
             OnStopRewind();
         }
 
@@ -302,6 +435,10 @@ namespace TimeRewind
             {
                 // 如果之前没在回溯，启动回溯状态（冻结 NavMeshAgent 等）
                 isRewinding = true;
+                
+                // ✅ 播放回溯特效
+                PlayRewindEffect();
+                
                 OnStartRewind();
             }
 
@@ -318,14 +455,63 @@ namespace TimeRewind
             {
                 // 如果是我们启动的回溯，恢复状态（解冻 NavMeshAgent 等）
                 isRewinding = false;
+                
+                // ✅ 停止回溯特效
+                StopRewindEffect();
+                
                 OnStopRewind(); // ✅ 关键：调用 StopRewind 恢复组件状态
             }
         }
 
+        /// <summary>
+        /// 启动暂停（独立于回溯系统）
+        /// </summary>
+        /// <remarks>
+        /// 暂停时会冻结录制和回溯,但不会消耗历史帧。
+        /// 子类可通过重写 OnStartPause 实现额外的冻结逻辑(如冻结NavMeshAgent/Animator/Rigidbody)。
+        /// </remarks>
+        public virtual void StartPause()
+        {
+            if (isPaused) return;
+            isPaused = true;
+            
+            // ✅ 播放暂停特效
+            PlayPauseEffect();
+            
+            OnStartPause();
+        }
+
+        /// <summary>
+        /// 停止暂停,恢复正常状态
+        /// </summary>
+        public virtual void StopPause()
+        {
+            if (!isPaused) return;
+            isPaused = false;
+            
+            // ✅ 停止暂停特效
+            StopPauseEffect();
+            
+            OnStopPause();
+        }
+
+        /// <summary>
+        /// 获取当前是否处于暂停状态
+        /// </summary>
+        public bool IsPaused => isPaused;
+
         #endregion
 
+        #region 清理
 
+        private void OnDestroy()
+        {
+            // 清理特效实例
+            StopRewindEffect();
+            StopPauseEffect();
+        }
 
+        #endregion
     }
 
 }

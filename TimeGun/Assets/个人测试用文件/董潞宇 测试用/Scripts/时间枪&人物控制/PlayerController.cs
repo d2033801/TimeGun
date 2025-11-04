@@ -30,6 +30,8 @@ namespace TimeGun
         public float sprintSpeed = 7.5f;  // 冲刺速度（m/s）
         public float rotationSpeed = 12f; // 旋转插值速度（越大越快）
         public float gravity = -20f;      // 重力加速度（负数，m/s^2）
+        [Tooltip("是否允许跳跃")]
+        public bool enableJump = true;    // 是否允许跳跃
         public float jumpHeight = 1.2f;   // 跳跃高度（m）
 
         /// <summary>蹲下相关</summary>
@@ -198,7 +200,7 @@ namespace TimeGun
             float dt = Time.deltaTime;
             // 相机根节点旋转（由本脚本外部驱动）
             CameraRootRot(lookDelta, dt);
-            weaponManager.UpdateWeaponPitch( _cameraPitch);
+            weaponManager.UpdateWeaponPitch( _cameraPitch);         // 更新枪械俯仰角
         }
 
         #endregion
@@ -301,11 +303,11 @@ namespace TimeGun
             // 重力与跳跃逻辑
             if (_characterController.isGrounded)
             {
-                // 在地面时设置一个小的负速度来“压住”角色，避免短时间内反复触发跳跃和浮空
+                // 在地面时设置一个小的负速度来"压住"角色，避免短时间内反复触发跳跃和浮空
                 _verticalVelocity = -2f;
 
-                // 跳跃：仅在未蹲下且在本帧按下跳跃时触发
-                if (_jump != null && _jump.WasPressedThisFrame() && !IsCrouching)
+                // 跳跃：仅在启用跳跃、未蹲下且在本帧按下跳跃时触发
+                if (enableJump && _jump != null && _jump.WasPressedThisFrame() && !IsCrouching)
                 {
                     // v = sqrt(-2 * g * h)
                     _verticalVelocity = Mathf.Sqrt(-2f * gravity * jumpHeight);

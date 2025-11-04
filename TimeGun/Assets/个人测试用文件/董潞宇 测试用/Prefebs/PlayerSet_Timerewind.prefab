@@ -1393,6 +1393,22 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 579975441641129358}
     m_Modifications:
+    - target: {fileID: 1393793813237832996, guid: 6bd9606718fc24441899fb6056c831e9, type: 3}
+      propertyPath: bulletFireSound
+      value: 
+      objectReference: {fileID: 8300000, guid: 9e0a38f41624cfc4eafa2aecadda14ec, type: 3}
+    - target: {fileID: 1393793813237832996, guid: 6bd9606718fc24441899fb6056c831e9, type: 3}
+      propertyPath: grenadeFireSound
+      value: 
+      objectReference: {fileID: 8300000, guid: 124f4e128a09c994c9e5d9434b7146ec, type: 3}
+    - target: {fileID: 1393793813237832996, guid: 6bd9606718fc24441899fb6056c831e9, type: 3}
+      propertyPath: muzzleFlashPrefab
+      value: 
+      objectReference: {fileID: 6345317055668330264, guid: 68872d4b07b0620429ca64a6b2e1f0fd, type: 3}
+    - target: {fileID: 1393793813237832996, guid: 6bd9606718fc24441899fb6056c831e9, type: 3}
+      propertyPath: grenadeLaunchEffectPrefab
+      value: 
+      objectReference: {fileID: 5232875226435781703, guid: 60599edf929ffd74fb9636d427f0e1f5, type: 3}
     - target: {fileID: 4566824613356072484, guid: 6bd9606718fc24441899fb6056c831e9, type: 3}
       propertyPath: m_Name
       value: "\u65F6\u95F4\u67AA"

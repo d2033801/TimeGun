@@ -669,6 +669,7 @@ Transform:
   m_Children:
   - {fileID: 449792596}
   - {fileID: 3699832606177445783}
+  - {fileID: 1984475675}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!114 &1371308621
@@ -759,6 +760,9 @@ MonoBehaviour:
   recordSecondsConfig: 0
   recordFPSConfig: 0
   rewindSpeedConfig: 2
+  rewindEffectPrefab: {fileID: 863509563378627453, guid: ec10b22567f639a4a9fbc684a436d8fe, type: 3}
+  pauseEffectPrefab: {fileID: 863509563378627453, guid: aa6c3264048da5a45bd62b0d48df1f4f, type: 3}
+  effectSpawnPoint: {fileID: 1984475675}
   agent: {fileID: 1371308622}
   anim: {fileID: 2467568054268473333}
   enemy: {fileID: 1371308621}
@@ -889,6 +893,37 @@ MonoBehaviour:
   m_ShadowLayerMask: 1
   m_RenderingLayers: 1
   m_ShadowRenderingLayers: 1
+--- !u!1 &1984475674
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1984475675}
+  m_Layer: 0
+  m_Name: "\u7279\u6548\u751F\u6210\u70B9"
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &1984475675
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1984475674}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: -2.032, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 1371308620}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &1995182333
 GameObject:
   m_ObjectHideFlags: 0
@@ -1073,6 +1108,10 @@ PrefabInstance:
     - target: {fileID: 2618350262988787068, guid: c6f74630181ee0c4983d9e872b52c5a8, type: 3}
       propertyPath: m_Name
       value: PlayerSet_Timerewind
+      objectReference: {fileID: 0}
+    - target: {fileID: 6709886959715999369, guid: c6f74630181ee0c4983d9e872b52c5a8, type: 3}
+      propertyPath: enableJump
+      value: 0
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []

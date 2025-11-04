@@ -1,4 +1,5 @@
 ﻿using System.Collections;
+using TimeRewind;
 using UnityEngine;
 
 namespace TimeGun
@@ -6,79 +7,106 @@ namespace TimeGun
     public class RewindRifleGrenade : AmmoRewindAbstract
     {
         [Header("榴弹设定 Grenade Settings")]
-        [SerializeField, Tooltip("引信时间")] public float fuseSeconds = 2.0f;        // 引信时间
+        [SerializeField, Tooltip("引信时间")] public float fuseSeconds = 2.0f;
         [SerializeField, Tooltip("爆炸半径")] public float explosionRadius = 4f;
         [SerializeField, Tooltip("爆炸类型")] private GrenadeExplosionMode explosionMode = GrenadeExplosionMode.OnImpact;
+        [SerializeField, Tooltip("效果模式")] private GrenadeEffectMode effectMode = GrenadeEffectMode.Rewind;
+        [SerializeField, Tooltip("暂停持续时间(仅在Pause模式下生效)")] private float pauseDuration = 3f;
+        
         [Header("特效 Effect References")]
         [SerializeField, Tooltip("爆炸特效")] private GameObject explosionEffectPrefab;
 
         enum GrenadeExplosionMode
         {
-            /// <summary>
-            /// 碰撞时立即爆炸
-            /// </summary>
             OnImpact,
-            /// <summary>
-            /// 碰撞后延时引爆
-            /// </summary>
             Timed
         }
-        private bool _isExploded = false;               // 是否已爆炸
-        private bool _hasBeenTriggered = false;         // 是否已被碰撞触发过
 
-        /// <summary>
-        /// 引信倒计时协程
-        /// </summary>
-        /// <param name="seconds">触发引信多久后爆炸</param>
-        /// <returns></returns>
+        enum GrenadeEffectMode
+        {
+            Rewind,
+            Pause
+        }
+
+        private bool _isExploded = false;
+        private bool _hasBeenTriggered = false;
+
         private IEnumerator FuseRoutine(float seconds)
         {
-            // 若不希望受 Time.timeScale 影响，改用 WaitForSecondsRealtime(fuseSeconds)
-            yield return new WaitForSeconds(seconds);       // 等待引信时间后再次调用函数
+            yield return new WaitForSeconds(seconds);
             Explode();
         }
 
-        /// <summary>
-        /// 爆炸处理
-        /// </summary>
         private void Explode()
         {
-            if (_isExploded)
-            {
-                return;
-            }
+            if (_isExploded) return;
             _isExploded = true;
 
-
             Vector3 center = transform.position;
+
+            // ✅ 播放爆炸音效（使用基类提供的方法）
+            PlaySound();
+
+            // 播放爆炸特效
             if (explosionEffectPrefab != null)
             {
-                // 在命中点创建特效（使用第一个碰撞点）
                 GameObject fx = Instantiate(explosionEffectPrefab, center, Quaternion.identity);
                 fx.transform.localScale = Vector3.one * explosionRadius;
-                // 设置特效在播放完后自动销毁
                 var main = fx.GetComponent<ParticleSystem>().main;
                 main.stopAction = ParticleSystemStopAction.Destroy;
             }
+
+            // 应用爆炸效果
             Collider[] hits = Physics.OverlapSphere(center, explosionRadius);
-            foreach (var c in hits)
+            
+            if (effectMode == GrenadeEffectMode.Pause)
             {
-                TryTriggerRewind(c, rewindSecondsOnHit);
+                foreach (var c in hits)
+                {
+                    TryTriggerPause(c, pauseDuration);
+                }
+            }
+            else
+            {
+                foreach (var c in hits)
+                {
+                    TryTriggerRewind(c, rewindSecondsOnHit);
+                }
             }
 
             Destroy(gameObject);
+        }
 
+        private void TryTriggerPause(Collider targetCollider, float duration)
+        {
+            if (targetCollider == null || duration <= 0f) return;
+
+            var rewindObj = targetCollider.GetComponentInParent<AbstractTimeRewindObject>();
+            if (rewindObj == null) return;
+
+            rewindObj.StartPause();
+            rewindObj.StartCoroutine(StopPauseAfterDelay(rewindObj, duration));
+        }
+
+        private IEnumerator StopPauseAfterDelay(AbstractTimeRewindObject rewindObj, float delay)
+        {
+            yield return new WaitForSeconds(delay);
+            
+            if (rewindObj != null && rewindObj.IsPaused)
+            {
+                rewindObj.StopPause();
+            }
         }
 
         protected override void HandleHit(Collision hitCollision)
         {
             if (_hasBeenTriggered) return;
             _hasBeenTriggered = true;
+            
             switch (explosionMode)
             {
-                
                 case GrenadeExplosionMode.OnImpact:
-                    StartCoroutine(FuseRoutine(0.1f));      // 碰撞后短暂延时以确保物理稳定
+                    StartCoroutine(FuseRoutine(0.02f));
                     break;
                 case GrenadeExplosionMode.Timed:
                     StartCoroutine(FuseRoutine(fuseSeconds));
@@ -91,7 +119,6 @@ namespace TimeGun
             Explode();
         }
 
-        // ==== Editor Gizmos ====
         [Header("调试")]
         [SerializeField, Tooltip("在编辑器中绘制爆炸范围（选中该物体时显示）")]
         private bool drawExplosionGizmo = true;
@@ -106,7 +133,6 @@ namespace TimeGun
         {
             if (!drawExplosionGizmo) return;
 
-            // 使用单位缩放，避免物体缩放影响半径显示
             var prev = Gizmos.matrix;
             Gizmos.matrix = Matrix4x4.TRS(transform.position, Quaternion.identity, Vector3.one);
 

@@ -41,25 +41,25 @@ namespace TimeRewind
         private RingBuffer<EnemySnapshot> _enemyHistory;
         private EnemySnapshot _lastAppliedEnemySnap;
 
-        //==================== 回溯期间的运行态标记 ====================
+        //==================== 回溯/暂停期间的运行态标记 ====================
         /// <summary>
-        /// 回溯期间用于保存 NavMeshAgent 原始配置的标记结构体
-        /// 用途：在 OnStartRewind 时保存原始状态，在 StopRewind 时恢复，确保回溯不影响正常运行
+        /// 回溯/暂停期间用于保存 NavMeshAgent 原始配置的标记结构体
+        /// 用途：在 OnStartRewind/OnStartPause 时保存原始状态，在 StopRewind/StopPause 时恢复
         /// </summary>
         private struct AgentRuntimeFlags
         {
-            public bool hadAgent; // 回溯启动时是否存在 Agent（用于判断 StopRewind 时是否需要恢复）
-            public bool origUpdatePosition; // 回溯前的原始 updatePosition（恢复时用）
-            public bool origUpdateRotation; // 回溯前的原始 updateRotation（恢复时用）
-            public bool origIsStopped; // 回溯前的原始 isStopped（恢复时用）
-            public bool origAutoBraking; // 回溯前的原始 autoBraking（恢复时用）
+            public bool hadAgent; // 启动时是否存在 Agent（用于判断恢复时是否需要处理）
+            public bool origUpdatePosition; // 原始 updatePosition
+            public bool origUpdateRotation; // 原始 updateRotation
+            public bool origIsStopped; // 原始 isStopped
+            public bool origAutoBraking; // 原始 autoBraking
         }
 
         private AgentRuntimeFlags _agentFlags;
-        private float _animOriginalSpeed = 1f; // 回溯前 Animator 的原始播放速度（恢复时用）
+        private float _animOriginalSpeed = 1f; // 原始 Animator 播放速度
 
-        private bool _enemyHadComponent; // 回溯启动时是否存在 Enemy 组件（用于判断 StopRewind 时是否需要恢复）
-        private bool _enemyWasEnabled; // 回溯前 Enemy.enabled 的原始值（恢复时用）
+        private bool _enemyHadComponent; // 启动时是否存在 Enemy 组件
+        private bool _enemyWasEnabled; // 原始 Enemy.enabled 值
 
         /// <summary>
         /// NavMeshAgent 的运行快照（仅涉及可回放的"配置/目标值"，真实位置由 Transform 快照恢复）
@@ -131,9 +131,6 @@ namespace TimeRewind
                 var snap = new AgentSnapshot
                 {
                     IsStopped = Agent.isStopped,
-                    // UpdatePosition = Agent.updatePosition,  // 删除
-                    // UpdateRotation = Agent.updateRotation,  // 删除
-
                     AutoBraking = Agent.autoBraking,
                     Speed = Agent.speed,
                     AngularSpeed = Agent.angularSpeed,
@@ -210,8 +207,44 @@ namespace TimeRewind
         /// <summary>
         /// 回溯开始：冻结 NavMesh 自动更新、冻结 Animator 推进、暂停 Enemy Update 驱动
         /// </summary>
-        ///
         protected override void OnStartRewind()
+        {
+            base.OnStartRewind();
+            FreezeAllComponents(); // 复用冻结逻辑
+        }
+
+        /// <summary>
+        /// 回溯结束：恢复 NavMeshAgent 配置与 Animator 速度，恢复 Enemy Update
+        /// </summary>
+        protected override void OnStopRewind()
+        {
+            base.OnStopRewind();
+            UnfreezeAllComponents(true); // 复用恢复逻辑，参数true表示恢复到回溯快照状态
+        }
+
+        /// <summary>
+        /// 暂停开始：冻结 NavMesh、Animator、Enemy（复用回溯的冻结逻辑）
+        /// </summary>
+        protected override void OnStartPause()
+        {
+            base.OnStartPause();
+            FreezeAllComponents(); // 复用冻结逻辑
+        }
+
+        /// <summary>
+        /// 暂停结束：恢复所有组件到暂停前的状态
+        /// </summary>
+        protected override void OnStopPause()
+        {
+            base.OnStopPause();
+            UnfreezeAllComponents(false); // 复用恢复逻辑，参数false表示恢复到原始状态
+        }
+
+        /// <summary>
+        /// 冻结所有组件（NavMeshAgent、Animator、Enemy）
+        /// 被 OnStartRewind 和 OnStartPause 复用
+        /// </summary>
+        private void FreezeAllComponents()
         {
             // 暂停 NavMesh 自动行为，记录原始配置
             if (Agent != null)
@@ -242,13 +275,17 @@ namespace TimeRewind
                 _enemyWasEnabled = TheEnemy.enabled;
                 TheEnemy.enabled = false;
             }
-
         }
 
         /// <summary>
-        /// 回溯结束：恢复 NavMeshAgent 配置与 Animator 速度，恢复 Enemy Update
+        /// 解冻所有组件（NavMeshAgent、Animator、Enemy）
+        /// 被 OnStopRewind 和 OnStopPause 复用
         /// </summary>
-        protected override void OnStopRewind()
+        /// <param name="restoreToSnapshot">
+        /// true = 恢复到回溯快照状态（用于回溯结束）
+        /// false = 恢复到冻结前的原始状态（用于暂停结束）
+        /// </param>
+        private void UnfreezeAllComponents(bool restoreToSnapshot)
         {
             // 恢复 NavMeshAgent（对齐位置 -> 恢复配置 -> 恢复 isStopped）
             if (_agentFlags.hadAgent && Agent != null)
@@ -264,9 +301,9 @@ namespace TimeRewind
                 Agent.updateRotation = _agentFlags.origUpdateRotation;
                 Agent.autoBraking = _agentFlags.origAutoBraking;
 
-                // 若我们在回溯期间应用了快照，则恢复到快照值；否则恢复原始值
-                if (_agentHistory != null)
+                if (restoreToSnapshot && _agentHistory != null)
                 {
+                    // 回溯结束：恢复到快照值
                     Agent.speed = _lastAppliedAgentSnap.Speed;
                     Agent.angularSpeed = _lastAppliedAgentSnap.AngularSpeed;
                     Agent.acceleration = _lastAppliedAgentSnap.Acceleration;
@@ -280,6 +317,7 @@ namespace TimeRewind
                 }
                 else
                 {
+                    // 暂停结束：恢复到原始值
                     SafeSetStopped(Agent, _agentFlags.origIsStopped);
                 }
             }
@@ -288,20 +326,15 @@ namespace TimeRewind
             if (Anim != null)
             {
                 Anim.speed = _animOriginalSpeed;
-                Debug.Log("Animspeed: " + Anim.speed);
             }
 
-            // 【修复】恢复 Enemy 行为逻辑：仅当敌人未死亡时才恢复
+            // 恢复 Enemy 行为逻辑：仅当敌人未死亡时才恢复
             if (_enemyHadComponent && TheEnemy != null && !TheEnemy.IsDead)
             {
                 TheEnemy.enabled = _enemyWasEnabled;
             }
             // 如果 IsDead == true，则保持 Enemy.enabled = false，防止死亡敌人继续 Update
-
-
         }
-
-
 
         /// <summary>
         /// 在回溯期间应用一帧 NavMeshAgent 快照（只改配置与目标，不做寻路推进）
