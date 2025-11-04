@@ -25,8 +25,14 @@ public class Enemy : MonoBehaviour
     [Tooltip("敌人的视野半径（米），超出此距离无法看到玩家")]
     public float viewRadius = 10f;
 
+<<<<<<< Updated upstream
     [Tooltip("敌人头部Transform，作为视线检测的起点")]
     public Transform headTransform;
+=======
+    [Header("������������")]
+    internal bool isDead = false; // ����״̬ /*TODO : ��Ҫ����*/
+    private const float crushForceThreshold = 1f;
+>>>>>>> Stashed changes
 
     [Tooltip("玩家所在的图层遮罩，用于视线检测")]
     public LayerMask playerMask;
