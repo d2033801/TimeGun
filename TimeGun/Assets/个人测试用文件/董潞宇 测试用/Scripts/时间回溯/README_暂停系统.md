@@ -2,7 +2,7 @@
 
 ## 📋 概述
 
-本系统为所有 `AbstractTimeRewindObject` 派生类提供了**独立的暂停功能**，与回溯系统完全解耦。
+本系统为所有 `AbstractTimeRewindObject` 派生类提供了**独立的暂停功能**，与回溯系统完全解耦，并支持**暂停和回溯并发运行**。
 
 ## 🎯 核心特性
 
@@ -11,330 +11,380 @@
 - 暂停不会消耗历史帧数据
 - 暂停时既不录制也不回放
 
+### ✅ 并发安全
+- **引用计数机制**：支持暂停和回溯同时运行
+- **通用冻结管理器**：`ComponentFreezeManager<TState>` 泛型类，适用于所有子类
+- **状态隔离**：暂停和回溯各自管理独立的恢复逻辑
+- **智能解冻**：仅当所有系统都释放冻结时才真正解冻组件
+
 ### ✅ 自动适配
 - **刚体物体** (`AbstractTimeRewindRigidBody` 及其子类) - 自动冻结物理行为
 - **敌人AI** (`EnemyTimeRewind`) - 自动冻结导航、动画和逻辑
-- **自定义物体** - 可重写 `OnStartPause`/`OnStopPause` 实现自定义冻结
-
-### ✅ 易于使用
-```csharp
-// 启动暂停
-rewindObj.StartPause();
-
-// 停止暂停
-rewindObj.StopPause();
-
-// 检查暂停状态
-if (rewindObj.IsPaused) { ... }
-```
+- **自定义物体** - 可使用 `ComponentFreezeManager<TState>` 实现自定义冻结
 
 ---
 
-## 📦 系统架构
+## 🔧 通用冻结管理器详解
 
-### 1. 基类 - `AbstractTimeRewindObject`
+### ComponentFreezeManager<TState>
 
-**新增字段**:
+**定义位置**：`AbstractTimeRewindObject.cs` 顶部（所有子类可直接使用）
+
+**核心特性**：
 ```csharp
-private bool isPaused = false;  // 暂停状态标记
-```
-
-**新增API**:
-```csharp
-public virtual void StartPause()     // 启动暂停
-public virtual void StopPause()      // 停止暂停
-public bool IsPaused { get; }        // 获取暂停状态
-```
-
-**新增虚方法** (供子类重写):
-```csharp
-protected virtual void OnStartPause()  // 暂停开始时触发
-protected virtual void OnStopPause()   // 暂停结束时触发
-```
-
-**核心逻辑修改**:
-```csharp
-protected virtual void FixedUpdate()
+public class ComponentFreezeManager<TState> where TState : struct
 {
-    if (isPaused) return;  // ✅ 暂停时既不录制也不回溯
+    // ✅ 泛型设计：支持任意自定义状态结构体
+    // ✅ 引用计数：防止重复冻结/解冻
+    // ✅ 状态保护：首次冻结时保存原始值，嵌套调用不覆盖
     
-    if (isRewinding)
-        RewindFixedStep();
-    else if(isRecording)
-        RecordFixedStep();
+    public bool RequestFreeze(TState currentState);  // 请求冻结，返回是否首次
+    public bool ReleaseFreeze(out TState savedState); // 释放冻结，返回是否完全解冻
+    public bool IsFrozen { get; }  // 是否处于冻结状态
+    public TState SavedState { get; }  // 保存的原始状态
 }
 ```
 
----
+### 使用示例
 
-### 2. 刚体类 - `AbstractTimeRewindRigidBody`
-
-**暂停时的行为**:
-- 保存原始 `isKinematic` 状态
-- 设置 `rb.isKinematic = true` 冻结物理
-
-**恢复时的行为**:
-- 恢复原始 `isKinematic` 状态
-
-**实现代码**:
-```csharp
-protected override void OnStartPause()
-{
-    base.OnStartPause();
-    oriIsKinematic = rb.isKinematic;
-    rb.isKinematic = true;  // 冻结物理
-}
-
-protected override void OnStopPause()
-{
-    base.OnStopPause();
-    rb.isKinematic = oriIsKinematic;  // 恢复物理
-}
-```
-
----
-
-### 3. 敌人AI类 - `EnemyTimeRewind`
-
-**暂停时的行为** (复用回溯的冻结逻辑):
-1. **NavMeshAgent** - 停止寻路、禁用自动更新
-2. **Animator** - 设置 `speed = 0` 冻结动画
-3. **Enemy脚本** - 设置 `enabled = false` 停止Update
-
-**恢复时的行为**:
-- 恢复到暂停前的原始状态 (与回溯结束时恢复到快照状态不同)
-
-**核心实现**:
-```csharp
-protected override void OnStartPause()
-{
-    base.OnStartPause();
-    FreezeAllComponents();  // 复用冻结逻辑
-}
-
-protected override void OnStopPause()
-{
-    base.OnStopPause();
-    UnfreezeAllComponents(false);  // false = 恢复到原始状态
-}
-
-// 回溯结束时调用
-protected override void OnStopRewind()
-{
-    base.OnStopRewind();
-    UnfreezeAllComponents(true);  // true = 恢复到快照状态
-}
-```
-
----
-
-## 🚀 使用示例
-
-### 示例1: 榴弹触发暂停
+#### 示例1：简单组件冻结（如 Rigidbody）
 
 ```csharp
-// RewindRifleGrenade.cs
-private void TryTriggerPause(Collider targetCollider, float duration)
+public class AbstractTimeRewindRigidBody : AbstractTimeRewindObject
 {
-    var rewindObj = targetCollider.GetComponentInParent<AbstractTimeRewindObject>();
-    if (rewindObj == null) return;
-
-    // ✅ 使用独立的暂停API
-    rewindObj.StartPause();
-    
-    // 在目标对象上启动协程，避免榴弹销毁导致协程中断
-    rewindObj.StartCoroutine(StopPauseAfterDelay(rewindObj, duration));
-}
-
-private IEnumerator StopPauseAfterDelay(AbstractTimeRewindObject rewindObj, float delay)
-{
-    yield return new WaitForSeconds(delay);
-    
-    if (rewindObj != null && rewindObj.IsPaused)
+    // 1️⃣ 定义冻结状态结构体
+    private struct RigidbodyFreezeState
     {
-        rewindObj.StopPause();
+        public bool origIsKinematic;
+        public Vector3 origVelocity;
+        public Vector3 origAngularVelocity;
     }
-}
-```
 
-### 示例2: 自定义暂停行为
+    // 2️⃣ 创建冻结管理器实例
+    private ComponentFreezeManager<RigidbodyFreezeState> _freezeManager 
+        = new ComponentFreezeManager<RigidbodyFreezeState>();
 
-```csharp
-public class MyCustomRewindObject : AbstractTimeRewindObject
-{
-    private ParticleSystem particles;
-    private AudioSource audioSource;
-    
-    protected override void OnStartPause()
+    // 3️⃣ 请求冻结（暂停和回溯都调用这个方法）
+    private void RequestFreezeRigidbody()
     {
-        base.OnStartPause();
-        
-        // 自定义暂停逻辑
-        if (particles != null)
-            particles.Pause();
-        
-        if (audioSource != null)
-            audioSource.Pause();
-    }
-    
-    protected override void OnStopPause()
-    {
-        base.OnStopPause();
-        
-        // 自定义恢复逻辑
-        if (particles != null)
-            particles.Play();
-        
-        if (audioSource != null)
-            audioSource.UnPause();
-    }
-}
-```
-
-### 示例3: 区域暂停技能
-
-```csharp
-public class TimeStopSkill : MonoBehaviour
-{
-    public float radius = 10f;
-    public float duration = 5f;
-    
-    public void ActivateTimeStop()
-    {
-        Collider[] hits = Physics.OverlapSphere(transform.position, radius);
-        
-        foreach (var c in hits)
+        var currentState = new RigidbodyFreezeState
         {
-            var rewindObj = c.GetComponentInParent<AbstractTimeRewindObject>();
-            if (rewindObj != null)
+            origIsKinematic = rb.isKinematic,
+            origVelocity = rb.linearVelocity,
+            origAngularVelocity = rb.angularVelocity
+        };
+
+        // ✅ 仅首次冻结时返回 true
+        if (_freezeManager.RequestFreeze(currentState))
+        {
+            rb.isKinematic = true;  // 执行冻结操作
+        }
+    }
+
+    // 4️⃣ 释放冻结
+    private void ReleaseFreezeRigidbody(bool restoreVelocity)
+    {
+        // ✅ 仅完全解冻时返回 true
+        if (_freezeManager.ReleaseFreeze(out var savedState))
+        {
+            rb.isKinematic = savedState.origIsKinematic;  // 恢复原始值
+            
+            if (restoreVelocity)
             {
-                rewindObj.StartPause();
-                StartCoroutine(AutoResume(rewindObj, duration));
+                rb.linearVelocity = savedState.origVelocity;
+                rb.angularVelocity = savedState.origAngularVelocity;
             }
         }
     }
-    
-    private IEnumerator AutoResume(AbstractTimeRewindObject obj, float delay)
+}
+```
+
+#### 示例2：复杂组件冻结（如 Enemy AI）
+
+```csharp
+public class EnemyTimeRewind : AbstractTimeRewindObject
+{
+    // 1️⃣ 定义完整的冻结状态（包含多个组件）
+    private struct CompleteFreezeState
     {
-        yield return new WaitForSeconds(delay);
-        if (obj != null) obj.StopPause();
+        // NavMeshAgent 状态
+        public bool hadAgent;
+        public bool origIsStopped;
+        public float origSpeed;
+        public Vector3 origDestination;
+        
+        // Animator 状态
+        public bool hadAnimator;
+        public float origAnimSpeed;  // ✅ 关键：保存 Animator 原始速度
+        
+        // Enemy 状态
+        public bool hadEnemy;
+        public bool origEnemyEnabled;
+    }
+
+    // 2️⃣ 创建管理器
+    private ComponentFreezeManager<CompleteFreezeState> _freezeManager 
+        = new ComponentFreezeManager<CompleteFreezeState>();
+
+    // 3️⃣ 收集所有组件的当前状态
+    private void RequestFreezeAllComponents()
+    {
+        var currentState = new CompleteFreezeState();
+        
+        if (Agent != null)
+        {
+            currentState.hadAgent = true;
+            currentState.origIsStopped = Agent.isStopped;
+            currentState.origSpeed = Agent.speed;
+            currentState.origDestination = SafeGetAgentDestination(Agent);
+        }
+        
+        // ✅ 修复：在冻结前保存 Animator 速度
+        if (Anim != null)
+        {
+            currentState.hadAnimator = true;
+            currentState.origAnimSpeed = Anim.speed;  // 保存原始值
+        }
+        
+        if (TheEnemy != null)
+        {
+            currentState.hadEnemy = true;
+            currentState.origEnemyEnabled = TheEnemy.enabled;
+        }
+
+        // ✅ 仅首次冻结时执行冻结操作
+        if (_freezeManager.RequestFreeze(currentState))
+        {
+            if (Agent != null)
+            {
+                Agent.isStopped = true;
+                Agent.updatePosition = false;
+                Agent.updateRotation = false;
+            }
+            
+            if (Anim != null)
+            {
+                Anim.speed = 0f;  // 冻结动画
+            }
+            
+            if (TheEnemy != null)
+            {
+                TheEnemy.enabled = false;  // 冻结逻辑
+            }
+        }
+    }
+
+    // 4️⃣ 恢复所有组件
+    private void ReleaseFreezeAllComponents(bool restoreToSnapshot)
+    {
+        // ✅ 仅完全解冻时执行恢复操作
+        if (!_freezeManager.ReleaseFreeze(out var savedState))
+        {
+            return;  // 还有其他系统需要冻结
+        }
+
+        // 恢复 NavMeshAgent
+        if (savedState.hadAgent && Agent != null)
+        {
+            Agent.updatePosition = true;
+            Agent.updateRotation = true;
+            
+            if (restoreToSnapshot)
+            {
+                // 回溯结束：恢复到快照值
+                Agent.speed = _lastAppliedAgentSnap.Speed;
+            }
+            else
+            {
+                // 暂停结束：恢复到原始值
+                Agent.speed = savedState.origSpeed;
+            }
+        }
+        
+        // ✅ 修复：恢复 Animator 原始速度
+        if (savedState.hadAnimator && Anim != null)
+        {
+            Anim.speed = savedState.origAnimSpeed;  // 使用保存的值
+        }
+        
+        // 恢复 Enemy（仅未死亡时）
+        if (savedState.hadEnemy && TheEnemy != null && !TheEnemy.IsDead)
+        {
+            TheEnemy.enabled = savedState.origEnemyEnabled;
+        }
     }
 }
 ```
 
 ---
 
-## 🔄 回溯 vs 暂停 对比
+## 🐛 修复的问题
 
-| 特性 | 回溯 (Rewind) | 暂停 (Pause) |
-|------|--------------|-------------|
-| **用途** | 让物体回到历史状态 | 冻结物体的当前状态 |
-| **历史帧** | 消耗历史帧数据 | 不消耗历史帧 |
-| **录制** | 停止录制 | 停止录制 |
-| **物理** | 禁用 (回放历史位置) | 禁用 (保持当前位置) |
-| **恢复** | 恢复到快照状态 | 恢复到暂停前状态 |
-| **API** | `StartRewind()` / `StopRewind()` | `StartPause()` / `StopPause()` |
+### 问题1：Animator 速度保存遗漏
 
----
-
-## ⚙️ 技术细节
-
-### 暂停期间的行为
-
-1. **FixedUpdate** - 完全跳过，既不录制也不回放
-2. **物理系统** - 通过 `isKinematic = true` 冻结
-3. **AI导航** - 通过 `isStopped = true` 和禁用更新冻结
-4. **动画** - 通过 `animator.speed = 0` 冻结
-5. **脚本逻辑** - 通过 `enabled = false` 冻结
-
-### 状态优先级
-
+**症状**：
 ```
-isPaused > isRewinding > isRecording
+场景：暂停 → 回溯 → 暂停结束
+结果：Animator 动画卡住不动（speed 恢复为 0）
 ```
 
-如果同时处于多个状态：
-- `isPaused = true` → 完全冻结，其他状态被忽略
-- `isRewinding = true` → 回放历史，停止录制
-- `isRecording = true` → 正常录制
-
-### 协程生命周期
-
-**❌ 错误做法**:
+**原因**：
 ```csharp
-// 榴弹上启动协程，榴弹销毁后协程中断
-StartCoroutine(StopPauseAfterDelay(rewindObj, duration));
-Destroy(gameObject);  // ❌ 协程宿主被销毁
-```
-
-**✅ 正确做法**:
-```csharp
-// 在目标对象上启动协程，目标存活则协程继续
-rewindObj.StartCoroutine(StopPauseAfterDelay(rewindObj, duration));
-Destroy(gameObject);  // ✅ 榴弹销毁不影响目标的协程
-```
-
----
-
-## 📝 升级指南
-
-### 从旧版本迁移
-
-**旧代码** (使用回溯速度0的hack):
-```csharp
-rewindObj.StartRewind(0f);  // ❌ 耦合度高，语义不清
-yield return new WaitForSeconds(duration);
-rewindObj.StopRewind();
-```
-
-**新代码** (使用独立的暂停API):
-```csharp
-rewindObj.StartPause();  // ✅ 解耦，语义清晰
-yield return new WaitForSeconds(duration);
-rewindObj.StopPause();
-```
-
----
-
-## 🐛 常见问题
-
-### Q: 暂停的物体会消耗历史帧吗？
-**A**: 不会。暂停期间 `FixedUpdate` 直接返回，不录制也不回放。
-
-### Q: 可以同时暂停和回溯吗？
-**A**: 不可以。暂停优先级更高，如果 `isPaused = true`，回溯逻辑不会执行。
-
-### Q: 暂停会影响其他物体吗？
-**A**: 不会。每个 `AbstractTimeRewindObject` 实例独立管理自己的暂停状态。
-
-### Q: 如何实现"暂停所有敌人"？
-**A**: 
-```csharp
-var allEnemies = FindObjectsOfType<EnemyTimeRewind>();
-foreach (var enemy in allEnemies)
+// ❌ 错误做法：在冻结时保存，但第二次冻结时保存的是已修改的值
+private void RequestFreezeAllComponents()
 {
-    enemy.StartPause();
+    // ...other code...
+    
+    if (Anim != null)
+    {
+        _animOriginalSpeed = Anim.speed;  // ❌ 第二次调用时 speed 已经是 0！
+        Anim.speed = 0f;
+    }
 }
+```
+
+**修复**：
+```csharp
+// ✅ 正确做法：在请求冻结前收集当前状态
+var currentState = new CompleteFreezeState();
+
+if (Anim != null)
+{
+    currentState.hadAnimator = true;
+    currentState.origAnimSpeed = Anim.speed;  // ✅ 在冻结前保存
+}
+
+// 仅首次冻结时执行（嵌套调用时跳过）
+if (_freezeManager.RequestFreeze(currentState))
+{
+    if (Anim != null)
+    {
+        Anim.speed = 0f;  // 冻结动画
+    }
+}
+```
+
+---
+
+## 🔄 并发场景详解
+
+### 场景：暂停 → 回溯 → 回溯结束 → 暂停结束
+
+```
+T0: 敌人巡逻中
+    Agent.speed = 3.5
+    Anim.speed = 1.0
+    
+T1: 开始暂停 -> RequestFreezeAllComponents()
+    _freezeManager.RequestFreeze({speed=3.5, animSpeed=1.0}) ✅ 返回 true
+    _freezeRefCount: 0 → 1
+    执行冻结：Agent.speed=0, Anim.speed=0
+    
+T2: 暂停期间回溯开始 -> RequestFreezeAllComponents()
+    _freezeManager.RequestFreeze({speed=0, animSpeed=0}) ✅ 返回 false（忽略这些值）
+    _freezeRefCount: 1 → 2
+    跳过冻结操作 ✅ 避免重复冻结
+    
+T3: 回溯结束 -> ReleaseFreezeAllComponents(true)
+    _freezeManager.ReleaseFreeze(out savedState) ✅ 返回 false
+    _freezeRefCount: 2 → 1
+    跳过解冻操作 ✅ 暂停继续生效
+    
+T4: 暂停结束 -> ReleaseFreezeAllComponents(false)
+    _freezeManager.ReleaseFreeze(out savedState) ✅ 返回 true
+    _freezeRefCount: 1 → 0
+    savedState = {speed=3.5, animSpeed=1.0} ✅ 恢复到 T0 的原始值
+    Agent.speed = 3.5
+    Anim.speed = 1.0 ✅ 动画恢复正常！
 ```
 
 ---
 
 ## 📌 最佳实践
 
-1. **协程宿主选择** - 在目标对象上启动自动恢复的协程，而不是触发源
-2. **状态检查** - 调用 `StopPause()` 前检查 `IsPaused`，避免重复调用
-3. **自定义暂停** - 重写 `OnStartPause`/`OnStopPause` 时记得调用 `base` 方法
-4. **死亡处理** - `EnemyTimeRewind` 已自动处理：死亡敌人暂停后不会恢复 `enabled`
+### 1. **定义冻结状态结构体**
+```csharp
+// ✅ 使用 struct（值类型），避免 GC
+// ✅ 包含所有需要恢复的组件状态
+// ✅ 使用 bool 标记组件是否存在（防止空引用）
+private struct MyFreezeState
+{
+    public bool hadComponent;  // 是否有组件
+    public float origValue;    // 原始值
+}
+```
+
+### 2. **在冻结前收集状态**
+```csharp
+// ✅ 在 RequestFreeze 前构建 currentState
+var currentState = new MyFreezeState
+{
+    hadComponent = component != null,
+    origValue = component?.value ?? 0f
+};
+
+if (_freezeManager.RequestFreeze(currentState))
+{
+    // 执行冻结操作
+}
+```
+
+### 3. **利用返回值控制流程**
+```csharp
+// ✅ RequestFreeze 返回 true 时才执行冻结
+if (_freezeManager.RequestFreeze(currentState))
+{
+    component.enabled = false;  // 仅首次执行
+}
+
+// ✅ ReleaseFreeze 返回 true 时才执行恢复
+if (_freezeManager.ReleaseFreeze(out var savedState))
+{
+    component.enabled = savedState.origEnabled;  // 仅完全解冻时执行
+}
+```
+
+### 4. **区分恢复策略**
+```csharp
+private void ReleaseFreezeAllComponents(bool restoreToSnapshot)
+{
+    if (!_freezeManager.ReleaseFreeze(out var savedState))
+    {
+        return;
+    }
+
+    if (restoreToSnapshot)
+    {
+        // 回溯结束：恢复到回溯的最后一帧
+        component.value = _lastAppliedSnapshot.Value;
+    }
+    else
+    {
+        // 暂停结束：恢复到首次冻结前的原始值
+        component.value = savedState.origValue;
+    }
+}
+```
 
 ---
 
 ## 🎓 总结
 
-本暂停系统通过以下方式实现了完全解耦：
+### 核心改进
+1. ✅ **通用冻结管理器**：`ComponentFreezeManager<TState>` 泛型类，所有子类可直接使用
+2. ✅ **状态保存修复**：在冻结前收集状态，避免保存已修改的值
+3. ✅ **Animator 速度修复**：将 `Anim.speed` 纳入冻结状态管理
+4. ✅ **零重复代码**：所有子类复用同一套引用计数逻辑
 
-1. ✅ **独立的状态标记** - `isPaused` 与 `isRewinding` 分离
-2. ✅ **独立的API** - `StartPause()` / `StopPause()` vs `StartRewind()` / `StopRewind()`
-3. ✅ **独立的回调** - `OnStartPause()` / `OnStopPause()` vs `OnStartRewind()` / `OnStopRewind()`
-4. ✅ **复用冻结逻辑** - `EnemyTimeRewind` 通过参数区分恢复行为，避免代码重复
+### 设计优势
+- **泛型化**：一个 `ComponentFreezeManager` 适配所有场景
+- **类型安全**：`where TState : struct` 确保状态是值类型
+- **易扩展**：新增组件只需定义新的 `struct` 并调用管理器
+- **零耦合**：暂停和回溯完全不知道彼此的存在
 
-现在所有继承自 `AbstractTimeRewindObject` 的物体都支持暂停功能！🎉
+现在所有继承自 `AbstractTimeRewindObject` 的物体都支持：
+- ✅ 暂停和回溯并发运行
+- ✅ Animator 动画正确恢复
+- ✅ 通用的组件冻结管理器
+
+完美解决所有问题！🎉

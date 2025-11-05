@@ -1,13 +1,98 @@
 ﻿using System;
 using Unity.VisualScripting;
-using Unity.VisualScripting.Dependencies.Sqlite;
-using UnityEditor;
 using UnityEngine;
 using Utility;
 
-
 namespace TimeRewind
 {
+    #region 通用冻结管理器（供所有子类使用）
+    
+    /// <summary>
+    /// 通用组件冻结管理器：使用引用计数跟踪有多少系统需要冻结组件
+    /// </summary>
+    /// <typeparam name="TState">冻结状态的数据结构（struct）</typeparam>
+    /// <remarks>
+    /// 用途：
+    /// - 支持暂停和回溯并发运行
+    /// - 防止重复冻结覆盖原始状态
+    /// - 仅当所有系统都释放冻结时才真正解冻
+    /// 
+    /// 使用示例：
+    /// <code>
+    /// private struct MyFreezeState { public bool origEnabled; }
+    /// private ComponentFreezeManager&lt;MyFreezeState&gt; _freezeManager = new();
+    /// 
+    /// // 请求冻结
+    /// var currentState = new MyFreezeState { origEnabled = component.enabled };
+    /// if (_freezeManager.RequestFreeze(currentState))
+    /// {
+    ///     component.enabled = false;  // 仅首次执行冻结
+    /// }
+    /// 
+    /// // 释放冻结
+    /// if (_freezeManager.ReleaseFreeze(out var savedState))
+    /// {
+    ///     component.enabled = savedState.origEnabled;  // 仅完全解冻时恢复
+    /// }
+    /// </code>
+    /// </remarks>
+    public class ComponentFreezeManager<TState> where TState : struct
+    {
+        private int _freezeRefCount = 0;  // 冻结引用计数（0=未冻结，>0=已冻结）
+        private TState _savedState;       // 保存的原始状态（仅在首次冻结时保存）
+        
+        /// <summary>是否处于冻结状态</summary>
+        public bool IsFrozen => _freezeRefCount > 0;
+        
+        /// <summary>获取保存的原始状态（仅在首次冻结时有效）</summary>
+        public TState SavedState => _savedState;
+        
+        /// <summary>
+        /// 请求冻结（引用计数+1）
+        /// </summary>
+        /// <param name="currentState">当前状态（仅在首次冻结时会被保存）</param>
+        /// <returns>是否是首次冻结（true表示需要执行冻结操作）</returns>
+        public bool RequestFreeze(TState currentState)
+        {
+            if (_freezeRefCount == 0)
+            {
+                // 首次冻结：保存原始状态
+                _savedState = currentState;
+            }
+            
+            _freezeRefCount++;
+            return _freezeRefCount == 1;  // 仅首次返回true
+        }
+        
+        /// <summary>
+        /// 释放冻结（引用计数-1）
+        /// </summary>
+        /// <param name="savedState">输出参数：保存的原始状态</param>
+        /// <returns>是否完全解冻（true表示需要执行解冻操作）</returns>
+        public bool ReleaseFreeze(out TState savedState)
+        {
+            savedState = _savedState;
+            
+            if (_freezeRefCount > 0)
+            {
+                _freezeRefCount--;
+            }
+            
+            return _freezeRefCount == 0;  // 仅归零时返回true
+        }
+        
+        /// <summary>
+        /// 强制重置（用于异常情况）
+        /// </summary>
+        public void Reset()
+        {
+            _freezeRefCount = 0;
+            _savedState = default;
+        }
+    }
+    
+    #endregion
+
     /// <summary>
     /// 作为所有可时停物体的基抽象类, 提供时停功能的基本框架。
     /// </summary>
@@ -39,7 +124,7 @@ namespace TimeRewind
         protected int recordFPS => recordFPSConfig == 0 ? (int)(1f / Time.deltaTime) : recordFPSConfig;
 
         // 回溯速度倍率
-        private float? _runtimeRewindSpeed = null; // 这是个运行时可空的回溯速度, 若不为null则使用该值
+        private float? _runtimeRewindSpeed = null; // 这是个运行时可空的回溯速度, 若不为null則使用该值
         protected float rewindSpeed => Mathf.Max(0f, _runtimeRewindSpeed ?? rewindSpeedConfig);
         
 

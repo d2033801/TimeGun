@@ -466,6 +466,9 @@ MonoBehaviour:
   recordSecondsConfig: 20
   recordFPSConfig: 0
   rewindSpeedConfig: 2
+  rewindEffectPrefab: {fileID: 0}
+  pauseEffectPrefab: {fileID: 0}
+  effectSpawnPoint: {fileID: 0}
 --- !u!135 &77723829
 SphereCollider:
   m_ObjectHideFlags: 0
@@ -2454,6 +2457,9 @@ MonoBehaviour:
   recordSecondsConfig: 20
   recordFPSConfig: 0
   rewindSpeedConfig: 2
+  rewindEffectPrefab: {fileID: 0}
+  pauseEffectPrefab: {fileID: 0}
+  effectSpawnPoint: {fileID: 0}
 --- !u!135 &1055539322
 SphereCollider:
   m_ObjectHideFlags: 0
@@ -2869,6 +2875,9 @@ MonoBehaviour:
   recordSecondsConfig: 20
   recordFPSConfig: 0
   rewindSpeedConfig: 2
+  rewindEffectPrefab: {fileID: 0}
+  pauseEffectPrefab: {fileID: 0}
+  effectSpawnPoint: {fileID: 0}
 --- !u!135 &1327383380
 SphereCollider:
   m_ObjectHideFlags: 0
@@ -3024,6 +3033,9 @@ MonoBehaviour:
   recordSecondsConfig: 20
   recordFPSConfig: 0
   rewindSpeedConfig: 2
+  rewindEffectPrefab: {fileID: 0}
+  pauseEffectPrefab: {fileID: 0}
+  effectSpawnPoint: {fileID: 0}
 --- !u!135 &1376531120
 SphereCollider:
   m_ObjectHideFlags: 0
@@ -3152,6 +3164,9 @@ MonoBehaviour:
   recordSecondsConfig: 20
   recordFPSConfig: 0
   rewindSpeedConfig: 2
+  rewindEffectPrefab: {fileID: 0}
+  pauseEffectPrefab: {fileID: 0}
+  effectSpawnPoint: {fileID: 0}
 --- !u!135 &1380911536
 SphereCollider:
   m_ObjectHideFlags: 0

@@ -41,25 +41,29 @@ namespace TimeRewind
         private RingBuffer<EnemySnapshot> _enemyHistory;
         private EnemySnapshot _lastAppliedEnemySnap;
 
-        //==================== 回溯/暂停期间的运行态标记 ====================
+        //==================== 冻结管理器（使用基类提供的通用版本）====================
         /// <summary>
-        /// 回溯/暂停期间用于保存 NavMeshAgent 原始配置的标记结构体
-        /// 用途：在 OnStartRewind/OnStartPause 时保存原始状态，在 StopRewind/StopPause 时恢复
+        /// NavMeshAgent + Animator + Enemy 的完整冻结状态
+        /// ✅ 优化：复用 Snapshot 结构，避免重复定义相同字段
         /// </summary>
-        private struct AgentRuntimeFlags
+        private struct CompleteFreezeState
         {
-            public bool hadAgent; // 启动时是否存在 Agent（用于判断恢复时是否需要处理）
-            public bool origUpdatePosition; // 原始 updatePosition
-            public bool origUpdateRotation; // 原始 updateRotation
-            public bool origIsStopped; // 原始 isStopped
-            public bool origAutoBraking; // 原始 autoBraking
+            // NavMeshAgent 状态（复用 AgentSnapshot）
+            public AgentSnapshot AgentSnap;
+            public bool HadAgent;
+            
+            // Animator 状态（复用 AnimatorRecorder.Snapshot）
+            public AnimatorRecorder.Snapshot AnimSnap;
+            public bool HadAnimator;
+            
+            // Enemy 状态（复用 EnemySnapshot）
+            public EnemySnapshot EnemySnap;
+            public bool HadEnemy;
+            public bool OrigEnemyEnabled;
         }
 
-        private AgentRuntimeFlags _agentFlags;
-        private float _animOriginalSpeed = 1f; // 原始 Animator 播放速度
-
-        private bool _enemyHadComponent; // 启动时是否存在 Enemy 组件
-        private bool _enemyWasEnabled; // 原始 Enemy.enabled 值
+        private ComponentFreezeManager<CompleteFreezeState> _freezeManager 
+            = new ComponentFreezeManager<CompleteFreezeState>();
 
         /// <summary>
         /// NavMeshAgent 的运行快照（仅涉及可回放的"配置/目标值"，真实位置由 Transform 快照恢复）
@@ -73,6 +77,11 @@ namespace TimeRewind
             public float AngularSpeed; // 转向速度（单位：度/秒，影响转身快慢）
             public float Acceleration; // 加速度（单位：米/秒²，影响加速/减速过程）
             public Vector3 Destination; // 导航目标点（寻路系统的目的地坐标）
+            public Vector3 Velocity; // ✅ 当前速度向量（用于恢复移动状态）
+            
+            // ✅ 新增：冻结恢复所需的配置
+            public bool UpdatePosition; // 是否自动更新位置
+            public bool UpdateRotation; // 是否自动更新旋转
         }
 
         /// <summary>
@@ -135,7 +144,10 @@ namespace TimeRewind
                     Speed = Agent.speed,
                     AngularSpeed = Agent.angularSpeed,
                     Acceleration = Agent.acceleration,
-                    Destination = SafeGetAgentDestination(Agent) // 访问 destination 可能抛异常，做了防护
+                    Destination = SafeGetAgentDestination(Agent),
+                    Velocity = Agent.enabled && Agent.isOnNavMesh ? Agent.velocity : Vector3.zero, // ✅ 录制速度
+                    UpdatePosition = Agent.updatePosition, // ✅ 录制配置
+                    UpdateRotation = Agent.updateRotation
                 };
                 _agentHistory.Push(snap);
             }
@@ -152,8 +164,8 @@ namespace TimeRewind
                     StateTimer = TheEnemy.StateTimer,
                     CurrentPointIndex = TheEnemy.CurrentPointIndex,
                     StateId = GetCurrentStateId(TheEnemy),
-                    CurrentSpeed = TheEnemy.CurrentSpeed, // 直接访问 public 属性
-                    SpeedVelocity = TheEnemy.SpeedVelocity, // 直接访问 public 属性
+                    CurrentSpeed = TheEnemy.CurrentSpeed,
+                    SpeedVelocity = TheEnemy.SpeedVelocity,
                     SeePlayerTimer = TheEnemy.SeePlayerTimer
                 };
 
@@ -205,105 +217,153 @@ namespace TimeRewind
         }
 
         /// <summary>
-        /// 回溯开始：冻结 NavMesh 自动更新、冻结 Animator 推进、暂停 Enemy Update 驱动
+        /// 回溯开始：请求冻结所有组件
         /// </summary>
         protected override void OnStartRewind()
         {
             base.OnStartRewind();
-            FreezeAllComponents(); // 复用冻结逻辑
+            RequestFreezeAllComponents();
         }
 
         /// <summary>
-        /// 回溯结束：恢复 NavMeshAgent 配置与 Animator 速度，恢复 Enemy Update
+        /// 回溯结束：释放冻结，并恢复到快照状态
         /// </summary>
         protected override void OnStopRewind()
         {
             base.OnStopRewind();
-            UnfreezeAllComponents(true); // 复用恢复逻辑，参数true表示恢复到回溯快照状态
+            ReleaseFreezeAllComponents(true);
         }
 
         /// <summary>
-        /// 暂停开始：冻结 NavMesh、Animator、Enemy（复用回溯的冻结逻辑）
+        /// 暂停开始：请求冻结所有组件
         /// </summary>
         protected override void OnStartPause()
         {
             base.OnStartPause();
-            FreezeAllComponents(); // 复用冻结逻辑
+            RequestFreezeAllComponents();
         }
 
         /// <summary>
-        /// 暂停结束：恢复所有组件到暂停前的状态
+        /// 暂停结束：释放冻结，并恢复到原始状态
         /// </summary>
         protected override void OnStopPause()
         {
             base.OnStopPause();
-            UnfreezeAllComponents(false); // 复用恢复逻辑，参数false表示恢复到原始状态
+            ReleaseFreezeAllComponents(false);
         }
 
         /// <summary>
-        /// 冻结所有组件（NavMeshAgent、Animator、Enemy）
-        /// 被 OnStartRewind 和 OnStartPause 复用
+        /// 请求冻结所有组件（引用计数+1）
         /// </summary>
-        private void FreezeAllComponents()
+        private void RequestFreezeAllComponents()
         {
-            // 暂停 NavMesh 自动行为，记录原始配置
+            // ✅ 收集当前完整状态（复用 Snapshot 结构）
+            var currentState = new CompleteFreezeState();
+            
+            // NavMeshAgent 状态（直接捕获一个完整快照）
             if (Agent != null)
             {
-                _agentFlags.hadAgent = true;
-                _agentFlags.origIsStopped = Agent.isStopped;
-                _agentFlags.origUpdatePosition = Agent.updatePosition;
-                _agentFlags.origUpdateRotation = Agent.updateRotation;
-                _agentFlags.origAutoBraking = Agent.autoBraking;
-
-                // 仅在 Agent 可用且位于 NavMesh 时设置 isStopped，避免报错
-                SafeSetStopped(Agent, true);
-                Agent.updatePosition = false; // 我们手动回写位置
-                Agent.updateRotation = false; // 我们手动回写旋转（随 Transform）
+                currentState.HadAgent = true;
+                currentState.AgentSnap = new AgentSnapshot
+                {
+                    IsStopped = Agent.isStopped,
+                    AutoBraking = Agent.autoBraking,
+                    Speed = Agent.speed,
+                    AngularSpeed = Agent.angularSpeed,
+                    Acceleration = Agent.acceleration,
+                    Destination = SafeGetAgentDestination(Agent),
+                    Velocity = Agent.enabled && Agent.isOnNavMesh ? Agent.velocity : Vector3.zero,
+                    UpdatePosition = Agent.updatePosition,
+                    UpdateRotation = Agent.updateRotation
+                };
             }
-
-            // 暂停 Animator（speed=0，仍可通过 Play+Update(0) 立即切换）
+            
+            // Animator 状态
             if (Anim != null)
             {
-                _animOriginalSpeed = Anim.speed;
+                currentState.HadAnimator = true;
+                currentState.AnimSnap = _animRecorder?.CaptureCurrentSnapshot();
+            }
+            
+            // Enemy 状态
+            if (TheEnemy != null)
+            {
+                currentState.HadEnemy = true;
+                currentState.OrigEnemyEnabled = TheEnemy.enabled;
+                currentState.EnemySnap = new EnemySnapshot
+                {
+                    IsDead = TheEnemy.IsDead,
+                    StateTimer = TheEnemy.StateTimer,
+                    CurrentPointIndex = TheEnemy.CurrentPointIndex,
+                    StateId = GetCurrentStateId(TheEnemy),
+                    CurrentSpeed = TheEnemy.CurrentSpeed,
+                    SpeedVelocity = TheEnemy.SpeedVelocity,
+                    SeePlayerTimer = TheEnemy.SeePlayerTimer
+                };
+            }
+
+            // 请求冻结（仅首次会返回true）
+            bool shouldFreeze = _freezeManager.RequestFreeze(currentState);
+            
+            if (!shouldFreeze) return;
+
+            // ========== 执行冻结操作 ==========/
+            
+            // 冻结 NavMeshAgent
+            if (Agent != null)
+            {
+                SafeSetStopped(Agent, true);
+                Agent.updatePosition = false;
+                Agent.updateRotation = false;
+            }
+
+            // 冻结 Animator
+            if (Anim != null)
+            {
                 Anim.speed = 0f;
             }
 
-            // 暂停 Enemy 行为逻辑（状态机不再推进，防止与回放冲突）
+            // 冻结 Enemy
             if (TheEnemy != null)
             {
-                _enemyHadComponent = true;
-                _enemyWasEnabled = TheEnemy.enabled;
                 TheEnemy.enabled = false;
             }
         }
 
         /// <summary>
-        /// 解冻所有组件（NavMeshAgent、Animator、Enemy）
-        /// 被 OnStopRewind 和 OnStopPause 复用
+        /// 释放冻结所有组件（引用计数-1）
         /// </summary>
         /// <param name="restoreToSnapshot">
-        /// true = 恢复到回溯快照状态（用于回溯结束）
-        /// false = 恢复到冻结前的原始状态（用于暂停结束）
+        /// true = 恢复到回溯快照状态（回溯结束时调用）
+        /// false = 恢复到原始状态（暂停结束时调用）
         /// </param>
-        private void UnfreezeAllComponents(bool restoreToSnapshot)
+        private void ReleaseFreezeAllComponents(bool restoreToSnapshot)
         {
-            // 恢复 NavMeshAgent（对齐位置 -> 恢复配置 -> 恢复 isStopped）
-            if (_agentFlags.hadAgent && Agent != null)
+            // 释放冻结（仅完全解冻时返回true）
+            if (!_freezeManager.ReleaseFreeze(out var savedState))
             {
-                // 若仍在 NavMesh 上，直接 Warp 到 Transform 位置（更安全的对齐方式）
+                return;  // ✅ 如果还有其他系统需要冻结，直接返回
+            }
+
+            // ========== 执行解冻操作 ==========
+
+            // 恢复 NavMeshAgent
+            if (savedState.HadAgent && Agent != null)
+            {
+                // 先恢复位置（Warp 会清零 velocity，所以必须在设置 velocity 之前调用）
                 if (Agent.isOnNavMesh)
                 {
                     Agent.Warp(transform.position);
                 }
 
-                // 恢复自动更新配置
-                Agent.updatePosition = _agentFlags.origUpdatePosition;
-                Agent.updateRotation = _agentFlags.origUpdateRotation;
-                Agent.autoBraking = _agentFlags.origAutoBraking;
+                // 恢复配置
+                Agent.updatePosition = savedState.AgentSnap.UpdatePosition;
+                Agent.updateRotation = savedState.AgentSnap.UpdateRotation;
+                Agent.autoBraking = savedState.AgentSnap.AutoBraking;
 
-                if (restoreToSnapshot && _agentHistory != null)
+                if (restoreToSnapshot)
                 {
-                    // 回溯结束：恢复到快照值
+                    // 回溯结束：恢复到回溯的最后一帧
                     Agent.speed = _lastAppliedAgentSnap.Speed;
                     Agent.angularSpeed = _lastAppliedAgentSnap.AngularSpeed;
                     Agent.acceleration = _lastAppliedAgentSnap.Acceleration;
@@ -314,30 +374,66 @@ namespace TimeRewind
                     }
 
                     SafeSetStopped(Agent, _lastAppliedAgentSnap.IsStopped);
+                    
+                    // ✅ 关键修复：恢复后不清零 velocity，而是保持一个合理值
+                    // 由于回溯时 velocity 被清零，解冻后需要根据 Agent.speed 初始化一个非零速度
+                    if (Agent.enabled && Agent.isOnNavMesh && !_lastAppliedAgentSnap.IsStopped)
+                    {
+                        // 使用目标方向和配置的速度生成初始速度
+                        Vector3 direction = (Agent.destination - transform.position).normalized;
+                        Agent.velocity = direction * Agent.speed;
+                    }
                 }
                 else
                 {
-                    // 暂停结束：恢复到原始值
-                    SafeSetStopped(Agent, _agentFlags.origIsStopped);
+                    // 暂停结束：恢复到首次冻结前的原始状态
+                    Agent.speed = savedState.AgentSnap.Speed;
+                    Agent.angularSpeed = savedState.AgentSnap.AngularSpeed;
+                    Agent.acceleration = savedState.AgentSnap.Acceleration;
+
+                    if (Agent.isOnNavMesh)
+                    {
+                        TrySetAgentDestination(Agent, savedState.AgentSnap.Destination);
+                    }
+
+                    SafeSetStopped(Agent, savedState.AgentSnap.IsStopped);
+                    
+                    // ✅ 关键修复：恢复原始速度（暂停前的真实速度）
+                    if (Agent.enabled && Agent.isOnNavMesh)
+                    {
+                        Agent.velocity = savedState.AgentSnap.Velocity;
+                    }
                 }
             }
 
-            // 恢复 Animator 推进速度
-            if (Anim != null)
+            // ✅ 恢复 Animator（速度 + 完整参数）
+            if (savedState.HadAnimator && Anim != null)
             {
-                Anim.speed = _animOriginalSpeed;
+                Anim.speed = 1f; // 恢复动画速度
+                
+                // ✅ 恢复 Animator 参数（Float/Int/Bool）
+                if (savedState.AnimSnap != null)
+                {
+                    _animRecorder?.ApplySnapshot(savedState.AnimSnap);
+                }
             }
 
-            // 恢复 Enemy 行为逻辑：仅当敌人未死亡时才恢复
-            if (_enemyHadComponent && TheEnemy != null && !TheEnemy.IsDead)
+            // 恢复 Enemy（仅未死亡时）
+            if (savedState.HadEnemy && TheEnemy != null && !TheEnemy.IsDead)
             {
-                TheEnemy.enabled = _enemyWasEnabled;
+                if (!restoreToSnapshot)
+                {
+                    // 暂停结束：恢复原始 Enemy 状态
+                    ApplyEnemySnapshotDuringRewind(TheEnemy, savedState.EnemySnap);
+                }
+                // 回溯结束时不需要恢复，因为已在 RewindOneSnap 中应用了最后一帧
+                
+                TheEnemy.enabled = savedState.OrigEnemyEnabled;
             }
-            // 如果 IsDead == true，则保持 Enemy.enabled = false，防止死亡敌人继续 Update
         }
 
         /// <summary>
-        /// 在回溯期间应用一帧 NavMeshAgent 快照（只改配置与目标，不做寻路推进）
+        /// 回溯期间应用一帧 NavMeshAgent 快照（只改配置与目标，不做寻路推进）
         /// </summary>
         private void ApplyAgentSnapshotDuringRewind(AgentSnapshot snap)
         {
@@ -529,17 +625,6 @@ namespace TimeRewind
             /// 魔改C#的结构体使得功能类似C++的union联合体
             /// 参数值使用显式内存布局，三个字段共享同一内存地址。
             /// 由于每个参数只能是 Float/Int/Bool 之一，使用 union 可节省内存。
-            /// </summary>
-            /// <remarks>
-            /// 原理是将每个存储位置的偏移值强制设为0，使得它们重叠存储。
-            /// 内存布局对比：
-            /// - 原方案（独立存储）：float(4) + int(4) + bool(4对齐) = 12 字节
-            /// - Union方案（重叠存储）：max(float, int, bool) = 4 字节
-            /// - 节省：67% 内存/参数
-            /// 
-            /// 类型安全保证：
-            /// - 通过 ParamMetadata.Type 确保读写字段一致（录制和回放使用相同类型）
-            /// - 编译器会自动处理内存对齐，无需手动计算偏移量
             /// </remarks>
             [System.Runtime.InteropServices.StructLayout(
                 System.Runtime.InteropServices.LayoutKind.Explicit)]
@@ -673,14 +758,53 @@ namespace TimeRewind
             }
 
             /// <summary>
+            /// ✅ 新增：捕获当前 Animator 完整状态（供冻结管理器使用）
+            /// </summary>
+            public Snapshot CaptureCurrentSnapshot()
+            {
+                if (_anim == null) return null;
+
+                int layerCount = _anim.layerCount;
+                var snap = new Snapshot
+                {
+                    LayerStateHashes = new int[layerCount],
+                    LayerNormalizedTimes = new float[layerCount],
+                    ParameterValues = CaptureParameterValues(_anim, _paramMetadata)
+                };
+
+                for (int layer = 0; layer < layerCount; layer++)
+                {
+                    var st = _anim.GetCurrentAnimatorStateInfo(layer);
+                    snap.LayerStateHashes[layer] = st.fullPathHash;
+                    snap.LayerNormalizedTimes[layer] = st.normalizedTime;
+                }
+
+                return snap;
+            }
+
+            /// <summary>
+            /// ✅ 新增：应用 Animator 快照（供冻结管理器使用）
+            /// </summary>
+            public void ApplySnapshot(Snapshot snap)
+            {
+                if (_anim == null || snap == null) return;
+
+                // 回放层状态
+                var layerLen = Mathf.Min(_anim.layerCount, snap.LayerStateHashes.Length);
+                for (int layer = 0; layer < layerLen; layer++)
+                {
+                    _anim.Play(snap.LayerStateHashes[layer], layer, snap.LayerNormalizedTimes[layer]);
+                }
+
+                // 恢复参数
+                ApplyParameters(_anim, _paramMetadata, snap.ParameterValues);
+
+                _anim.Update(0f);
+            }
+
+            /// <summary>
             /// 【优化】基于预构建的元数据捕获参数值（避免每帧重新遍历 anim.parameters）
             /// </summary>
-            /// <remarks>
-            /// 优化原理：
-            /// - 元数据（Hash/Type）在构造时提取一次，录制时仅读取值
-            /// - 避免每帧分配 List 和遍历 Trigger 类型参数
-            /// - 使用 Union 存储，三个字段共享内存（F/I/B 仅一个有效）
-            /// </remarks>
             private static ParamValue[] CaptureParameterValues(Animator anim, ParamMetadata[] metadata)
             {
                 if (metadata == null || metadata.Length == 0)
@@ -692,7 +816,6 @@ namespace TimeRewind
                 {
                     var meta = metadata[i];
 
-                    // 【Union 特性】根据类型写入对应字段，三者共享同一内存地址
                     switch (meta.Type)
                     {
                         case AnimatorControllerParameterType.Float:
@@ -713,12 +836,6 @@ namespace TimeRewind
             /// <summary>
             /// 【优化】基于元数据 + 值数组恢复参数（确保类型安全）
             /// </summary>
-            /// <remarks>
-            /// 类型安全保证：
-            /// - 录制时根据 meta.Type 写入对应字段（F/I/B）
-            /// - 回放时根据相同的 meta.Type 读取对应字段
-            /// - Union 虽然允许访问任意字段，但通过元数据控制确保读写一致性
-            /// </remarks>
             private static void ApplyParameters(Animator anim, ParamMetadata[] metadata, ParamValue[] values)
             {
                 if (metadata == null || values == null) return;
@@ -729,7 +846,6 @@ namespace TimeRewind
                     var meta = metadata[i];
                     var val = values[i];
 
-                    // 【Union 特性】根据类型读取对应字段（必须与录制时使用的字段一致）
                     switch (meta.Type)
                     {
                         case AnimatorControllerParameterType.Float:
