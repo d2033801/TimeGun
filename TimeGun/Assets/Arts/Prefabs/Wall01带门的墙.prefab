@@ -48,9 +48,29 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
       objectReference: {fileID: 0}
+    - target: {fileID: -6702934723018446048, guid: 7bff9de0377ab3547a6fe17a53474b5b, type: 3}
+      propertyPath: m_StaticEditorFlags
+      value: 2147483647
+      objectReference: {fileID: 0}
+    - target: {fileID: -3949381564683906113, guid: 7bff9de0377ab3547a6fe17a53474b5b, type: 3}
+      propertyPath: m_StaticEditorFlags
+      value: 2147483647
+      objectReference: {fileID: 0}
     - target: {fileID: 919132149155446097, guid: 7bff9de0377ab3547a6fe17a53474b5b, type: 3}
       propertyPath: m_Name
-      value: "\u5E26\u95E8\u7684\u5899"
+      value: "Wall01\u5E26\u95E8\u7684\u5899"
+      objectReference: {fileID: 0}
+    - target: {fileID: 919132149155446097, guid: 7bff9de0377ab3547a6fe17a53474b5b, type: 3}
+      propertyPath: m_StaticEditorFlags
+      value: 2147483647
+      objectReference: {fileID: 0}
+    - target: {fileID: 6260694339890541569, guid: 7bff9de0377ab3547a6fe17a53474b5b, type: 3}
+      propertyPath: m_StaticEditorFlags
+      value: 2147483647
+      objectReference: {fileID: 0}
+    - target: {fileID: 9067929685449703834, guid: 7bff9de0377ab3547a6fe17a53474b5b, type: 3}
+      propertyPath: m_StaticEditorFlags
+      value: 2147483647
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
@@ -226,7 +246,7 @@ MonoBehaviour:
   rotationSpeed: 90
   autoCloseDelay: 1
   detectionInterval: 0.2
-  debugModeDetectPlayer: 1
+  debugModeDetectPlayer: 0
   showDebugGizmos: 1
   enableDebugLog: 1
 --- !u!1 &8264726680758020564 stripped

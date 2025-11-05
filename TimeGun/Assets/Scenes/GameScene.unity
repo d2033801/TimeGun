@@ -24399,6 +24399,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 5158437418fbb77469da1c7d5b4599b1, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::TimeGun.WeaponManager
+  weaponMode: 1
+  fixedWeapon: {fileID: 0}
   handTransform: {fileID: 4935953993133698605}
   gunPrefab: {fileID: 4566824613356072484, guid: 6bd9606718fc24441899fb6056c831e9, type: 3}
 --- !u!4 &763166312972800660
@@ -25461,6 +25463,7 @@ MonoBehaviour:
   sprintSpeed: 7.5
   rotationSpeed: 12
   gravity: -20
+  enableJump: 1
   jumpHeight: 1.2
   holdToCrouch: 0
   standHeight: 1.8
@@ -25999,6 +26002,9 @@ MonoBehaviour:
   recordSecondsConfig: 0
   recordFPSConfig: 0
   rewindSpeedConfig: 2
+  rewindEffectPrefab: {fileID: 0}
+  pauseEffectPrefab: {fileID: 0}
+  effectSpawnPoint: {fileID: 0}
   agent: {fileID: 5161339882815528061}
   anim: {fileID: 2112140857243518589}
   enemy: {fileID: 8843266604036155761}
@@ -26256,7 +26262,7 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 8744639224185900739}
   serializedVersion: 2
-  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: 1, y: 1.1110001, z: -5}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
