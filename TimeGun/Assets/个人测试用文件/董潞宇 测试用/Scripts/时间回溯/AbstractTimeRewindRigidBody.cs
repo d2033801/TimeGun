@@ -1,6 +1,7 @@
 ﻿using Unity.VisualScripting;
 using UnityEngine;
 using Utility;
+
 namespace TimeRewind
 {
     /// <summary>
@@ -13,6 +14,11 @@ namespace TimeRewind
         private Rigidbody rb => _rb ??= GetComponent<Rigidbody>();
         private RingBuffer<VelocityValuesSnapshot> rigidBodyHistory;
 
+        /// <summary>
+        /// 最后一次回溯应用的速度快照（用于回溯结束时恢复）
+        /// </summary>
+        private VelocityValuesSnapshot _lastRewindedVelocity;
+
         //==================== 冻结管理器（使用基类提供的通用版本）====================
         /// <summary>
         /// 刚体冻结状态
@@ -24,7 +30,7 @@ namespace TimeRewind
             public Vector3 origAngularVelocity;  // 原始角速度
         }
 
-        private ComponentFreezeManager<RigidbodyFreezeState> _freezeManager 
+        private ComponentFreezeManager<RigidbodyFreezeState> _freezeManager
             = new ComponentFreezeManager<RigidbodyFreezeState>();
 
         /// <summary>
@@ -45,7 +51,7 @@ namespace TimeRewind
         protected override void OnStopRewind()
         {
             base.OnStopRewind();
-            ReleaseFreezeRigidbody(false);  // 回溯结束不恢复速度（由快照恢复）
+            ReleaseFreezeRigidbody(true);  // ✅ 修改：回溯结束时恢复速度（使用最后回溯的快照）
         }
 
         protected override void OnStartPause()
@@ -57,7 +63,7 @@ namespace TimeRewind
         protected override void OnStopPause()
         {
             base.OnStopPause();
-            ReleaseFreezeRigidbody(true);  // 暂停结束恢复速度
+            ReleaseFreezeRigidbody(false);  // ✅ 暂停结束不恢复速度（使用冻结前的原始速度）
         }
 
         /// <summary>
@@ -73,7 +79,7 @@ namespace TimeRewind
             };
 
             bool shouldFreeze = _freezeManager.RequestFreeze(currentState);
-            
+
             if (!shouldFreeze) return;  // 已经冻结，直接返回
 
             // 执行冻结
@@ -83,7 +89,10 @@ namespace TimeRewind
         /// <summary>
         /// 释放冻结刚体（引用计数-1）
         /// </summary>
-        /// <param name="restoreVelocity">是否恢复速度（暂停结束时为true，回溯结束时为false）</param>
+        /// <param name="restoreVelocity">
+        /// true = 恢复速度（回溯结束时使用最后回溯的快照速度）
+        /// false = 不恢复速度（暂停结束时使用冻结前的原始速度）
+        /// </param>
         private void ReleaseFreezeRigidbody(bool restoreVelocity)
         {
             if (!_freezeManager.ReleaseFreeze(out var savedState))
@@ -94,9 +103,16 @@ namespace TimeRewind
             // 执行解冻
             rb.isKinematic = savedState.origIsKinematic;
 
-            // 恢复速度（仅暂停结束时）
+            // ✅ 修复：根据场景恢复速度
             if (restoreVelocity)
             {
+                // 回溯结束：应用最后一次回溯的快照速度
+                rb.linearVelocity = _lastRewindedVelocity.Velocity;
+                rb.angularVelocity = _lastRewindedVelocity.AngularVelocity;
+            }
+            else
+            {
+                // 暂停结束：恢复到冻结前的原始速度
                 rb.linearVelocity = savedState.origVelocity;
                 rb.angularVelocity = savedState.origAngularVelocity;
             }
@@ -122,9 +138,13 @@ namespace TimeRewind
         protected override void RewindOneSnap()
         {
             base.RewindOneSnap();
-            var snap = rigidBodyHistory.PopBack();
-            rb.linearVelocity = snap.Velocity;
-            rb.angularVelocity = snap.AngularVelocity;
+
+            // ✅ 优化：只保存快照，不应用速度（因为 isKinematic=true 时速度无效）
+            _lastRewindedVelocity = rigidBodyHistory.PopBack();
+
+            // ❌ 删除：不再每帧设置速度（浪费性能）
+            // rb.linearVelocity = snap.Velocity;
+            // rb.angularVelocity = snap.AngularVelocity;
         }
     }
 }

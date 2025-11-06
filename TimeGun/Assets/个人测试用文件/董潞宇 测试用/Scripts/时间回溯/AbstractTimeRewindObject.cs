@@ -100,6 +100,9 @@ namespace TimeRewind
     /// TODO: 但其实我也没想明白这个类该不该抽象化，到底把哪些抽象化
     public abstract class AbstractTimeRewindObject : MonoBehaviour
     {
+        // ✅ 新增：全局事件（任意物体停止回溯时触发）
+        public static event System.Action<AbstractTimeRewindObject> OnAnyObjectStoppedRewind;
+
         #region 显示在检视器上的数据
         [Header("Config")]
         [Min(0), SerializeField, Tooltip("录制时长, 0为默认值20秒")] private int recordSecondsConfig = 0;
@@ -143,6 +146,12 @@ namespace TimeRewind
         /// </summary>
         protected bool isRewinding = false;
 
+        // ✅ 新增：公开属性（供外部查询回溯状态）
+        /// <summary>
+        /// 获取当前是否正在回溯（只读属性）
+        /// </summary>
+        public bool IsRewinding => isRewinding;
+
         /// <summary>
         /// 是否处于录制状态（true 表示正在录制历史快照，false 表示暂停录制）。
         /// </summary>
@@ -160,7 +169,7 @@ namespace TimeRewind
         float recordTimer = 0f;
 
         /// <summary>
-        /// 由于正常来说每个历史文件中的帧数是固定的, 所以这里用一个计数器记录当前剩了多少帧, 以便实现复用代码
+        /// 由于正常来说每个历史文件中的帧数是固定的,  所以这里用一个计数器记录当前剩了多少帧, 以便实现复用代码
         /// 子类或许也可以改写这个？
         /// </summary>
         protected int frameCount => transformHistory?.Count ?? 0;
@@ -288,7 +297,7 @@ namespace TimeRewind
 
                 if (frameCount == 0)
                 {
-                    // 没历史了，停止回放
+                    // 没历史了，停止回播放
                     StopRewind();
                     return;
                 }
@@ -492,10 +501,11 @@ namespace TimeRewind
             _runtimeRewindSpeed = null;
             isRewinding = false;
 
-            // ✅ 停止回溯特效
             StopRewindEffect();
-
             OnStopRewind();
+
+            // ✅ 新增：触发全局事件（通知管理器）
+            OnAnyObjectStoppedRewind?.Invoke(this);
         }
 
         /// <summary>
