@@ -135,6 +135,11 @@ namespace TimeGun
                 cameraRoot.rotation = Quaternion.Euler(_cameraPitch, _cameraYaw, 0f);
             }
 
+        }
+
+        private void Start()
+        {
+
             UnityEngine.Cursor.lockState = CursorLockMode.Locked;
             UnityEngine.Cursor.visible = false;
         }

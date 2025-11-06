@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections;
 using Unity.VisualScripting;
 using UnityEngine;
 using Utility;
@@ -6,7 +7,7 @@ using Utility;
 namespace TimeRewind
 {
     #region 通用冻结管理器（供所有子类使用）
-    
+
     /// <summary>
     /// 通用组件冻结管理器：使用引用计数跟踪有多少系统需要冻结组件
     /// </summary>
@@ -40,13 +41,13 @@ namespace TimeRewind
     {
         private int _freezeRefCount = 0;  // 冻结引用计数（0=未冻结，>0=已冻结）
         private TState _savedState;       // 保存的原始状态（仅在首次冻结时保存）
-        
+
         /// <summary>是否处于冻结状态</summary>
         public bool IsFrozen => _freezeRefCount > 0;
-        
+
         /// <summary>获取保存的原始状态（仅在首次冻结时有效）</summary>
         public TState SavedState => _savedState;
-        
+
         /// <summary>
         /// 请求冻结（引用计数+1）
         /// </summary>
@@ -59,11 +60,11 @@ namespace TimeRewind
                 // 首次冻结：保存原始状态
                 _savedState = currentState;
             }
-            
+
             _freezeRefCount++;
             return _freezeRefCount == 1;  // 仅首次返回true
         }
-        
+
         /// <summary>
         /// 释放冻结（引用计数-1）
         /// </summary>
@@ -72,15 +73,15 @@ namespace TimeRewind
         public bool ReleaseFreeze(out TState savedState)
         {
             savedState = _savedState;
-            
+
             if (_freezeRefCount > 0)
             {
                 _freezeRefCount--;
             }
-            
+
             return _freezeRefCount == 0;  // 仅归零时返回true
         }
-        
+
         /// <summary>
         /// 强制重置（用于异常情况）
         /// </summary>
@@ -90,7 +91,7 @@ namespace TimeRewind
             _savedState = default;
         }
     }
-    
+
     #endregion
 
     /// <summary>
@@ -101,21 +102,21 @@ namespace TimeRewind
     {
         #region 显示在检视器上的数据
         [Header("Config")]
-        [Min(0), SerializeField, Tooltip("录制时长, 0为默认值20秒")]private int recordSecondsConfig = 0;
+        [Min(0), SerializeField, Tooltip("录制时长, 0为默认值20秒")] private int recordSecondsConfig = 0;
         [Min(0), SerializeField, Tooltip("每秒录制帧率(0为默认值)")] private int recordFPSConfig = 0;
-        [Range(0,10), SerializeField, Tooltip("回溯速度倍率")] private float rewindSpeedConfig = 2;
+        [Range(0, 10), SerializeField, Tooltip("回溯速度倍率")] private float rewindSpeedConfig = 2;
 
         [Header("特效 Effects (可选)")]
-        [Tooltip("回溯时播放的特效预制件"), SerializeField] 
+        [Tooltip("回溯时播放的特效预制件"), SerializeField]
         private GameObject rewindEffectPrefab;
-        
-        [Tooltip("暂停时播放的特效预制件"), SerializeField] 
+
+        [Tooltip("暂停时播放的特效预制件"), SerializeField]
         private GameObject pauseEffectPrefab;
 
         [Tooltip("特效生成点（留空则使用物体自身位置）"), SerializeField]
         private Transform effectSpawnPoint;
         #endregion
-        
+
         #region 内部数据与结构体
         // 最大录制时长, 若为0则使用默认20秒
         protected int recordSeconds => recordSecondsConfig == 0 ? 20 : recordSecondsConfig;
@@ -126,7 +127,7 @@ namespace TimeRewind
         // 回溯速度倍率
         private float? _runtimeRewindSpeed = null; // 这是个运行时可空的回溯速度, 若不为null則使用该值
         protected float rewindSpeed => Mathf.Max(0f, _runtimeRewindSpeed ?? rewindSpeedConfig);
-        
+
 
         RingBuffer<TransformValuesSnapshot> transformHistory;           // transform组件值的记录
         float recordInterval;                                           // 每次记录间隔
@@ -235,12 +236,12 @@ namespace TimeRewind
         {
             // ✅ 暂停时既不录制也不回溯
             if (isPaused) return;
-            
+
             if (isRewinding)
             {
                 RewindFixedStep();
             }
-            else if(isRecording)
+            else if (isRecording)
             {
                 RecordFixedStep();
             }
@@ -377,11 +378,11 @@ namespace TimeRewind
 
             // 在特效生成点创建新的回溯特效
             _activeRewindEffect = Instantiate(
-                rewindEffectPrefab, 
-                EffectSpawnPoint.position, 
+                rewindEffectPrefab,
+                EffectSpawnPoint.position,
                 EffectSpawnPoint.rotation
             );
-            
+
             // 设置父物体为生成点，跟随生成点移动和旋转
             _activeRewindEffect.transform.SetParent(EffectSpawnPoint);
         }
@@ -410,11 +411,11 @@ namespace TimeRewind
 
             // 在特效生成点创建新的暂停特效
             _activePauseEffect = Instantiate(
-                pauseEffectPrefab, 
-                EffectSpawnPoint.position, 
+                pauseEffectPrefab,
+                EffectSpawnPoint.position,
                 EffectSpawnPoint.rotation
             );
-            
+
             // 设置父物体为生成点，跟随生成点移动和旋转
             _activePauseEffect.transform.SetParent(EffectSpawnPoint);
         }
@@ -474,10 +475,10 @@ namespace TimeRewind
             _runtimeRewindSpeed = speed;
             isRewinding = true;
             rewindTimer = 0f;
-            
+
             // ✅ 播放回溯特效
             PlayRewindEffect();
-            
+
             OnStartRewind();
         }
 
@@ -490,10 +491,10 @@ namespace TimeRewind
             if (!isRewinding) return;
             _runtimeRewindSpeed = null;
             isRewinding = false;
-            
+
             // ✅ 停止回溯特效
             StopRewindEffect();
-            
+
             OnStopRewind();
         }
 
@@ -520,15 +521,15 @@ namespace TimeRewind
             {
                 // 如果之前没在回溯，启动回溯状态（冻结 NavMeshAgent 等）
                 isRewinding = true;
-                
+
                 // ✅ 播放回溯特效
                 PlayRewindEffect();
-                
+
                 OnStartRewind();
             }
 
             // TODO: 这里可以优化掉, 直接循环也太弱智了, 应该可以直接跳转到对应帧
-                for (int i = 0; i < frames; i++)
+            for (int i = 0; i < frames; i++)
             {
                 if (frameCount == 0) break;
                 RewindOneSnap();
@@ -540,10 +541,10 @@ namespace TimeRewind
             {
                 // 如果是我们启动的回溯，恢复状态（解冻 NavMeshAgent 等）
                 isRewinding = false;
-                
+
                 // ✅ 停止回溯特效
                 StopRewindEffect();
-                
+
                 OnStopRewind(); // ✅ 关键：调用 StopRewind 恢复组件状态
             }
         }
@@ -559,10 +560,10 @@ namespace TimeRewind
         {
             if (isPaused) return;
             isPaused = true;
-            
+
             // ✅ 播放暂停特效
             PlayPauseEffect();
-            
+
             OnStartPause();
         }
 
@@ -573,10 +574,10 @@ namespace TimeRewind
         {
             if (!isPaused) return;
             isPaused = false;
-            
+
             // ✅ 停止暂停特效
             StopPauseEffect();
-            
+
             OnStopPause();
         }
 
@@ -584,6 +585,56 @@ namespace TimeRewind
         /// 获取当前是否处于暂停状态
         /// </summary>
         public bool IsPaused => isPaused;
+
+        /// <summary>
+        /// 供外部调用的方法。回溯指定的秒数后自动停止。
+        /// </summary>
+        /// <param name="rewindDuration">回溯持续时长（秒）</param>
+        /// <param name="speed">回溯速度倍率（可选，默认使用配置值）</param>
+        /// <remarks>
+        /// 使用协程实现限时回溯，不影响现有的 StartRewind/StopRewind 逻辑。
+        /// 示例：StartRewindByTime(2f) - 以默认速度回溯2秒后自动停止
+        /// </remarks>
+        public virtual void StartRewindByTime(float rewindDuration, float? speed = null)
+        {
+            if (rewindDuration <= 0f)
+            {
+                Debug.LogWarning($"[{gameObject.name}] 回溯时长必须大于0");
+                return;
+            }
+
+            // 如果已经在限时回溯中，先停止旧的协程
+            if (_timedRewindCoroutine != null)
+            {
+                StopCoroutine(_timedRewindCoroutine);
+                _timedRewindCoroutine = null;
+            }
+
+            // 启动新的限时回溯协程
+            _timedRewindCoroutine = StartCoroutine(TimedRewindCoroutine(rewindDuration, speed ?? rewindSpeed));
+        }
+
+        /// <summary>
+        /// 限时回溯协程（内部使用）
+        /// </summary>
+        private IEnumerator TimedRewindCoroutine(float duration, float speed)
+        {
+            // 启动回溯
+            StartRewind(speed);
+
+            // 等待指定时长
+            yield return new WaitForSeconds(duration);
+
+            // 自动停止回溯
+            StopRewind();
+
+            _timedRewindCoroutine = null;
+        }
+
+        /// <summary>
+        /// 当前正在运行的限时回溯协程
+        /// </summary>
+        private Coroutine _timedRewindCoroutine = null;
 
         #endregion
 
