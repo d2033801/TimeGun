@@ -383,6 +383,11 @@ MonoBehaviour:
   m_ShadowLayerMask: 1
   m_RenderingLayers: 1
   m_ShadowRenderingLayers: 1
+--- !u!1 &1374646309 stripped
+GameObject:
+  m_CorrespondingSourceObject: {fileID: 8513759365037498703, guid: 600e5864c82d14c43afb09d6d17c88da, type: 3}
+  m_PrefabInstance: {fileID: 3364861623213228855}
+  m_PrefabAsset: {fileID: 0}
 --- !u!1001 &3364861623213228855
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -395,6 +400,18 @@ PrefabInstance:
       propertyPath: m_AnchorMax.y
       value: 0
       objectReference: {fileID: 0}
+    - target: {fileID: 1103760378517405369, guid: 600e5864c82d14c43afb09d6d17c88da, type: 3}
+      propertyPath: m_RaycastTarget
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 1619880610613755058, guid: 600e5864c82d14c43afb09d6d17c88da, type: 3}
+      propertyPath: m_RaycastTarget
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 2766580926251830057, guid: 600e5864c82d14c43afb09d6d17c88da, type: 3}
+      propertyPath: mainMenuCanvas
+      value: 
+      objectReference: {fileID: 1374646309}
     - target: {fileID: 6697756192347083318, guid: 600e5864c82d14c43afb09d6d17c88da, type: 3}
       propertyPath: m_AnchorMax.y
       value: 0

@@ -1,4 +1,6 @@
+using Unity.Cinemachine;
 using UnityEngine;
+using UnityEngine.InputSystem;
 using UnityEngine.SceneManagement;
 using UnityEngine.UI;
 
@@ -6,11 +8,17 @@ public class MainMenu : MonoBehaviour
 {
     public GameObject settingsPanel;   // 拖拽引用
     public Slider volumeSlider;        // 拖拽引用
+    public GameObject mainMenuCanvas;
+    public CinemachineCamera menuCam;
+    public CinemachineCamera gameCam;
 
     private void Start()
     {
         // 默认隐藏设置界面
         settingsPanel.SetActive(false);
+
+        gameCam.Priority = 10;
+        menuCam.Priority = 20;
 
         // 初始化音量（如果你有保存过音量，就加载，否则用默认值1）
         float savedVolume = PlayerPrefs.GetFloat("Volume", 1f);
@@ -24,8 +32,18 @@ public class MainMenu : MonoBehaviour
     // 在按钮 OnClick 中调用
     public void StartGame()
     {
-        // 场景名必须与项目中场景文件名一致
-        SceneManager.LoadScene("GameScene");
+        /*
+        // 1. 提升游戏镜头优先级
+        gameCam.Priority = 20;
+        menuCam.Priority = 5;
+        */
+
+        // 2. 隐藏主菜单
+        mainMenuCanvas.SetActive(false);
+        gameCam.Priority = 20;
+        menuCam.Priority = 10;
+        // 3. TODO : 显示游戏UI
+        // gameHUDCanvas.SetActive(true);
     }
 
     public void QuitGame()
