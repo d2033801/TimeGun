@@ -11,8 +11,14 @@ namespace TimeGun
     {
         [Header("通常设定 Common")]
         [Tooltip("生命周期 到时会自动销毁")] public float lifeTime = 6f;           // 自动销毁时间
-
         [Tooltip("可受影响的层")] public LayerMask hitLayers = ~0;      // 可打中的层
+
+        [Header("音效 Audio (可选)")]
+        [Tooltip("击中/爆炸音效（可选）")] 
+        [SerializeField] protected AudioClip impactSound;
+        
+        [Tooltip("音效音量(0-1)"), Range(0f, 1f)] 
+        [SerializeField] protected float soundVolume = 0.5f;
 
         protected Rigidbody rb; // 子弹物理刚体引用
         private float lifeTimer = 0f;
@@ -40,10 +46,8 @@ namespace TimeGun
             // Despawn(); 留给对象池扩展用
         }
 
-
         protected virtual void OnCollisionEnter(Collision collision)
         {
-
             // 只处理指定层
             if (((1 << collision.gameObject.layer) & hitLayers) == 0) return;
 
@@ -64,6 +68,56 @@ namespace TimeGun
         /// </remarks>
         protected abstract void HandleHit(Collision hitCollision);
 
+        #region 音效辅助方法
+
+        /// <summary>
+        /// 在指定位置播放音效（使用AudioSource.PlayClipAtPoint）
+        /// </summary>
+        /// <param name="position">音效播放的3D空间位置</param>
+        /// <param name="clip">要播放的音效片段（如果为null则使用impactSound）</param>
+        /// <remarks>
+        /// 使用PlayClipAtPoint的优点：
+        /// - 无需管理AudioSource组件
+        /// - 3D空间音效，自动根据距离衰减
+        /// - 播放完自动销毁，无内存泄漏
+        /// - 支持同时播放多个音效
+        /// </remarks>
+        protected void PlaySoundAtPoint(Vector3 position, AudioClip clip = null)
+        {
+            AudioClip soundToPlay = clip ?? impactSound;
+            if (soundToPlay == null) return;
+
+            AudioSource.PlayClipAtPoint(soundToPlay, position, soundVolume);
+        }
+
+        /// <summary>
+        /// 在当前位置播放音效
+        /// </summary>
+        /// <param name="clip">要播放的音效片段（如果为null则使用impactSound）</param>
+        protected void PlaySound(AudioClip clip = null)
+        {
+            PlaySoundAtPoint(transform.position, clip);
+        }
+
+        /// <summary>
+        /// 在击中点播放音效（自动从Collision中提取击中点位置）
+        /// </summary>
+        /// <param name="hitCollision">碰撞信息</param>
+        /// <param name="clip">要播放的音效片段（如果为null则使用impactSound）</param>
+        protected void PlayHitSound(Collision hitCollision, AudioClip clip = null)
+        {
+            if (hitCollision.contactCount > 0)
+            {
+                Vector3 hitPoint = hitCollision.GetContact(0).point;
+                PlaySoundAtPoint(hitPoint, clip);
+            }
+            else
+            {
+                PlaySound(clip);
+            }
+        }
+
+        #endregion
 
         #region 可选对象池扩展
         // 注意在使用对象池时还要改上面的 OnLifeExpired 
@@ -86,9 +140,4 @@ namespace TimeGun
         }
         #endregion
     }
-
-
-
-
-
 }

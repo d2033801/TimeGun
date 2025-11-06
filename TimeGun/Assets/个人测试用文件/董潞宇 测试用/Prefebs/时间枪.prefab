@@ -58,7 +58,7 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 4566824613356072484}
   serializedVersion: 2
-  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 3, y: 3, z: 3}
   m_ConstrainProportionsScale: 1
@@ -74,7 +74,7 @@ MeshFilter:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 4566824613356072484}
-  m_Mesh: {fileID: 8989324824668654689, guid: df5aa88e1e036e54499affb177abbff3, type: 3}
+  m_Mesh: {fileID: 3746009558113476005, guid: 6f652c8b7312b8948878fc0e261f0558, type: 3}
 --- !u!23 &4797229422209445902
 MeshRenderer:
   m_ObjectHideFlags: 0
@@ -100,10 +100,10 @@ MeshRenderer:
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
-  - {fileID: 2100000, guid: fc7417908fed84b4984bf4dcedd1dcbd, type: 2}
+  - {fileID: 2100000, guid: 720bf476125f28b4c948819614618dd0, type: 2}
   - {fileID: 2100000, guid: 720bf476125f28b4c948819614618dd0, type: 2}
   - {fileID: 2100000, guid: b0e26c10a6a9614479bde7ee65040d6a, type: 2}
-  - {fileID: 4994165885606464720, guid: df5aa88e1e036e54499affb177abbff3, type: 3}
+  - {fileID: 4994165885606464720, guid: 6f652c8b7312b8948878fc0e261f0558, type: 3}
   - {fileID: 2100000, guid: 44cd3726f7cf022459267d37ed2c4ba4, type: 2}
   m_StaticBatchInfo:
     firstSubMesh: 0
@@ -143,6 +143,13 @@ MonoBehaviour:
   grenadeLaunchPoint: {fileID: 4311936464823221693}
   grenadePrefab: {fileID: 4954844983062401583, guid: 440a1689ade92c64b93a4489bbb53b5c, type: 3}
   bulletPrefab: {fileID: 5079446126904241230, guid: 8590c39336a248747a612c0389436d6a, type: 3}
+  muzzleFlashPrefab: {fileID: 6345317055668330264, guid: 68872d4b07b0620429ca64a6b2e1f0fd, type: 3}
+  grenadeLaunchEffectPrefab: {fileID: 5232875226435781703, guid: 60599edf929ffd74fb9636d427f0e1f5, type: 3}
+  effectDuration: 0.5
+  bulletFireSound: {fileID: 8300000, guid: 9e0a38f41624cfc4eafa2aecadda14ec, type: 3}
+  grenadeFireSound: {fileID: 8300000, guid: 124f4e128a09c994c9e5d9434b7146ec, type: 3}
+  soundVolume: 1
+  audioSource: {fileID: 0}
   bulletSpeed: 200
   bulletFireInterval: 0.5
   grenadeSpeed: 20

@@ -377,6 +377,7 @@ MonoBehaviour:
   sprintSpeed: 7.5
   rotationSpeed: 12
   gravity: -20
+  enableJump: 0
   jumpHeight: 1.2
   holdToCrouch: 0
   standHeight: 1.8
@@ -549,8 +550,8 @@ MonoBehaviour:
       m_Bits: 1
     IgnoreTag: Player
     CameraRadius: 0.217
-    DampingIntoCollision: 1.47
-    DampingFromCollision: 1.12
+    DampingIntoCollision: 0.56
+    DampingFromCollision: 0.44
 --- !u!114 &8996962453792168019
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -812,8 +813,8 @@ MonoBehaviour:
       m_Bits: 1
     IgnoreTag: Player
     CameraRadius: 0.217
-    DampingIntoCollision: 1.47
-    DampingFromCollision: 1.12
+    DampingIntoCollision: 0.56
+    DampingFromCollision: 0.44
 --- !u!114 &4701001846488267537
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -1398,18 +1399,6 @@ PrefabInstance:
       value: "\u65F6\u95F4\u67AA"
       objectReference: {fileID: 0}
     - target: {fileID: 6433304652104816477, guid: 6bd9606718fc24441899fb6056c831e9, type: 3}
-      propertyPath: m_LocalScale.x
-      value: 3
-      objectReference: {fileID: 0}
-    - target: {fileID: 6433304652104816477, guid: 6bd9606718fc24441899fb6056c831e9, type: 3}
-      propertyPath: m_LocalScale.y
-      value: 3
-      objectReference: {fileID: 0}
-    - target: {fileID: 6433304652104816477, guid: 6bd9606718fc24441899fb6056c831e9, type: 3}
-      propertyPath: m_LocalScale.z
-      value: 3
-      objectReference: {fileID: 0}
-    - target: {fileID: 6433304652104816477, guid: 6bd9606718fc24441899fb6056c831e9, type: 3}
       propertyPath: m_LocalPosition.x
       value: 0
       objectReference: {fileID: 0}
@@ -1448,10 +1437,6 @@ PrefabInstance:
     - target: {fileID: 6433304652104816477, guid: 6bd9606718fc24441899fb6056c831e9, type: 3}
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 6433304652104816477, guid: 6bd9606718fc24441899fb6056c831e9, type: 3}
-      propertyPath: m_ConstrainProportionsScale
-      value: 1
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
