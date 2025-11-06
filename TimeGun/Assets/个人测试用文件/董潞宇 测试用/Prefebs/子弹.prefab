@@ -138,10 +138,10 @@ GameObject:
   - component: {fileID: 710012689266433136}
   - component: {fileID: 6476541822173574423}
   - component: {fileID: 4709545728463188964}
-  - component: {fileID: 1571964942566938409}
   - component: {fileID: 9007592167850698637}
   - component: {fileID: 7464742530675779873}
   - component: {fileID: 2603481143765120950}
+  - component: {fileID: 2995030300168043169}
   m_Layer: 0
   m_Name: "\u5B50\u5F39"
   m_TagString: Untagged
@@ -222,27 +222,6 @@ MeshRenderer:
   m_SortingLayer: 0
   m_SortingOrder: 0
   m_AdditionalVertexStreams: {fileID: 0}
---- !u!135 &1571964942566938409
-SphereCollider:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 5079446126904241230}
-  m_Material: {fileID: 13400000, guid: 1d8eff000b3c7e5499d0550db8e3185e, type: 2}
-  m_IncludeLayers:
-    serializedVersion: 2
-    m_Bits: 0
-  m_ExcludeLayers:
-    serializedVersion: 2
-    m_Bits: 0
-  m_LayerOverridePriority: 0
-  m_IsTrigger: 0
-  m_ProvidesContacts: 0
-  m_Enabled: 1
-  serializedVersion: 3
-  m_Radius: 0.5
-  m_Center: {x: 0, y: 0, z: 0}
 --- !u!54 &9007592167850698637
 Rigidbody:
   m_ObjectHideFlags: 0
@@ -400,5 +379,28 @@ MonoBehaviour:
   soundVolume: 0.5
   rewindSecondsOnHit: 1
   rewindSpeedOnHit: 2
-  rewindMode: 1
+  rewindMode: 2
   impactEffectPrefab: {fileID: 362261158077530393, guid: 20fda529c996a334da7fd65b48ea40df, type: 3}
+--- !u!136 &2995030300168043169
+CapsuleCollider:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5079446126904241230}
+  m_Material: {fileID: 0}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_LayerOverridePriority: 0
+  m_IsTrigger: 0
+  m_ProvidesContacts: 0
+  m_Enabled: 1
+  serializedVersion: 2
+  m_Radius: 0.34838143
+  m_Height: 2.0224936
+  m_Direction: 2
+  m_Center: {x: 0, y: 0.016216002, z: 1.0112468}

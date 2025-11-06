@@ -11,12 +11,16 @@ namespace TimeGun
         [Header("时间回溯设定 Time Rewind")]
         [Tooltip("子弹/榴弹让物体回溯的时间")] public float rewindSecondsOnHit = 1f; // 命中目标时触发的回溯秒数（派生类可覆盖）TODO: 现阶段没这功能只是放着作为占位符
         [Tooltip("子弹/榴弹让物体回溯的时间")] public float rewindSpeedOnHit = 2f; // 命中目标时触发的回溯秒数（派生类可覆盖）TODO: 现阶段没这功能只是放着作为占位符
-        [Tooltip("回溯应用模式：Instant=瞬时跳回；Gradual=渐进回放"), SerializeField] 
+        [Tooltip("回溯应用模式：Instant=瞬时跳回；Gradual=渐进回放；Timed Gradual=按固定时间渐进回溯"), SerializeField] 
         private RewindMode rewindMode = RewindMode.Gradual;
         private enum RewindMode
         {
+            [InspectorName("瞬时跳回 (Instant)")]
             Instant,  // 瞬时跳回
-            Gradual   // 渐进回放
+            [InspectorName("渐进回放 (Gradual)")]
+            Gradual,   // 渐进回放
+            [InspectorName("渐进回溯固定时间 (Timed Gradual)")]
+            TimedGradual    // 渐进回溯固定时间
         }
 
         /// <summary>
@@ -40,6 +44,10 @@ namespace TimeGun
                 case RewindMode.Instant:
                     // 若 瞬时跳回 则 使用此行
                     rewindObj.RewindBySeconds(seconds); 
+                    return;
+                case RewindMode.TimedGradual:
+                    // 若 选择的是渐进回溯固定时间 则 使用此行
+                    rewindObj.StartRewindByTime(seconds, rewindSpeedOnHit);
                     return;
             }
 
