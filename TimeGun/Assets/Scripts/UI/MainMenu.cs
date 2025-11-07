@@ -1,75 +1,159 @@
 using Unity.Cinemachine;
 using UnityEngine;
 using UnityEngine.InputSystem;
-using UnityEngine.SceneManagement;
-using UnityEngine.UI;
 
 public class MainMenu : MonoBehaviour
 {
-    public GameObject settingsPanel;   // 拖拽引用
-    public Slider volumeSlider;        // 拖拽引用
-    public GameObject mainMenuCanvas;
+    [Header("UI 引用")]
+    public GameObject controlsPanel;   // 操作指南（共用）
+    public GameObject mainMenuPanel;  // 主菜单整体
+    public GameObject gameHUDPanel;   // 游戏HUD
+    public GameObject escMenuPanel;   // 暂停菜单
+
+    [Header("摄像机")]
     public CinemachineCamera menuCam;
     public CinemachineCamera gameCam;
 
+    private bool isInControls = false; // 是否在操作指南
+    private bool isPaused = false;     // 是否在暂停菜单
+    private bool isPlaying = false;    // 是否在游戏中
+    private bool openedFromEsc = false; // 记录操作指南是从ESC菜单打开的
+
     private void Start()
     {
-        // 默认隐藏设置界面
-        settingsPanel.SetActive(false);
+        // 初始化状态
+        controlsPanel?.SetActive(false);
+        gameHUDPanel?.SetActive(false);
+        mainMenuPanel?.SetActive(true);
+        escMenuPanel?.SetActive(false);
 
-        gameCam.Priority = 10;
-        menuCam.Priority = 20;
+        // 初始相机优先级
+        if (gameCam != null) gameCam.Priority = 10;
+        if (menuCam != null) menuCam.Priority = 20;
 
-        // 初始化音量（如果你有保存过音量，就加载，否则用默认值1）
-        float savedVolume = PlayerPrefs.GetFloat("Volume", 1f);
-        volumeSlider.value = savedVolume;
-        AudioListener.volume = savedVolume;
+        //Debug.Log(escMenuPanel.activeInHierarchy);
+        
+        // 解锁鼠标（在主菜单下）
+        Cursor.lockState = CursorLockMode.None;
+        Cursor.visible = true;
 
-        // 监听滑块变化
-        volumeSlider.onValueChanged.AddListener(OnVolumeChanged);
+        // 恢复时间流动
+        Time.timeScale = 1;
     }
 
-    // 在按钮 OnClick 中调用
+    private void Update()
+    {
+        // 处理 ESC 键逻辑
+        if (Keyboard.current.escapeKey.wasPressedThisFrame)
+        {
+            // 如果在操作指南中，返回来源菜单
+            if (isInControls)
+            {
+                CloseControls();
+                return;
+            }
+       
+            
+            // 如果在游戏中
+            if (isPlaying)
+            {
+                if (!isPaused)
+                {
+                    ShowEscMenu();
+                    isPaused = true;
+                }
+                else
+                {
+                    ResumeGame();
+                    isPaused = false;
+                }
+            }
+        }
+    }
+
+    // ====== 主菜单 ======
     public void StartGame()
     {
-        /*
-        // 1. 提升游戏镜头优先级
-        gameCam.Priority = 20;
-        menuCam.Priority = 5;
-        */
+        mainMenuPanel.SetActive(false);
+        gameHUDPanel.SetActive(true);
+        escMenuPanel.SetActive(false);
+        controlsPanel.SetActive(false);
 
-        // 2. 隐藏主菜单
-        mainMenuCanvas.SetActive(false);
         gameCam.Priority = 20;
         menuCam.Priority = 10;
-        // 3. TODO : 显示游戏UI
-        // gameHUDCanvas.SetActive(true);
 
-        // 4. 锁定并隐藏鼠标光标
-        Cursor.lockState = CursorLockMode.Locked;  // 锁定鼠标到屏幕中心
-        Cursor.visible = false;                    // 隐藏鼠标
+        // 锁定并隐藏鼠标
+        Cursor.lockState = CursorLockMode.Locked;
+        Cursor.visible = false;
+
+        // 确保时间流动
+        Time.timeScale = 1;
+        isPlaying = true;
+        isPaused = false;
     }
 
     public void QuitGame()
     {
-        // 编辑器里不会退出，但会在控制台打印
         Debug.Log("QuitGame called - Application.Quit() will work in build.");
         Application.Quit();
     }
 
-    public void OpenSettings()
+    // ====== 操作指南（共用） ======
+    public void OpenControls()
     {
-        settingsPanel.SetActive(true);
+        // 判断当前是从哪个菜单进入的
+        if (mainMenuPanel.activeSelf)
+        {
+            openedFromEsc = false; // 从主菜单进入
+            mainMenuPanel.SetActive(false);
+        }
+        else if (escMenuPanel.activeSelf)
+        {
+            openedFromEsc = true; // 从ESC菜单进入
+            escMenuPanel.SetActive(false);
+        }
+
+        controlsPanel.SetActive(true);
+        isInControls = true;
     }
 
-    public void CloseSettings()
+    public void CloseControls()
     {
-        settingsPanel.SetActive(false);
+        controlsPanel.SetActive(false);
+
+        // 返回来源菜单
+        if (openedFromEsc)
+        {
+            escMenuPanel.SetActive(true);
+        }
+        else
+        {
+            mainMenuPanel.SetActive(true);
+        }
+
+        isInControls = false;
     }
 
-    private void OnVolumeChanged(float value)
+    // ====== 游戏中（ESC菜单） ======
+    public void ShowEscMenu()
     {
-        AudioListener.volume = value;
-        PlayerPrefs.SetFloat("Volume", value);
+        escMenuPanel.SetActive(true);
+        gameHUDPanel.SetActive(false);
+        controlsPanel.SetActive(false);
+        Time.timeScale = 0; // 暂停游戏
+
+        Cursor.lockState = CursorLockMode.None;
+        Cursor.visible = true;
+    }
+
+    public void ResumeGame()
+    {
+        escMenuPanel.SetActive(false);
+        gameHUDPanel.SetActive(true);
+        controlsPanel.SetActive(false);
+        Time.timeScale = 1; // 继续游戏
+
+        Cursor.lockState = CursorLockMode.Locked;
+        Cursor.visible = false;
     }
 }
