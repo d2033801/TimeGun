@@ -3859,6 +3859,59 @@ Transform:
   m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!1 &2140878582
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 2140878584}
+  - component: {fileID: 2140878583}
+  m_Layer: 0
+  m_Name: "\u2014\u2014\u2014\u2014\u2014\u2014GlobalRewindMANAGER\u2014\u2014\u2014\u2014\u2014\u2014"
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!114 &2140878583
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2140878582}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e3df282095e535e4997561a46587fbb9, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::TimeRewind.GlobalTimeRewindManager
+  globalRewindAction: {fileID: -3109475139534900079, guid: 052faaac586de48259a63d0c4782560b, type: 3}
+  globalRewindSpeed: 2
+  enableAutoTrigger: 0
+  autoTriggerTime: 10
+  autoTriggerDuration: 3
+  rewindVolumeProfile: {fileID: 11400000, guid: 88c69555f197ad949b6525ba2e2717cc, type: 2}
+  volumeBlendSpeed: 5
+  trackedObjectsCount: 0
+  isGlobalRewinding: 0
+--- !u!4 &2140878584
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2140878582}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: -12.04127, y: -7.16, z: -24.62002}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1001 &3660209954455690810
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -3935,3 +3988,4 @@ SceneRoots:
   - {fileID: 887492513}
   - {fileID: 857534656}
   - {fileID: 922253298}
+  - {fileID: 2140878584}
