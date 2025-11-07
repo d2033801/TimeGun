@@ -44,6 +44,10 @@ public class MainMenu : MonoBehaviour
         menuCam.Priority = 10;
         // 3. TODO : 显示游戏UI
         // gameHUDCanvas.SetActive(true);
+
+        // 4. 锁定并隐藏鼠标光标
+        Cursor.lockState = CursorLockMode.Locked;  // 锁定鼠标到屏幕中心
+        Cursor.visible = false;                    // 隐藏鼠标
     }
 
     public void QuitGame()
