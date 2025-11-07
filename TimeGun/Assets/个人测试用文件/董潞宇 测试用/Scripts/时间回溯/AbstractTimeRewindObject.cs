@@ -172,7 +172,7 @@ namespace TimeRewind
         /// 由于正常来说每个历史文件中的帧数是固定的,  所以这里用一个计数器记录当前剩了多少帧, 以便实现复用代码
         /// 子类或许也可以改写这个？
         /// </summary>
-        protected int frameCount => transformHistory?.Count ?? 0;
+        protected virtual int frameCount => transformHistory?.Count ?? 0;
 
         /// <summary>
         /// 当前正在播放的回溯特效实例

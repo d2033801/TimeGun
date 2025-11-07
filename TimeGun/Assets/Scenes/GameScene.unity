@@ -25341,6 +25341,7 @@ MonoBehaviour:
   escMenuPanel: {fileID: 831549304}
   menuCam: {fileID: 1253610045}
   gameCam: {fileID: 0}
+  callMenuAction: {fileID: -2396588557585006758, guid: 052faaac586de48259a63d0c4782560b, type: 3}
 --- !u!1001 &2085256669
 PrefabInstance:
   m_ObjectHideFlags: 0

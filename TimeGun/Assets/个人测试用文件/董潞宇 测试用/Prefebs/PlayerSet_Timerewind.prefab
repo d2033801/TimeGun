@@ -400,6 +400,14 @@ MonoBehaviour:
   lookAction: {fileID: -5630151704836100654, guid: 052faaac586de48259a63d0c4782560b, type: 3}
   grenadeLaunchAction: {fileID: -4572875327634685691, guid: 052faaac586de48259a63d0c4782560b, type: 3}
   fireAction: {fileID: 1120369429361536294, guid: 052faaac586de48259a63d0c4782560b, type: 3}
+  respawnDelay: 0
+  respawnPoint: {fileID: 0}
+  OnDeath:
+    m_PersistentCalls:
+      m_Calls: []
+  OnRespawn:
+    m_PersistentCalls:
+      m_Calls: []
 --- !u!114 &2412214122436787765
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -477,7 +485,7 @@ Transform:
   m_GameObject: {fileID: 3561372271506811464}
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: 1, y: 1.1000001, z: -5}
+  m_LocalPosition: {x: 1, y: 1.0999999, z: -5}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []

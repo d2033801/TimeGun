@@ -1,6 +1,7 @@
 ﻿using System;
 using UnityEngine;
 using UnityEngine.InputSystem;
+using UnityEngine.Events;
 
 namespace TimeGun
 {
@@ -23,7 +24,7 @@ namespace TimeGun
         [Tooltip("计算射击目标的相机, 通常用主相机")]
         public Camera shootCamera; // 通常使用 Camera.main
         public Transform cameraRoot;      // Cinemachine Follow/LookAt 目标（挂在角色身上：胸口/头部附近）
-        [SerializeField,Tooltip("武器管理器, 正常情况下挂载在角色身上")] private WeaponManager weaponManager;
+        [SerializeField, Tooltip("武器管理器, 正常情况下挂载在角色身上")] private WeaponManager weaponManager;
 
         [Header("Movement")]
         public float moveSpeed = 5f;      // 普通移动速度（m/s）
@@ -72,6 +73,20 @@ namespace TimeGun
         [Tooltip("开火输入。触发当前武器的 Fire()（短按/长按行为由武器实现）")]
         public InputActionReference fireAction;
 
+        [Header("Death Settings")]
+        [Tooltip("死亡后延迟重生时间(秒), 0表示不自动重生")]
+        [SerializeField] private float respawnDelay = 0f;
+
+        [Tooltip("重生点Transform(如果为null则在当前位置重生)")]
+        [SerializeField] private Transform respawnPoint;
+
+        [Header("Death Events")]
+        [Tooltip("死亡时触发的事件(可绑定UI/音效/特效)")]
+        public UnityEvent OnDeath;
+
+        [Tooltip("重生时触发的事件")]
+        public UnityEvent OnRespawn;
+
         #endregion
 
         #region 状态属性与私有字段
@@ -79,6 +94,7 @@ namespace TimeGun
         // 对外状态
         public bool IsAiming { get; private set; }
         public bool IsCrouching { get; private set; }
+        public bool IsDead { get; private set; }
 
         // 组件与运行时状态
         private CharacterController _characterController;
@@ -96,7 +112,7 @@ namespace TimeGun
 
         // 缓存后的输入动作（避免每帧从 Reference 间接取用）
         private InputAction _move, _jump, _sprint, _crouch, _aim, _look, _grendeLaunch, _fire;
-      
+
 
         #endregion
 
@@ -116,12 +132,12 @@ namespace TimeGun
             _crouch = crouchAction ? crouchAction.action : null;
             _aim = aimAction ? aimAction.action : null;
             _look = lookAction ? lookAction.action : null;
-            _grendeLaunch = grenadeLaunchAction? grenadeLaunchAction.action : null;
-            _fire = fireAction? fireAction : null;
+            _grendeLaunch = grenadeLaunchAction ? grenadeLaunchAction.action : null;
+            _fire = fireAction ? fireAction.action : null;
 
             // _shootCameraTransform 统一回退，避免每帧判空（若需运行时替换可自行赋值覆盖）
             if (shootCamera == null) shootCamera = Camera.main;
-            _shootCameraTransform = shootCamera?.transform?? transform;    // 若存在主相机则使用主相机，否则使用自身Transform
+            _shootCameraTransform = shootCamera?.transform ?? transform;    // 若存在主相机则使用主相机，否则使用自身Transform
 
             // 初始化 CharacterController 为站立尺寸，并同步 cameraRoot 局部位置
             ApplyControllerDimensionsInstant();
@@ -179,6 +195,8 @@ namespace TimeGun
         /// </summary>
         private void Update()
         {
+            if (IsDead) return;
+
             // 统一获取时间增量 dt
             float dt = Time.deltaTime;
 
@@ -201,11 +219,13 @@ namespace TimeGun
 
         private void LateUpdate()
         {
+            if (IsDead) return;
+
             Vector2 lookDelta = _look != null ? _look.ReadValue<Vector2>() : Vector2.zero;
             float dt = Time.deltaTime;
             // 相机根节点旋转（由本脚本外部驱动）
             CameraRootRot(lookDelta, dt);
-            weaponManager.UpdateWeaponPitch( _cameraPitch);         // 更新枪械俯仰角
+            weaponManager.UpdateWeaponPitch(_cameraPitch);         // 更新枪械俯仰角
         }
 
         #endregion
@@ -239,8 +259,8 @@ namespace TimeGun
         /// - 起身时会检测头顶是否有遮挡，若被挡则保持蹲下
         /// - 使用插值平滑调整 CharacterController 的 height 与 center.y
         /// </summary>
-        /// <param name="crouchPressed">是否在本帧“按下”蹲下键（用于切换模式）</param>
-        /// <param name="crouchHeld">是否“按住”蹲下键（用于按住模式）</param>
+        /// <param name="crouchPressed">是否在本帧"按下"蹲下键（用于切换模式）</param>
+        /// <param name="crouchHeld">是否"按住"蹲下键（用于按住模式）</param>
         /// <param name="dt">本帧的时间步长（秒）</param>
         private void HandleCrouch(bool crouchPressed, bool crouchHeld, float dt)
         {
@@ -332,7 +352,7 @@ namespace TimeGun
         /// <summary>
         /// 处理角色朝向：
         /// - 在瞄准时，使角色面向相机的水平朝向（使用 _cameraYaw）
-        /// - 非瞄准且有移动输入时，使角色面向“相对相机”的输入方向
+        /// - 非瞄准且有移动输入时，使角色面向"相对相机"的输入方向
         /// </summary>
         /// <param name="move">移动输入（用于判断是否需要根据输入方向旋转）</param>
         /// <param name="dt">本帧的时间步长（秒）</param>
@@ -407,7 +427,7 @@ namespace TimeGun
             // 小段检测距离，足够判断是否被天花板阻挡
             const float clearance = 0.15f;
 
-            // 站立时的半高与头顶位置（注意这里以“站立 center”为基准）
+            // 站立时的半高与头顶位置（注意这里以"站立 center"为基准）
             float halfHeight = standHeight * 0.5f;
             Vector3 centerWorld = transform.TransformPoint(new Vector3(_characterController.center.x, standCenterY, _characterController.center.z));
             Vector3 headTop = centerWorld + Vector3.up * halfHeight;
@@ -455,7 +475,7 @@ namespace TimeGun
 
                 var origin = _shootCameraTransform?.position ?? transform.position;
                 var dir = _shootCameraTransform?.forward ?? transform.forward;
-                
+
                 if (Physics.Raycast(origin, dir, out var hit, _maxShootPointRange, ~0, QueryTriggerInteraction.Ignore))
                 {
                     return hit.point;
@@ -514,12 +534,59 @@ namespace TimeGun
             _cameraPitch += lookDelta.y * ySign * sens;
             _cameraPitch = Mathf.Clamp(_cameraPitch, pitchClamp.x, pitchClamp.y);
 
-            
-            // 直接设置“世界旋转”，Unity 会换算为 localRotation
+
+            // 直接设置"世界旋转"，Unity 会换算为 localRotation
             cameraRoot.rotation = Quaternion.Euler(_cameraPitch, _cameraYaw, 0f);
         }
 
+        #endregion
 
+        #region 死亡系统
+
+        /// <summary>
+        /// 触发玩家死亡(被敌人发现时调用)
+        /// </summary>
+        public void Die()
+        {
+            if (IsDead) return;
+
+            IsDead = true;
+
+            if (_characterController != null)
+                _characterController.enabled = false;
+
+            OnDeath?.Invoke();
+
+            Debug.Log("[PlayerController] 玩家死亡");
+
+            if (respawnDelay > 0)
+            {
+                Invoke(nameof(Respawn), respawnDelay);
+            }
+        }
+
+        /// <summary>
+        /// 重生
+        /// </summary>
+        public void Respawn()
+        {
+            IsDead = false;
+
+            if (respawnPoint != null)
+            {
+                transform.position = respawnPoint.position;
+                transform.rotation = respawnPoint.rotation;
+            }
+
+            _verticalVelocity = 0f;
+
+            if (_characterController != null)
+                _characterController.enabled = true;
+
+            OnRespawn?.Invoke();
+
+            Debug.Log("[PlayerController] 玩家重生");
+        }
 
         #endregion
     }

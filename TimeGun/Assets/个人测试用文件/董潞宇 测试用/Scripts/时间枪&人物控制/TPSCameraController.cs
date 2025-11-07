@@ -2,7 +2,7 @@
 using Unity.Cinemachine;
 using UnityEngine;
 
-namespace TimeGun
+namespace TimeGun   
 {
     /// <summary>
     /// 请把此脚本挂载在一个空物体 (管理器) 上，用于控制第三人称摄像机的切换

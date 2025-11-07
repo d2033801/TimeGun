@@ -1,60 +1,65 @@
-using Unity.Cinemachine;
+ï»¿using Unity.Cinemachine;
 using UnityEngine;
 using UnityEngine.InputSystem;
 
 public class MainMenu : MonoBehaviour
 {
-    [Header("UI ÒıÓÃ")]
-    public GameObject controlsPanel;   // ²Ù×÷Ö¸ÄÏ£¨¹²ÓÃ£©
-    public GameObject mainMenuPanel;  // Ö÷²Ëµ¥ÕûÌå
-    public GameObject gameHUDPanel;   // ÓÎÏ·HUD
-    public GameObject escMenuPanel;   // ÔİÍ£²Ëµ¥
+    [Header("UI å¼•ç”¨")]
+    public GameObject controlsPanel;   // æ“ä½œæŒ‡å—ï¼ˆå…±ç”¨ï¼‰
+    public GameObject mainMenuPanel;  // ä¸»èœå•æ•´ä½“
+    public GameObject gameHUDPanel;   // æ¸¸æˆHUD
+    public GameObject escMenuPanel;   // æš‚åœèœå•
 
-    [Header("ÉãÏñ»ú")]
+    [Header("æ‘„åƒæœº")]
     public CinemachineCamera menuCam;
     public CinemachineCamera gameCam;
 
-    private bool isInControls = false; // ÊÇ·ñÔÚ²Ù×÷Ö¸ÄÏ
-    private bool isPaused = false;     // ÊÇ·ñÔÚÔİÍ£²Ëµ¥
-    private bool isPlaying = false;    // ÊÇ·ñÔÚÓÎÏ·ÖĞ
-    private bool openedFromEsc = false; // ¼ÇÂ¼²Ù×÷Ö¸ÄÏÊÇ´ÓESC²Ëµ¥´ò¿ªµÄ
+    [Header("Input System")]
+    [SerializeField]
+    private InputActionReference callMenuAction;
 
+    private bool isInControls = false; // æ˜¯å¦åœ¨æ“ä½œæŒ‡å—
+    private bool isPaused = false;     // æ˜¯å¦åœ¨æš‚åœèœå•
+    private bool isPlaying = false;    // æ˜¯å¦åœ¨æ¸¸æˆä¸­
+    private bool openedFromEsc = false; // è®°å½•æ“ä½œæŒ‡å—æ˜¯ä»ESCèœå•æ‰“å¼€çš„
+    private InputAction _callMenuAction; // Inputsystemç¼“å­˜
     private void Start()
     {
-        // ³õÊ¼»¯×´Ì¬
+        // åˆå§‹åŒ–çŠ¶æ€
         controlsPanel?.SetActive(false);
         gameHUDPanel?.SetActive(false);
         mainMenuPanel?.SetActive(true);
         escMenuPanel?.SetActive(false);
+        _callMenuAction ??= callMenuAction.action;
 
-        // ³õÊ¼Ïà»úÓÅÏÈ¼¶
+        // åˆå§‹ç›¸æœºä¼˜å…ˆçº§
         if (gameCam != null) gameCam.Priority = 10;
         if (menuCam != null) menuCam.Priority = 20;
 
         //Debug.Log(escMenuPanel.activeInHierarchy);
-        
-        // ½âËøÊó±ê£¨ÔÚÖ÷²Ëµ¥ÏÂ£©
+
+        // è§£é”é¼ æ ‡ï¼ˆåœ¨ä¸»èœå•ä¸‹ï¼‰
         Cursor.lockState = CursorLockMode.None;
         Cursor.visible = true;
 
-        // »Ö¸´Ê±¼äÁ÷¶¯
+        // æ¢å¤æ—¶é—´æµåŠ¨
         Time.timeScale = 1;
     }
 
     private void Update()
     {
-        // ´¦Àí ESC ¼üÂß¼­
-        if (Keyboard.current.escapeKey.wasPressedThisFrame)
+        // å¤„ç† ESC é”®é€»è¾‘
+        if (_callMenuAction.WasPressedThisFrame())
         {
-            // Èç¹ûÔÚ²Ù×÷Ö¸ÄÏÖĞ£¬·µ»ØÀ´Ô´²Ëµ¥
+            // å¦‚æœåœ¨æ“ä½œæŒ‡å—ä¸­ï¼Œè¿”å›æ¥æºèœå•
             if (isInControls)
             {
                 CloseControls();
                 return;
             }
-       
-            
-            // Èç¹ûÔÚÓÎÏ·ÖĞ
+
+
+            // å¦‚æœåœ¨æ¸¸æˆä¸­
             if (isPlaying)
             {
                 if (!isPaused)
@@ -71,7 +76,7 @@ public class MainMenu : MonoBehaviour
         }
     }
 
-    // ====== Ö÷²Ëµ¥ ======
+    // ====== ä¸»èœå• ======
     public void StartGame()
     {
         mainMenuPanel.SetActive(false);
@@ -82,11 +87,11 @@ public class MainMenu : MonoBehaviour
         gameCam.Priority = 20;
         menuCam.Priority = 10;
 
-        // Ëø¶¨²¢Òş²ØÊó±ê
+        // é”å®šå¹¶éšè—é¼ æ ‡
         Cursor.lockState = CursorLockMode.Locked;
         Cursor.visible = false;
 
-        // È·±£Ê±¼äÁ÷¶¯
+        // ç¡®ä¿æ—¶é—´æµåŠ¨
         Time.timeScale = 1;
         isPlaying = true;
         isPaused = false;
@@ -98,18 +103,18 @@ public class MainMenu : MonoBehaviour
         Application.Quit();
     }
 
-    // ====== ²Ù×÷Ö¸ÄÏ£¨¹²ÓÃ£© ======
+    // ====== æ“ä½œæŒ‡å—ï¼ˆå…±ç”¨ï¼‰ ======
     public void OpenControls()
     {
-        // ÅĞ¶Ïµ±Ç°ÊÇ´ÓÄÄ¸ö²Ëµ¥½øÈëµÄ
+        // åˆ¤æ–­å½“å‰æ˜¯ä»å“ªä¸ªèœå•è¿›å…¥çš„
         if (mainMenuPanel.activeSelf)
         {
-            openedFromEsc = false; // ´ÓÖ÷²Ëµ¥½øÈë
+            openedFromEsc = false; // ä»ä¸»èœå•è¿›å…¥
             mainMenuPanel.SetActive(false);
         }
         else if (escMenuPanel.activeSelf)
         {
-            openedFromEsc = true; // ´ÓESC²Ëµ¥½øÈë
+            openedFromEsc = true; // ä»ESCèœå•è¿›å…¥
             escMenuPanel.SetActive(false);
         }
 
@@ -121,7 +126,7 @@ public class MainMenu : MonoBehaviour
     {
         controlsPanel.SetActive(false);
 
-        // ·µ»ØÀ´Ô´²Ëµ¥
+        // è¿”å›æ¥æºèœå•
         if (openedFromEsc)
         {
             escMenuPanel.SetActive(true);
@@ -134,13 +139,13 @@ public class MainMenu : MonoBehaviour
         isInControls = false;
     }
 
-    // ====== ÓÎÏ·ÖĞ£¨ESC²Ëµ¥£© ======
+    // ====== æ¸¸æˆä¸­ï¼ˆESCèœå•ï¼‰ ======
     public void ShowEscMenu()
     {
         escMenuPanel.SetActive(true);
         gameHUDPanel.SetActive(false);
         controlsPanel.SetActive(false);
-        Time.timeScale = 0; // ÔİÍ£ÓÎÏ·
+        Time.timeScale = 0; // æš‚åœæ¸¸æˆ
 
         Cursor.lockState = CursorLockMode.None;
         Cursor.visible = true;
@@ -151,7 +156,7 @@ public class MainMenu : MonoBehaviour
         escMenuPanel.SetActive(false);
         gameHUDPanel.SetActive(true);
         controlsPanel.SetActive(false);
-        Time.timeScale = 1; // ¼ÌĞøÓÎÏ·
+        Time.timeScale = 1; // ç»§ç»­æ¸¸æˆ
 
         Cursor.lockState = CursorLockMode.Locked;
         Cursor.visible = false;

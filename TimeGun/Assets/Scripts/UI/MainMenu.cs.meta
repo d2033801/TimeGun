@@ -1,2 +1,18 @@
 fileFormatVersion: 2
 guid: 2d0fcadfe4aa74a439383c5de8701f1c
+MonoImporter:
+  externalObjects: {}
+  serializedVersion: 2
+  defaultReferences:
+  - controlsPanel: {instanceID: 0}
+  - mainMenuPanel: {instanceID: 0}
+  - gameHUDPanel: {instanceID: 0}
+  - escMenuPanel: {instanceID: 0}
+  - menuCam: {instanceID: 0}
+  - gameCam: {instanceID: 0}
+  - callMenuAction: {fileID: -2396588557585006758, guid: 052faaac586de48259a63d0c4782560b, type: 3}
+  executionOrder: 0
+  icon: {instanceID: 0}
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 

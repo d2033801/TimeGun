@@ -44,6 +44,7 @@ namespace TimeRewind
         private ComponentFreezeManager<AnimatorFreezeState> _freezeManager 
             = new ComponentFreezeManager<AnimatorFreezeState>();
 
+        protected override int frameCount => _animRecorder?.Count ?? 0;
         //==================== 初始化 ====================
         /// <summary>
         /// 初始化 Animator 录制器
@@ -83,10 +84,6 @@ namespace TimeRewind
             _animRecorder?.RewindOneSnap();
         }
 
-        /// <summary>
-        /// 重写 frameCount 以返回 Animator 历史帧数（而非 Transform 帧数）
-        /// </summary>
-        protected new int frameCount => _animRecorder?.Count ?? 0;
 
         //==================== 冻结控制 ====================
         /// <summary>
@@ -411,3 +408,4 @@ namespace TimeRewind
         }
     }
 }
+    
