@@ -1,6 +1,8 @@
+using TMPro;
 using Unity.Cinemachine;
 using UnityEngine;
 using UnityEngine.InputSystem;
+using UnityEngine.SceneManagement;
 
 public class MainMenu : MonoBehaviour
 {
@@ -14,10 +16,17 @@ public class MainMenu : MonoBehaviour
     public CinemachineCamera menuCam;
     public CinemachineCamera gameCam;
 
+    [Header("HUD 元素")]
+    public TextMeshProUGUI ammoText;
+
     private bool isInControls = false; // 是否在操作指南
     private bool isPaused = false;     // 是否在暂停菜单
     private bool isPlaying = false;    // 是否在游戏中
     private bool openedFromEsc = false; // 记录操作指南是从ESC菜单打开的
+
+    // 弹药数据（示例值，可由武器脚本动态更新）
+    private int currentAmmo = 1;
+    private int maxAmmo = 2;
 
     private void Start()
     {
@@ -27,11 +36,11 @@ public class MainMenu : MonoBehaviour
         mainMenuPanel?.SetActive(true);
         escMenuPanel?.SetActive(false);
 
+        /*
         // 初始相机优先级
         if (gameCam != null) gameCam.Priority = 10;
         if (menuCam != null) menuCam.Priority = 20;
-
-        //Debug.Log(escMenuPanel.activeInHierarchy);
+         */
         
         // 解锁鼠标（在主菜单下）
         Cursor.lockState = CursorLockMode.None;
@@ -39,6 +48,8 @@ public class MainMenu : MonoBehaviour
 
         // 恢复时间流动
         Time.timeScale = 1;
+
+        UpdateAmmoDisplay();
     }
 
     private void Update()
@@ -52,11 +63,11 @@ public class MainMenu : MonoBehaviour
                 CloseControls();
                 return;
             }
-       
-            
+            Debug.Log("unPlaying ESC Pressed!");
             // 如果在游戏中
             if (isPlaying)
             {
+                Debug.Log("Playing ESC Pressed!");
                 if (!isPaused)
                 {
                     ShowEscMenu();
@@ -74,22 +85,21 @@ public class MainMenu : MonoBehaviour
     // ====== 主菜单 ======
     public void StartGame()
     {
-        mainMenuPanel.SetActive(false);
-        gameHUDPanel.SetActive(true);
-        escMenuPanel.SetActive(false);
-        controlsPanel.SetActive(false);
+        mainMenuPanel?.SetActive(false);
+        gameHUDPanel?.SetActive(true);
+        escMenuPanel?.SetActive(false);
+        controlsPanel?.SetActive(false);
 
+        /*
         gameCam.Priority = 20;
         menuCam.Priority = 10;
+         */
 
+        isPlaying = true;
+        isPaused = false;
         // 锁定并隐藏鼠标
         Cursor.lockState = CursorLockMode.Locked;
         Cursor.visible = false;
-
-        // 确保时间流动
-        Time.timeScale = 1;
-        isPlaying = true;
-        isPaused = false;
     }
 
     public void QuitGame()
@@ -144,6 +154,30 @@ public class MainMenu : MonoBehaviour
 
         Cursor.lockState = CursorLockMode.None;
         Cursor.visible = true;
+    }
+
+    public void UpdateAmmoDisplay()
+    {
+        if (ammoText != null)
+            ammoText.text = $"Ammo: {currentAmmo} / {maxAmmo}";
+    }
+
+    public void SetAmmo(int current, int max)
+    {
+        currentAmmo = current;
+        maxAmmo = max;
+        UpdateAmmoDisplay();
+    }
+
+    public void RestartGame()
+    {
+        // 恢复时间流动
+        Time.timeScale = 1;
+
+        // 重新加载当前场景
+        SceneManager.LoadScene(SceneManager.GetActiveScene().buildIndex);
+        
+        Debug.Log("Game Restarted.");
     }
 
     public void ResumeGame()
