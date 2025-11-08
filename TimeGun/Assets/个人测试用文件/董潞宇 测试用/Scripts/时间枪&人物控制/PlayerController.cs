@@ -87,6 +87,9 @@ namespace TimeGun
         [Tooltip("重生时触发的事件")]
         public UnityEvent OnRespawn;
 
+        [Header("动画机")]
+        private Animator _animator;
+
         #endregion
 
         #region 状态属性与私有字段
@@ -213,7 +216,6 @@ namespace TimeGun
             HandleMovement(move, wantsSprint, dt);
             HandleRotation(move, dt);
             HandleWeapon();
-
 
         }
 
@@ -589,5 +591,20 @@ namespace TimeGun
         }
 
         #endregion
+
+        private void UpdateAnimator(Vector2 move)
+        {
+            if (_animator == null) return;
+
+            // 速度（可根据实际移动速度或输入量调整）
+            float speedX = move.x;
+            float speedY = move.y;
+
+            _animator.SetFloat("MoveX", speedX, 0.1f, Time.deltaTime);
+            _animator.SetFloat("MoveY", speedY, 0.1f, Time.deltaTime);
+
+            _animator.SetBool("IsCrouching", IsCrouching);
+            _animator.SetBool("IsAiming", IsAiming);
+        }
     }
 }
