@@ -7,6 +7,12 @@ namespace TimeGun
 
         [SerializeField, Tooltip("枪口位置")] protected Transform muzzlePoint;
 
+        [Header("IK Settings")]
+        [Tooltip("左手IK握持点")] public Transform leftHandIkTarget;
+        [Tooltip("右手IK握持点")] public Transform rightHandIkTarget;
+        [Tooltip("左肘IK辅助目标点")] public Transform leftElbowHint;
+        [Tooltip("右肘IK辅助目标点")] public Transform rightElbowHint;
+
         protected WeaponManager manager; // 不知道获取有什么用反正先获取了
 
         /// <summary>

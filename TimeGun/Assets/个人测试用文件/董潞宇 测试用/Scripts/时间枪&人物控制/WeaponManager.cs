@@ -50,6 +50,7 @@ namespace TimeGun
         /// 当前已装备的武器实例（抽象基类）。
         /// </summary>
         private AbstractWeaponBase currentAbstractWeapon; // 获取武器后会自动初始化
+        public AbstractWeaponBase CurrentWeapon => currentAbstractWeapon;
 
         /// <summary>
         /// 启动时根据模式初始化武器。

@@ -11,6 +11,7 @@ public class MainMenu : MonoBehaviour
     public GameObject mainMenuPanel;
     public GameObject gameHUDPanel;
     public GameObject escMenuPanel;
+    public GameObject deadPanel;
 
     [Header("摄像机")]
     public CinemachineCamera menuCam;
@@ -59,6 +60,7 @@ public class MainMenu : MonoBehaviour
         gameHUDPanel?.SetActive(false);
         mainMenuPanel?.SetActive(true);
         escMenuPanel?.SetActive(false);
+        deadPanel?.SetActive(false);
         _callMenuAction ??= callMenuAction.action;
 
         // 初始化相机优先级（菜单相机优先级更高）
@@ -80,7 +82,11 @@ public class MainMenu : MonoBehaviour
 
     private void Update()
     {
-        if (_callMenuAction.WasPressedThisFrame())
+        if (playerController.IsDead)
+        {
+            // pass
+        }
+        else if (_callMenuAction.WasPressedThisFrame())
         {
             if (isInControls)
             {
@@ -102,6 +108,8 @@ public class MainMenu : MonoBehaviour
                 }
             }
         }
+
+        
     }
 
     // ====== 主菜单 ======
@@ -111,6 +119,7 @@ public class MainMenu : MonoBehaviour
         gameHUDPanel?.SetActive(true);
         escMenuPanel?.SetActive(false);
         controlsPanel?.SetActive(false);
+        deadPanel?.SetActive(false);
 
         // 切换相机优先级（触发 Cinemachine 混合）
         if (menuCam != null) menuCam.Priority = 10;
@@ -178,6 +187,11 @@ public class MainMenu : MonoBehaviour
         isInControls = true;
     }
 
+    public void OpenDeadPanel()
+    {
+
+    }
+
     public void CloseControls()
     {
         controlsPanel.SetActive(false);
@@ -200,6 +214,7 @@ public class MainMenu : MonoBehaviour
         escMenuPanel.SetActive(true);
         gameHUDPanel.SetActive(false);
         controlsPanel.SetActive(false);
+        deadPanel?.SetActive(false);
         Time.timeScale = 0;
 
         Cursor.lockState = CursorLockMode.None;
@@ -237,6 +252,7 @@ public class MainMenu : MonoBehaviour
         escMenuPanel.SetActive(false);
         gameHUDPanel.SetActive(true);
         controlsPanel.SetActive(false);
+        deadPanel?.SetActive(false);
         Time.timeScale = 1;
 
         Cursor.lockState = CursorLockMode.Locked;
