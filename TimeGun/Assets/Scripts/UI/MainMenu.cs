@@ -16,20 +16,21 @@ public class MainMenu : MonoBehaviour
     public CinemachineCamera menuCam;
     public CinemachineCamera gameCam;
 
-    [Header("HUD Ԫ��")]
+    [Header("HUD")]
     public TextMeshProUGUI ammoText;
 
-    private bool isInControls = false; // �Ƿ��ڲ���ָ��
-    private bool isPaused = false;     // �Ƿ�����ͣ�˵�
-    private bool isPlaying = false;    // �Ƿ�����Ϸ��
-    private bool openedFromEsc = false; // ��¼����ָ���Ǵ�ESC�˵��򿪵�
+    [Header("Input System")]
+    [SerializeField]
+    private InputActionReference callMenuAction;
+    private InputAction _callMenuAction; // Inputsystem缓存
 
-    // ��ҩ���ݣ�ʾ��ֵ�����������ű���̬���£�
+    private bool isInControls = false; // 是否在操作指南
+    private bool isPaused = false;    // 是否在暂停菜单
+    private bool isPlaying = false;  // 是否在游戏中
+    private bool openedFromEsc = false; 
+
     private int currentAmmo = 1;
     private int maxAmmo = 2;
-    
-    private bool openedFromEsc = false; // 记录操作指南是从ESC菜单打开的
-    private InputAction _callMenuAction; // Inputsystem缓存
     private void Start()
     {
         // 初始化状态
@@ -40,12 +41,10 @@ public class MainMenu : MonoBehaviour
         _callMenuAction ??= callMenuAction.action;
 
         /*
-        // ��ʼ������ȼ�
+        // 初始相机优先级
         if (gameCam != null) gameCam.Priority = 10;
         if (menuCam != null) menuCam.Priority = 20;
          */
-        
-        // ������꣨�����˵��£�
         Cursor.lockState = CursorLockMode.None;
         Cursor.visible = true;
 
@@ -67,7 +66,7 @@ public class MainMenu : MonoBehaviour
                 return;
             }
             Debug.Log("unPlaying ESC Pressed!");
-            // �������Ϸ��
+
             if (isPlaying)
             {
                 Debug.Log("Playing ESC Pressed!");
@@ -177,10 +176,9 @@ public class MainMenu : MonoBehaviour
 
     public void RestartGame()
     {
-        // �ָ�ʱ������
+        
         Time.timeScale = 1;
 
-        // ���¼��ص�ǰ����
         SceneManager.LoadScene(SceneManager.GetActiveScene().buildIndex);
         
         Debug.Log("Game Restarted.");
