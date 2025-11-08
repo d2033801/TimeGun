@@ -1,5 +1,8 @@
 ﻿using System.Collections.Generic;
+using Unity.AI.Navigation;
+using Unity.VisualScripting.Antlr3.Runtime;
 using UnityEngine;
+using UnityEngine.AI;
 
 namespace TimeGun
 {
@@ -80,7 +83,8 @@ namespace TimeGun
         private bool _playerInRange = false;                 // 玩家是否在范围内（调试模式）
         private Quaternion _closedRotation;                  // 门关闭时的旋转
         private Quaternion _openRotation;                    // 门开启时的旋转
-        private readonly Collider[] _detectionResults = new Collider[10]; // 球形检测结果缓存（避免GC）
+        private readonly Collider[] _detectionResults = new Collider[100]; // 球形检测结果缓存（避免GC）
+        private NavMeshObstacle obstacle;
 
         #endregion
 
@@ -110,6 +114,18 @@ namespace TimeGun
 
         private void Awake()
         {
+            
+            obstacle = GetComponent<NavMeshObstacle>();
+            if (obstacle == null)
+            {
+                Debug.Log("obstacle is not initialized");
+            }
+            else
+            {
+                Debug.Log("obstacle is initialized");
+            }
+            
+
             // 初始化验证
             if (doorTransform == null)
             {
@@ -281,6 +297,9 @@ namespace TimeGun
                 string reason = _playerInRange && debugModeDetectPlayer ? "(Player触发)" : "(Enemy触发)";
                 Debug.Log($"[SmartDoor] 门已开启 {reason}");
             }
+
+            if (obstacle != null)
+                obstacle.carving = !_isDoorOpen;
         }
 
         /// <summary>
@@ -299,6 +318,9 @@ namespace TimeGun
             {
                 Debug.Log($"[SmartDoor] 门已关闭");
             }
+
+            if (obstacle != null)
+                obstacle.carving = !_isDoorOpen;
         }
 
         /// <summary>
