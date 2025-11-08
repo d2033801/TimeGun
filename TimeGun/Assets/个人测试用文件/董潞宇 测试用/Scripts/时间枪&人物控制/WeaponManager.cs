@@ -7,7 +7,6 @@ namespace TimeGun
     /// 负责：
     /// 1) 装备/切换武器（实例化预制体并放到手部挂点）；
     /// 2) 转发开火/投掷请求到当前武器；
-    /// 3) 将相机俯仰（pitch）同步给当前武器，用于对齐枪口仰俯。
     /// </summary>
     public class WeaponManager : MonoBehaviour
     {
@@ -49,7 +48,7 @@ namespace TimeGun
         /// <summary>
         /// 当前已装备的武器实例（抽象基类）。
         /// </summary>
-        private AbstractWeaponBase currentAbstractWeapon; // 获取武器后会自动初始化
+        private AbstractWeaponBase currentAbstractWeapon;
         public AbstractWeaponBase CurrentWeapon => currentAbstractWeapon;
 
         /// <summary>
@@ -103,7 +102,7 @@ namespace TimeGun
 
             var weaponObj = Instantiate(weaponPrefab, handTransform);
             currentAbstractWeapon = weaponObj.GetComponent<AbstractWeaponBase>();
-            currentAbstractWeapon.Initialize(this); // 调用武器系统自身的初始化方法
+            currentAbstractWeapon.Initialize(this);
         }
 
         #region 外部接口
@@ -152,15 +151,6 @@ namespace TimeGun
             {
                 throwable.Throw(targetPoint);
             }
-        }
-
-        /// <summary>
-        /// 将相机的俯仰角（pitch，度）同步到当前武器，用于对齐武器仰俯。
-        /// </summary>
-        /// <param name="pitch">俯仰角（度）。</param>
-        public void UpdateWeaponPitch(float pitch)
-        {
-            currentAbstractWeapon?.UpdatePitchRotation(pitch);
         }
 
         #endregion
