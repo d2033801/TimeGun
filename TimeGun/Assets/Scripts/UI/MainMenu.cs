@@ -6,47 +6,50 @@ using UnityEngine.SceneManagement;
 
 public class MainMenu : MonoBehaviour
 {
-    [Header("UI ÒıÓÃ")]
-    public GameObject controlsPanel;   // ²Ù×÷Ö¸ÄÏ£¨¹²ÓÃ£©
-    public GameObject mainMenuPanel;  // Ö÷²Ëµ¥ÕûÌå
-    public GameObject gameHUDPanel;   // ÓÎÏ·HUD
-    public GameObject escMenuPanel;   // ÔİÍ£²Ëµ¥
+    [Header("UI å¼•ç”¨")]
+    public GameObject controlsPanel;   // æ“ä½œæŒ‡å—ï¼ˆå…±ç”¨ï¼‰
+    public GameObject mainMenuPanel;  // ä¸»èœå•æ•´ä½“
+    public GameObject gameHUDPanel;   // æ¸¸æˆHUD
+    public GameObject escMenuPanel;   // æš‚åœèœå•
 
-    [Header("ÉãÏñ»ú")]
+    [Header("æ‘„åƒæœº")]
     public CinemachineCamera menuCam;
     public CinemachineCamera gameCam;
 
-    [Header("HUD ÔªËØ")]
+    [Header("HUD Ôªï¿½ï¿½")]
     public TextMeshProUGUI ammoText;
 
-    private bool isInControls = false; // ÊÇ·ñÔÚ²Ù×÷Ö¸ÄÏ
-    private bool isPaused = false;     // ÊÇ·ñÔÚÔİÍ£²Ëµ¥
-    private bool isPlaying = false;    // ÊÇ·ñÔÚÓÎÏ·ÖĞ
-    private bool openedFromEsc = false; // ¼ÇÂ¼²Ù×÷Ö¸ÄÏÊÇ´ÓESC²Ëµ¥´ò¿ªµÄ
+    private bool isInControls = false; // ï¿½Ç·ï¿½ï¿½Ú²ï¿½ï¿½ï¿½Ö¸ï¿½ï¿½
+    private bool isPaused = false;     // ï¿½Ç·ï¿½ï¿½ï¿½ï¿½ï¿½Í£ï¿½Ëµï¿½
+    private bool isPlaying = false;    // ï¿½Ç·ï¿½ï¿½ï¿½ï¿½ï¿½Ï·ï¿½ï¿½
+    private bool openedFromEsc = false; // ï¿½ï¿½Â¼ï¿½ï¿½ï¿½ï¿½Ö¸ï¿½ï¿½ï¿½Ç´ï¿½ESCï¿½Ëµï¿½ï¿½ò¿ªµï¿½
 
-    // µ¯Ò©Êı¾İ£¨Ê¾ÀıÖµ£¬¿ÉÓÉÎäÆ÷½Å±¾¶¯Ì¬¸üĞÂ£©
+    // ï¿½ï¿½Ò©ï¿½ï¿½ï¿½İ£ï¿½Ê¾ï¿½ï¿½Öµï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Å±ï¿½ï¿½ï¿½Ì¬ï¿½ï¿½ï¿½Â£ï¿½
     private int currentAmmo = 1;
     private int maxAmmo = 2;
-
+    
+    private bool openedFromEsc = false; // è®°å½•æ“ä½œæŒ‡å—æ˜¯ä»ESCèœå•æ‰“å¼€çš„
+    private InputAction _callMenuAction; // Inputsystemç¼“å­˜
     private void Start()
     {
-        // ³õÊ¼»¯×´Ì¬
+        // åˆå§‹åŒ–çŠ¶æ€
         controlsPanel?.SetActive(false);
         gameHUDPanel?.SetActive(false);
         mainMenuPanel?.SetActive(true);
         escMenuPanel?.SetActive(false);
+        _callMenuAction ??= callMenuAction.action;
 
         /*
-        // ³õÊ¼Ïà»úÓÅÏÈ¼¶
+        // ï¿½ï¿½Ê¼ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½È¼ï¿½
         if (gameCam != null) gameCam.Priority = 10;
         if (menuCam != null) menuCam.Priority = 20;
          */
         
-        // ½âËøÊó±ê£¨ÔÚÖ÷²Ëµ¥ÏÂ£©
+        // ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ê£¨ï¿½ï¿½ï¿½ï¿½ï¿½Ëµï¿½ï¿½Â£ï¿½
         Cursor.lockState = CursorLockMode.None;
         Cursor.visible = true;
 
-        // »Ö¸´Ê±¼äÁ÷¶¯
+        // æ¢å¤æ—¶é—´æµåŠ¨
         Time.timeScale = 1;
 
         UpdateAmmoDisplay();
@@ -54,17 +57,17 @@ public class MainMenu : MonoBehaviour
 
     private void Update()
     {
-        // ´¦Àí ESC ¼üÂß¼­
-        if (Keyboard.current.escapeKey.wasPressedThisFrame)
+        // å¤„ç† ESC é”®é€»è¾‘
+        if (_callMenuAction.WasPressedThisFrame())
         {
-            // Èç¹ûÔÚ²Ù×÷Ö¸ÄÏÖĞ£¬·µ»ØÀ´Ô´²Ëµ¥
+            // å¦‚æœåœ¨æ“ä½œæŒ‡å—ä¸­ï¼Œè¿”å›æ¥æºèœå•
             if (isInControls)
             {
                 CloseControls();
                 return;
             }
             Debug.Log("unPlaying ESC Pressed!");
-            // Èç¹ûÔÚÓÎÏ·ÖĞ
+            // ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ï·ï¿½ï¿½
             if (isPlaying)
             {
                 Debug.Log("Playing ESC Pressed!");
@@ -82,7 +85,7 @@ public class MainMenu : MonoBehaviour
         }
     }
 
-    // ====== Ö÷²Ëµ¥ ======
+    // ====== ä¸»èœå• ======
     public void StartGame()
     {
         mainMenuPanel?.SetActive(false);
@@ -95,11 +98,14 @@ public class MainMenu : MonoBehaviour
         menuCam.Priority = 10;
          */
 
-        isPlaying = true;
-        isPaused = false;
-        // Ëø¶¨²¢Òş²ØÊó±ê
+        // é”å®šå¹¶éšè—é¼ æ ‡
         Cursor.lockState = CursorLockMode.Locked;
         Cursor.visible = false;
+
+        // ç¡®ä¿æ—¶é—´æµåŠ¨
+        Time.timeScale = 1;
+        isPlaying = true;
+        isPaused = false;
     }
 
     public void QuitGame()
@@ -108,18 +114,18 @@ public class MainMenu : MonoBehaviour
         Application.Quit();
     }
 
-    // ====== ²Ù×÷Ö¸ÄÏ£¨¹²ÓÃ£© ======
+    // ====== æ“ä½œæŒ‡å—ï¼ˆå…±ç”¨ï¼‰ ======
     public void OpenControls()
     {
-        // ÅĞ¶Ïµ±Ç°ÊÇ´ÓÄÄ¸ö²Ëµ¥½øÈëµÄ
+        // åˆ¤æ–­å½“å‰æ˜¯ä»å“ªä¸ªèœå•è¿›å…¥çš„
         if (mainMenuPanel.activeSelf)
         {
-            openedFromEsc = false; // ´ÓÖ÷²Ëµ¥½øÈë
+            openedFromEsc = false; // ä»ä¸»èœå•è¿›å…¥
             mainMenuPanel.SetActive(false);
         }
         else if (escMenuPanel.activeSelf)
         {
-            openedFromEsc = true; // ´ÓESC²Ëµ¥½øÈë
+            openedFromEsc = true; // ä»ESCèœå•è¿›å…¥
             escMenuPanel.SetActive(false);
         }
 
@@ -131,7 +137,7 @@ public class MainMenu : MonoBehaviour
     {
         controlsPanel.SetActive(false);
 
-        // ·µ»ØÀ´Ô´²Ëµ¥
+        // è¿”å›æ¥æºèœå•
         if (openedFromEsc)
         {
             escMenuPanel.SetActive(true);
@@ -144,13 +150,13 @@ public class MainMenu : MonoBehaviour
         isInControls = false;
     }
 
-    // ====== ÓÎÏ·ÖĞ£¨ESC²Ëµ¥£© ======
+    // ====== æ¸¸æˆä¸­ï¼ˆESCèœå•ï¼‰ ======
     public void ShowEscMenu()
     {
         escMenuPanel.SetActive(true);
         gameHUDPanel.SetActive(false);
         controlsPanel.SetActive(false);
-        Time.timeScale = 0; // ÔİÍ£ÓÎÏ·
+        Time.timeScale = 0; // æš‚åœæ¸¸æˆ
 
         Cursor.lockState = CursorLockMode.None;
         Cursor.visible = true;
@@ -171,10 +177,10 @@ public class MainMenu : MonoBehaviour
 
     public void RestartGame()
     {
-        // »Ö¸´Ê±¼äÁ÷¶¯
+        // ï¿½Ö¸ï¿½Ê±ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
         Time.timeScale = 1;
 
-        // ÖØĞÂ¼ÓÔØµ±Ç°³¡¾°
+        // ï¿½ï¿½ï¿½Â¼ï¿½ï¿½Øµï¿½Ç°ï¿½ï¿½ï¿½ï¿½
         SceneManager.LoadScene(SceneManager.GetActiveScene().buildIndex);
         
         Debug.Log("Game Restarted.");
@@ -185,7 +191,7 @@ public class MainMenu : MonoBehaviour
         escMenuPanel.SetActive(false);
         gameHUDPanel.SetActive(true);
         controlsPanel.SetActive(false);
-        Time.timeScale = 1; // ¼ÌĞøÓÎÏ·
+        Time.timeScale = 1; // ç»§ç»­æ¸¸æˆ
 
         Cursor.lockState = CursorLockMode.Locked;
         Cursor.visible = false;

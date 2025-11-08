@@ -33,6 +33,7 @@ namespace TimeGun
             if (targetCollider == null || seconds <= 0f) return;
 
             // 尝试从被击中的对象或其父级获取回溯组件
+            
             var rewindObj = targetCollider.GetComponentInParent<AbstractTimeRewindObject>();
             if (rewindObj == null) return;
             switch (rewindMode)

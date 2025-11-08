@@ -50,7 +50,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: -6702934723018446048, guid: 7bff9de0377ab3547a6fe17a53474b5b, type: 3}
       propertyPath: m_StaticEditorFlags
-      value: 2147483647
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: -3949381564683906113, guid: 7bff9de0377ab3547a6fe17a53474b5b, type: 3}
       propertyPath: m_StaticEditorFlags
@@ -70,7 +70,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 9067929685449703834, guid: 7bff9de0377ab3547a6fe17a53474b5b, type: 3}
       propertyPath: m_StaticEditorFlags
-      value: 2147483647
+      value: 0
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
@@ -82,6 +82,9 @@ PrefabInstance:
     - targetCorrespondingSourceObject: {fileID: 919132149155446097, guid: 7bff9de0377ab3547a6fe17a53474b5b, type: 3}
       insertIndex: -1
       addedObject: {fileID: 8011738110819869993}
+    - targetCorrespondingSourceObject: {fileID: 919132149155446097, guid: 7bff9de0377ab3547a6fe17a53474b5b, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 4913002095066572424}
     - targetCorrespondingSourceObject: {fileID: -6702934723018446048, guid: 7bff9de0377ab3547a6fe17a53474b5b, type: 3}
       insertIndex: -1
       addedObject: {fileID: 2724749745115479223}
@@ -122,8 +125,8 @@ BoxCollider:
   m_ProvidesContacts: 0
   m_Enabled: 1
   serializedVersion: 3
-  m_Size: {x: 3.8333895, y: 7.5485315, z: 4.564778}
-  m_Center: {x: 1.916642, y: 3.7385721, z: -3.4948936}
+  m_Size: {x: 3.8333895, y: 7.5485315, z: 4.664891}
+  m_Center: {x: 1.916642, y: 3.7385721, z: -3.444839}
 --- !u!65 &3901816248502107980
 BoxCollider:
   m_ObjectHideFlags: 0
@@ -143,8 +146,8 @@ BoxCollider:
   m_ProvidesContacts: 0
   m_Enabled: 1
   serializedVersion: 3
-  m_Size: {x: 3.8333895, y: 7.5485315, z: 4.6465354}
-  m_Center: {x: 1.916642, y: 3.7385721, z: 3.4540153}
+  m_Size: {x: 3.8333895, y: 7.5485315, z: 4.7216196}
+  m_Center: {x: 1.916642, y: 3.7385721, z: 3.4164734}
 --- !u!65 &5051094395158721391
 BoxCollider:
   m_ObjectHideFlags: 0
@@ -164,8 +167,8 @@ BoxCollider:
   m_ProvidesContacts: 0
   m_Enabled: 1
   serializedVersion: 3
-  m_Size: {x: 3.8333895, y: 3.7266383, z: 2.3370514}
-  m_Center: {x: 1.916642, y: 5.649524, z: -0.010215563}
+  m_Size: {x: 3.8333895, y: 4.239717, z: 2.7374995}
+  m_Center: {x: 1.916642, y: 5.3929925, z: -0.022730455}
 --- !u!1 &3287508172749652846 stripped
 GameObject:
   m_CorrespondingSourceObject: {fileID: 9067929685449703834, guid: 7bff9de0377ab3547a6fe17a53474b5b, type: 3}
@@ -249,6 +252,25 @@ MonoBehaviour:
   debugModeDetectPlayer: 0
   showDebugGizmos: 1
   enableDebugLog: 1
+--- !u!114 &4913002095066572424
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6667922928410165157}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e038c35a8d96d8644a04c049b5cc55ea, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::TimeRewind.SmartDoorTimeRewind
+  recordSecondsConfig: 0
+  recordFPSConfig: 0
+  rewindSpeedConfig: 2
+  rewindEffectPrefab: {fileID: 863509563378627453, guid: ec10b22567f639a4a9fbc684a436d8fe, type: 3}
+  pauseEffectPrefab: {fileID: 863509563378627453, guid: aa6c3264048da5a45bd62b0d48df1f4f, type: 3}
+  effectSpawnPoint: {fileID: 0}
+  targetAnimator: {fileID: 4369546229300244859}
 --- !u!1 &8264726680758020564 stripped
 GameObject:
   m_CorrespondingSourceObject: {fileID: -6702934723018446048, guid: 7bff9de0377ab3547a6fe17a53474b5b, type: 3}
