@@ -55,11 +55,11 @@ AudioMixerController:
   - guid: 906e54b69b5ece24db0e0fcd8dcfe1ef
     name: MusicVolume
   - guid: a3b31949f58e8d94aa7de8ce07ecf142
-    name: RewindVolume
+    name: BGMVolume
   - guid: 0c918a50d2d54204686544764392e20a
-    name: RewindLowpassCutoff
+    name: BGMLowpassCutoff
   - guid: 2bd9e5a3e81ef914e814e6d78cb0bde9
-    name: RewindPitch
+    name: BGMPitch
   m_AudioMixerGroupViews:
   - guids:
     - 096152dea7c815f4aac056af305c9eba
