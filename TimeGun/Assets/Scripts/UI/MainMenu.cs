@@ -303,7 +303,8 @@ public class MainMenu : MonoBehaviour
     /// </summary>
     private System.Collections.IEnumerator DeathCameraSequence(Transform killerEnemy)
     {
-        Debug.Log($"[MainMenu] 开始死亡摄像机序列，目标敌人: {killerEnemy.name}");
+        Debug.Log($"[MainMenu] ========== 开始死亡摄像机序列 ==========");
+        Debug.Log($"[MainMenu] 目标敌人: {killerEnemy.name}");
 
         // 隐藏游戏 HUD
         gameHUDPanel?.SetActive(false);
@@ -322,7 +323,7 @@ public class MainMenu : MonoBehaviour
         if (enemyComp != null && enemyComp.headTransform != null)
         {
             lookAtTarget = enemyComp.headTransform;
-            Debug.Log($"[MainMenu] 使用敌人的 headTransform: {lookAtTarget.name}");
+            Debug.Log($"[MainMenu] ✅ 使用敌人的 headTransform: {lookAtTarget.name}");
         }
         else
         {
@@ -330,7 +331,7 @@ public class MainMenu : MonoBehaviour
             if (headEye != null)
             {
                 lookAtTarget = headEye;
-                Debug.Log($"[MainMenu] 找到 Headeye: {lookAtTarget.name}");
+                Debug.Log($"[MainMenu] ✅ 找到 Headeye: {lookAtTarget.name}");
             }
             else
             {
@@ -338,42 +339,80 @@ public class MainMenu : MonoBehaviour
                 if (head != null)
                 {
                     lookAtTarget = head;
-                    Debug.Log($"[MainMenu] 找到 Head: {lookAtTarget.name}");
+                    Debug.Log($"[MainMenu] ✅ 找到 Head: {lookAtTarget.name}");
                 }
                 else
                 {
-                    Debug.Log($"[MainMenu] 未找到头部节点，使用敌人根节点: {killerEnemy.name}");
+                    Debug.LogWarning($"[MainMenu] ⚠️ 未找到头部节点，使用敌人根节点: {killerEnemy.name}");
                 }
             }
         }
 
-        // 设置死亡摄像机的 LookAt 目标为敌人
+        // ✅ 设置死亡摄像机同时跟随和看向敌人
         if (deathCam != null)
         {
+            // 确保摄像机激活
             deathCam.gameObject.SetActive(true);
+            
+            // ✅ 先设置 Follow 和 LookAt（在提升优先级之前）
+            deathCam.Follow = killerEnemy;
             deathCam.LookAt = lookAtTarget;
 
-            // ✅ 使用固定的高优先级（确保高于所有游戏摄像机）
-            int deathCamPriority = 100;
+            Debug.Log($"[MainMenu] 📍 死亡摄像机 Follow 目标: {killerEnemy.name} (Position: {killerEnemy.position})");
+            Debug.Log($"[MainMenu] 👁️ 死亡摄像机 LookAt 目标: {lookAtTarget.name} (Position: {lookAtTarget.position})");
 
-            // 设置混合时间并提升死亡摄像机优先级
+            // ✅ 强制更新 Cinemachine 状态（重要！）
+            deathCam.enabled = false;
+            yield return null; // 等待一帧
+            deathCam.enabled = true;
+
+            // 设置混合时间
             if (cinemachineBrain != null)
             {
                 cinemachineBrain.DefaultBlend.Time = deathCameraBlendTime;
+                Debug.Log($"[MainMenu] 🎬 设置混合时间: {deathCameraBlendTime}s");
             }
 
+            // ✅ 最后提升优先级（触发混合）
+            int deathCamPriority = 100;
             deathCam.Priority = deathCamPriority;
-            Debug.Log($"[MainMenu] 死亡摄像机优先级设置为: {deathCamPriority}");
+            Debug.Log($"[MainMenu] 🎯 死亡摄像机优先级设置为: {deathCamPriority}");
+
+            // ✅ 检查摄像机配置
+            Debug.Log($"[MainMenu] 📹 死亡摄像机配置检查:");
+            Debug.Log($"  - GameObject Active: {deathCam.gameObject.activeSelf}");
+            Debug.Log($"  - Component Enabled: {deathCam.enabled}");
+            Debug.Log($"  - Follow: {(deathCam.Follow != null ? deathCam.Follow.name : "NULL")}");
+            Debug.Log($"  - LookAt: {(deathCam.LookAt != null ? deathCam.LookAt.name : "NULL")}");
+            Debug.Log($"  - Priority: {deathCam.Priority}");
+        }
+        else
+        {
+            Debug.LogError("[MainMenu] ❌ deathCam 为 null！请在 Inspector 中设置 Death Cam 引用！");
+            ShowDeadPanelImmediate();
+            yield break;
         }
 
         // 等待摄像机混合完成 + 额外停留时间（使用未缩放时间，避免被暂停影响）
         float totalWaitTime = deathCameraBlendTime + deathCameraHoldTime;
         float elapsed = 0f;
+        
+        Debug.Log($"[MainMenu] ⏳ 等待摄像机混合 ({deathCameraBlendTime}s) + 停留 ({deathCameraHoldTime}s) = {totalWaitTime}s");
+        
         while (elapsed < totalWaitTime)
         {
             elapsed += Time.unscaledDeltaTime;
+            
+            // 每秒输出一次调试信息
+            if (Mathf.FloorToInt(elapsed) != Mathf.FloorToInt(elapsed - Time.unscaledDeltaTime))
+            {
+                Debug.Log($"[MainMenu] ⏱️ 进度: {elapsed:F1}s / {totalWaitTime:F1}s");
+            }
+            
             yield return null;
         }
+
+        Debug.Log("[MainMenu] ✅ 摄像机序列完成");
 
         // 恢复混合时间
         if (cinemachineBrain != null)
@@ -381,11 +420,16 @@ public class MainMenu : MonoBehaviour
             cinemachineBrain.DefaultBlend.Time = inGameBlendTime;
         }
 
-        // ✅ 降低死亡摄像机优先级，但不重新启用 TPSCameraController（因为游戏已暂停）
+        // ✅ 清理死亡摄像机的 Follow 和 LookAt 引用，防止后续干扰
         if (deathCam != null)
         {
             deathCam.Priority = 5;
+            deathCam.Follow = null;
+            deathCam.LookAt = null;
+            Debug.Log("[MainMenu] 🧹 已清理死亡摄像机的 Follow/LookAt 引用");
         }
+
+        Debug.Log("[MainMenu] ========== 死亡摄像机序列结束 ==========");
 
         // 显示死亡面板
         ShowDeadPanelImmediate();

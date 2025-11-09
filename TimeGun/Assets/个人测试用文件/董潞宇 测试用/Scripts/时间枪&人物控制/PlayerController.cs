@@ -504,8 +504,16 @@ namespace TimeGun
 
             IsDead = true;
 
+            // ✅ 停止角色控制器
             if (_characterController != null)
                 _characterController.enabled = false;
+
+            // ✅ 停止动画播放
+            if (animator != null)
+            {
+                animator.speed = 0f; // 冻结动画
+                Debug.Log("[PlayerController] 已停止玩家动画");
+            }
 
             OnDeath?.Invoke();
 
@@ -543,6 +551,13 @@ namespace TimeGun
 
             if (_characterController != null)
                 _characterController.enabled = true;
+
+            // ✅ 恢复动画播放
+            if (animator != null)
+            {
+                animator.speed = 1f;
+                Debug.Log("[PlayerController] 已恢复玩家动画");
+            }
 
             OnRespawn?.Invoke();
 
