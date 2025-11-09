@@ -20,7 +20,7 @@ public class Enemy : MonoBehaviour
 
     [Header("视野设置")]
     [Tooltip("敌人的视野角度（度），以前方为中心的扇形角度")]
-    public float viewAngle = 90f;
+    public float viewAngle = 120f;
 
     [Tooltip("敌人的视野半径（米），超出此距离无法看到玩家")]
     public float viewRadius = 10f;
@@ -42,7 +42,7 @@ public class Enemy : MonoBehaviour
     private bool isDead = false;
 
     [Tooltip("触发死亡所需的最小冲击力阈值")]
-    private const float crushForceThreshold = 50f;
+    private const float crushForceThreshold = 200f;
 
 
 
