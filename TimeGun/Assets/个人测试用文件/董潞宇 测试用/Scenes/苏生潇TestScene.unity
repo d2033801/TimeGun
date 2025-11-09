@@ -447,26 +447,6 @@ PrefabInstance:
       propertyPath: m_Name
       value: PlayerSet_Timerewind RealMan
       objectReference: {fileID: 0}
-    - target: {fileID: 3798071656773939083, guid: 059844ad65e04fc4cbc62abd0b4c7189, type: 3}
-      propertyPath: m_LocalPosition.z
-      value: -6.271
-      objectReference: {fileID: 0}
-    - target: {fileID: 5398828753992649074, guid: 059844ad65e04fc4cbc62abd0b4c7189, type: 3}
-      propertyPath: m_LocalPosition.x
-      value: 0.39999962
-      objectReference: {fileID: 0}
-    - target: {fileID: 5398828753992649074, guid: 059844ad65e04fc4cbc62abd0b4c7189, type: 3}
-      propertyPath: m_LocalPosition.y
-      value: 2.387
-      objectReference: {fileID: 0}
-    - target: {fileID: 5398828753992649074, guid: 059844ad65e04fc4cbc62abd0b4c7189, type: 3}
-      propertyPath: m_LocalPosition.z
-      value: -6.271
-      objectReference: {fileID: 0}
-    - target: {fileID: 6075054107925848998, guid: 059844ad65e04fc4cbc62abd0b4c7189, type: 3}
-      propertyPath: m_LocalPosition.z
-      value: -1.139
-      objectReference: {fileID: 0}
     - target: {fileID: 8097560756441127659, guid: 059844ad65e04fc4cbc62abd0b4c7189, type: 3}
       propertyPath: m_LocalPosition.x
       value: 13.564944
@@ -1385,7 +1365,7 @@ MonoBehaviour:
   m_OverrideTileSize: 0
   m_TileSize: 256
   m_OverrideVoxelSize: 0
-  m_VoxelSize: 0.1
+  m_VoxelSize: 0.043333333
   m_MinRegionArea: 2
   m_NavMeshData: {fileID: 23800000, guid: f93ab2b81e651c84dafb59fcfd0a49e6, type: 2}
   m_BuildHeightMesh: 0
