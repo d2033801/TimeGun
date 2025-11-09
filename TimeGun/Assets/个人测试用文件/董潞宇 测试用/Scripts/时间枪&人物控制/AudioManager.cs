@@ -27,13 +27,13 @@ namespace TimeGun
     /// 
     /// 依赖：
     /// - DOTween插件（用于平滑音量过渡）
-    /// - AudioMixer Asset（必需！用于动态音效处理）
+    /// - AudioMixer Asset（用于动态音效处理，可选）
     /// 
     /// 配置步骤：
-    /// 1. 创建AudioMixer，配置Music/BackgroundMusic分组
-    /// 2. 为BackgroundMusic组添加Lowpass、Pitch Shifter效果器
-    /// 3. 暴露参数：MusicVolume、BGMVolume、BGMLowpassCutoff、BGMPitch
-    /// 4. 在Inspector中分配AudioMixer和参数名称
+    /// 1. 创建AudioMixer，配置Music/BackgroundMusic分组（可选）
+    /// 2. 为BackgroundMusic组添加Lowpass、Pitch Shifter效果器（可选）
+    /// 3. 暴露参数：MusicVolume、BGMVolume、BGMLowpassCutoff、BGMPitch（可选）
+    /// 4. 在Inspector中分配音乐片段（必需）
     /// </summary>
     [AddComponentMenu("TimeGun/Audio Manager")]
     public class AudioManager : MonoBehaviour
@@ -119,8 +119,8 @@ namespace TimeGun
         [Tooltip("音乐切换交叉淡入淡出时间（秒）")]
         [SerializeField] private float crossfadeTime = 2f;
 
-        [Header("AudioMixer配置（必需）")]
-        [Tooltip("主音频混合器 - 用于动态音效处理")]
+        [Header("AudioMixer配置（可选）")]
+        [Tooltip("主音频混合器 - 用于动态音效处理（可选）")]
         [SerializeField] private AudioMixer audioMixer;
 
         [Tooltip("主音量参数名")]
@@ -333,7 +333,7 @@ namespace TimeGun
                 }
                 else
                 {
-                    Debug.LogWarning("[AudioManager] 未找到 'BackgroundMusic' Mixer Group，音效处理将无法工作");
+                    Debug.LogWarning("[AudioManager] 未找到 'BackgroundMusic' Mixer Group，将使用默认输出");
                 }
             }
         }
@@ -344,6 +344,7 @@ namespace TimeGun
             {
                 Debug.LogWarning("[AudioManager] 未分配AudioMixer，将使用基础音量控制（无法实现回溯音效）");
                 audioMixerValid = false;
+                _audioMixerConfigured = false;
                 return;
             }
 
@@ -382,8 +383,8 @@ namespace TimeGun
 
         private void PlayMusic(MusicState state, AudioClip clip)
         {
-            Debug.Log($"[AudioManager] PlayMusic() 调用 - State: {state}, Clip: {(clip != null ? clip.name : "NULL")}\n" +
-                      $"[AudioManager] 当前状态: {currentMusicState}, 主音源播放中: {_mainAudioSource.isPlaying}");
+            Debug.Log($"[AudioManager] PlayMusic() 调用 - State: {state}, Clip: {(clip != null ? clip.name : "NULL")}");
+            Debug.Log($"[AudioManager] 当前状态: {currentMusicState}, 主音源播放中: {_mainAudioSource.isPlaying}");
             
             if (currentMusicState == state && _mainAudioSource.isPlaying)
             {
@@ -474,24 +475,29 @@ namespace TimeGun
                 // 直接播放
                 Debug.Log($"[AudioManager] 主音源未播放，直接播放新音乐: {newClip.name}");
                 _mainAudioSource.clip = newClip;
-                _mainAudioSource.volume = 0f;
                 _mainAudioSource.Play();
                 
-                Debug.Log($"[AudioManager] AudioSource 状态: Playing={_mainAudioSource.isPlaying}, Volume={_mainAudioSource.volume}, Clip={_mainAudioSource.clip.name}");
+                Debug.Log($"[AudioManager] AudioSource 状态: Playing={_mainAudioSource.isPlaying}, Clip={_mainAudioSource.clip.name}");
                 
                 if (_audioMixerConfigured)
                 {
                     float targetDB = LinearToDecibel(defaultVolume);
                     Debug.Log($"[AudioManager] 使用 AudioMixer 淡入: -80 dB → {targetDB} dB");
+                    
+                    // 先设置初始音量为-80dB
+                    audioMixer.SetFloat(bgmVolumeParameter, -80f);
+                    
                     DOTween.To(() => -80f, x => 
                     {
                         audioMixer.SetFloat(bgmVolumeParameter, x);
                         Debug.Log($"[AudioManager] AudioMixer 音量: {x} dB");
-                    }, targetDB, fadeTime);
+                    }, targetDB, fadeTime)
+                    .OnComplete(() => Debug.Log($"[AudioManager] ✅ AudioMixer 淡入完成"));
                 }
                 else
                 {
                     Debug.Log($"[AudioManager] 使用 AudioSource 音量淡入: 0 → {defaultVolume}");
+                    _mainAudioSource.volume = 0f;
                     _mainAudioSource.DOFade(defaultVolume, fadeTime)
                         .OnUpdate(() => Debug.Log($"[AudioManager] AudioSource 音量: {_mainAudioSource.volume}"))
                         .OnComplete(() => Debug.Log($"[AudioManager] ✅ 音量淡入完成: {_mainAudioSource.volume}"));
@@ -506,12 +512,10 @@ namespace TimeGun
         #region 事件订阅 - 全局回溯
         private void SubscribeToEvents()
         {
-            // 订阅全局回溯管理器的事件（如果存在）
         }
 
         private void UnsubscribeFromEvents()
         {
-            // 取消订阅事件
         }
 
         private void Update()
@@ -570,7 +574,6 @@ namespace TimeGun
             }
             else
             {
-                // 降级方案：只降低音量
                 Debug.LogWarning("[AudioManager] AudioMixer未配置，只能降低音量");
                 _mainAudioSource.DOFade(rewindBGMVolume, fadeTime);
             }
