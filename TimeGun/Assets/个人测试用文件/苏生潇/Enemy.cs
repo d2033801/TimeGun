@@ -63,6 +63,11 @@ public class Enemy : MonoBehaviour
     internal Transform player; // 玩家引用
     internal NavMeshAgent navMeshAgent; // 导航组件
 
+    /// <summary>
+    /// 标记敌人是否刚从警戒状态返回（用于防止立即切换到下一个巡逻点）
+    /// </summary>
+    internal bool isReturningFromAlert = false;
+
     #region 暴露给回溯组件的变量
     /// <summary>
     /// 获取或设置敌人的死亡状态。
