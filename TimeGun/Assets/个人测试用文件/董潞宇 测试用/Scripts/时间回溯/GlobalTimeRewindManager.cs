@@ -32,10 +32,23 @@ namespace TimeRewind
 
         #region 单例模式
         private static GlobalTimeRewindManager _instance;
+        
+        /// <summary>
+        /// 标记是否正在销毁（防止OnDestroy时重新创建实例）
+        /// </summary>
+        private static bool _isDestroying = false;
+        
         public static GlobalTimeRewindManager Instance
         {
             get
             {
+                // ✅ 防止在销毁过程中重新创建实例
+                if (_isDestroying)
+                {
+                    Debug.LogWarning("[GlobalTimeRewindManager] 正在销毁中，不允许访问单例");
+                    return null;
+                }
+                
                 if (_instance == null)
                 {
                     _instance = FindFirstObjectByType<GlobalTimeRewindManager>();
@@ -69,19 +82,33 @@ namespace TimeRewind
 
         private void OnDestroy()
         {
+            // ✅ 标记正在销毁，防止重新创建
+            _isDestroying = true;
+            
             StopGlobalRewind();
             CleanupRewindVolume();
 
             // ✅ 取消订阅（防止内存泄漏）
             AbstractTimeRewindObject.OnAnyObjectStoppedRewind -= OnTrackedObjectStoppedRewind;
             
-            // ✅ 新增：清空单例引用，允许下一个场景重新创建
+            // ✅ 清空单例引用，允许下一个场景重新创建
             if (_instance == this)
             {
                 _instance = null;
             }
             
             Debug.Log("[GlobalTimeRewindManager] 已取消订阅事件并清空单例引用");
+        }
+        
+        /// <summary>
+        /// 场景卸载时重置销毁标记（通过 RuntimeInitializeOnLoadMethod 在新场景加载时调用）
+        /// </summary>
+        [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
+        private static void ResetStatics()
+        {
+            _instance = null;
+            _isDestroying = false;
+            Debug.Log("[GlobalTimeRewindManager] 静态变量已重置");
         }
         #endregion
 

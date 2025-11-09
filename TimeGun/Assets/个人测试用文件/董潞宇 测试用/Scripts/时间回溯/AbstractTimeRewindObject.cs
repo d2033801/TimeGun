@@ -627,13 +627,16 @@ namespace TimeRewind
         /// <summary>
         /// 限时回溯协程（内部使用）
         /// </summary>
+        /// <param name="duration">回溯的时长</param>
+        /// <param name="speed">回溯的速度</param>
+        /// <returns>在时长/速度(现实回溯时间)后停止回溯</returns>
         private IEnumerator TimedRewindCoroutine(float duration, float speed)
         {
             // 启动回溯
             StartRewind(speed);
 
             // 等待指定时长
-            yield return new WaitForSeconds(duration);
+            yield return new WaitForSeconds(duration / speed);
 
             // 自动停止回溯
             StopRewind();
