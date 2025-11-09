@@ -53,7 +53,7 @@ namespace TimeGun
         [Header("Crouch")]
         public bool holdToCrouch = false;
         public float standHeight = 1.8f;
-        public float crouchHeight = 1.2f;
+        public float crouchHeight = 1.0f;
         public float heightLerpSpeed = 12f;
         public LayerMask ceilingMask = ~0;
         [Tooltip("站立状态时 CharacterController.center.y")]
