@@ -550,7 +550,7 @@
                     "interactions": "",
                     "processors": "",
                     "groups": ";Keyboard&Mouse",
-                    "action": "Global Rewind",
+                    "action": "Grenade Launch",
                     "isComposite": false,
                     "isPartOfComposite": false
                 },

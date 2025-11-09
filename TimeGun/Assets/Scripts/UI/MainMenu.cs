@@ -1,9 +1,10 @@
+using System.Collections.Generic;
+using TimeGun;
 using TMPro;
 using Unity.Cinemachine;
 using UnityEngine;
 using UnityEngine.InputSystem;
 using UnityEngine.SceneManagement;
-using System.Collections.Generic;
 
 public class MainMenu : MonoBehaviour
 {
@@ -13,6 +14,7 @@ public class MainMenu : MonoBehaviour
     public GameObject gameHUDPanel;
     public GameObject escMenuPanel;
     public GameObject deadPanel;
+    public GameObject victoryPanel;
 
     [Header("摄像机")]
     public CinemachineCamera menuCam;
@@ -109,6 +111,7 @@ public class MainMenu : MonoBehaviour
         mainMenuPanel?.SetActive(true);
         escMenuPanel?.SetActive(false);
         deadPanel?.SetActive(false);
+        victoryPanel?.SetActive(false);
         _callMenuAction ??= callMenuAction.action;
 
         // 初始化相机优先级（菜单相机优先级更高）
@@ -128,6 +131,9 @@ public class MainMenu : MonoBehaviour
 
         // 延迟初始化显示，确保 AmmoSystem 已经初始化
         StartCoroutine(InitializeAmmoDisplayDelayed());
+
+        // 播放主菜单音乐
+        AudioManager.PlayMainMenuMusic();
     }
 
     /// <summary>
@@ -235,6 +241,9 @@ public class MainMenu : MonoBehaviour
         Time.timeScale = 1;
         isPlaying = true;
         isPaused = false;
+
+        // 切换到游戏音乐
+        AudioManager.PlayGameplayMusic();
     }
 
     /// <summary>
@@ -540,6 +549,7 @@ public class MainMenu : MonoBehaviour
         gameHUDPanel.SetActive(false);
         controlsPanel.SetActive(false);
         deadPanel?.SetActive(false);
+        victoryPanel?.SetActive(false);
         Time.timeScale = 0;
 
         Cursor.lockState = CursorLockMode.None;
@@ -550,6 +560,8 @@ public class MainMenu : MonoBehaviour
         {
             playerController.enabled = false;
         }
+
+        AudioManager.EnterPauseState();  // 降低音量
     }
 
     /// <summary>
@@ -638,6 +650,7 @@ public class MainMenu : MonoBehaviour
         gameHUDPanel.SetActive(true);
         controlsPanel.SetActive(false);
         deadPanel?.SetActive(false);
+        victoryPanel?.SetActive(false);
         Time.timeScale = 1;
 
         Cursor.lockState = CursorLockMode.Locked;
@@ -648,5 +661,31 @@ public class MainMenu : MonoBehaviour
         {
             playerController.enabled = true;
         }
+
+        AudioManager.ExitPauseState();   // 恢复音量
+    }
+
+    public void showVictoryMenu()
+    {
+        escMenuPanel.SetActive(false);
+        gameHUDPanel.SetActive(false);
+        controlsPanel.SetActive(false);
+        deadPanel?.SetActive(false);
+        victoryPanel?.SetActive(true);
+
+        // 暂停游戏
+        Time.timeScale = 0;
+
+        // 显示鼠标
+        Cursor.lockState = CursorLockMode.None;
+        Cursor.visible = true;
+
+        // 禁用玩家控制
+        if (playerController != null)
+        {
+            playerController.enabled = false;
+        }
+
+        AudioManager.PlayVictoryMusic();
     }
 }
