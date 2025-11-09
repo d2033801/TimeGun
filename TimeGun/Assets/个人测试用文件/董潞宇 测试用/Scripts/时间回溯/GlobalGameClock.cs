@@ -1,4 +1,5 @@
-﻿using UnityEngine;
+﻿using TMPro;
+using UnityEngine;
 using Utility;
 
 namespace TimeRewind
@@ -53,6 +54,18 @@ namespace TimeRewind
         }
         #endregion
 
+        #region UI 配置
+        [Header("UI 显示")]
+        [Tooltip("时间显示的 TextMeshProUGUI 组件（可选）")]
+        [SerializeField] private TextMeshProUGUI timeText;
+
+        [Tooltip("是否显示时间文本")]
+        [SerializeField] private bool showTimeDisplay = true;
+
+        [Tooltip("时间文本格式（{0}=分钟, {1}=秒）")]
+        [SerializeField] private string timeFormat = "游戏时间: {0:D2}:{1:D2}";
+        #endregion
+
         #region 公共接口
         /// <summary>
         /// 当前经过的总秒数（只读）
@@ -80,6 +93,26 @@ namespace TimeRewind
         public void ResetClock()
         {
             _totalSeconds = 0f;
+            UpdateTimeDisplay();
+        }
+
+        /// <summary>
+        /// 设置时间显示的 UI Text 组件
+        /// </summary>
+        /// <param name="textComponent">TextMeshProUGUI 组件</param>
+        public void SetTimeText(TextMeshProUGUI textComponent)
+        {
+            timeText = textComponent;
+            UpdateTimeDisplay();
+        }
+
+        /// <summary>
+        /// 设置是否显示时间
+        /// </summary>
+        public void SetShowTimeDisplay(bool show)
+        {
+            showTimeDisplay = show;
+            UpdateTimeDisplay();
         }
         #endregion
 
@@ -108,6 +141,7 @@ namespace TimeRewind
         {
             base.MainInit();
             _timeHistory = RewindInit<TimeSnapshot>(out _);
+            UpdateTimeDisplay();
         }
         #endregion
 
@@ -125,6 +159,12 @@ namespace TimeRewind
             _totalSeconds += Time.fixedDeltaTime;
 
             base.FixedUpdate();
+        }
+
+        private void LateUpdate()
+        {
+            // 每帧更新 UI 显示（确保显示流畅）
+            UpdateTimeDisplay();
         }
         #endregion
 
@@ -149,20 +189,15 @@ namespace TimeRewind
         }
         #endregion
 
-        #region 调试信息
-        private void OnGUI()
+        #region UI 更新
+        /// <summary>
+        /// 更新时间显示（支持 TextMeshProUGUI）
+        /// </summary>
+        private void UpdateTimeDisplay()
         {
-            if (!Application.isPlaying) return;
+            if (!showTimeDisplay || timeText == null) return;
 
-            // 右上角显示时钟
-            GUIStyle style = new GUIStyle(GUI.skin.label)
-            {
-                fontSize = 24,
-                normal = { textColor = Color.white }
-            };
-
-            int screenWidth = Screen.width; // 获取屏幕宽度
-            GUI.Label(new Rect(screenWidth - 210, 10, 200, 30), $"游戏时间: {FormattedTime}", style);
+            timeText.text = string.Format(timeFormat, Minutes, Seconds);
         }
         #endregion
     }

@@ -231,21 +231,44 @@ namespace TimeGun
             if (IsDead) return;
 
             float dt = Time.deltaTime;
+
+            // --- 蹲下状态处理 ---
+            // 读取输入
+            bool crouchPressed = _crouch != null && _crouch.WasPressedThisFrame();
+            bool crouchHeld = _crouch != null && _crouch.IsPressed();
+
+            // 根据模式（长按/切换）计算期望的蹲下状态
+            bool desiredCrouch = holdToCrouch ? crouchHeld : (crouchPressed ? !IsCrouching : IsCrouching);
+
+            // 如果要从蹲下站起，检查头顶是否有障碍物
+            if (IsCrouching && !desiredCrouch)
+            {
+                if (!CanStandUp())
+                {
+                    desiredCrouch = true; // 无法站起，强制保持蹲下
+                }
+            }
+            // 立即更新蹲下状态
+            IsCrouching = desiredCrouch;
+
+            // --- 其他输入和状态更新 ---
             Vector2 move = _move != null ? _move.ReadValue<Vector2>() : Vector2.zero;
             bool hasMoveInput = move.sqrMagnitude > 0.0001f;
             bool wantsSprint = _sprint != null && _sprint.IsPressed() && hasMoveInput;
-            bool crouchPressed = _crouch != null && _crouch.WasPressedThisFrame();
-            bool crouchHeld = _crouch != null && _crouch.IsPressed();
             
             // 使用属性设置，自动触发事件
             IsAiming = _aim != null && _aim.IsPressed();
 
-            HandleCrouch(crouchPressed, crouchHeld, dt);
+            // --- 动画更新 ---
+            // 立即更新动画，使其响应最新的状态
+            UpdateAnimator();
+
+            // --- 物理与行为处理 ---
+            // 处理物理形态的平滑过渡
+            HandleCrouch(dt);
             HandleMovement(move, wantsSprint, dt);
             HandleRotation(move, dt);
             HandleWeapon();
-
-            UpdateAnimator();
         }
 
         private void LateUpdate()
@@ -275,18 +298,9 @@ namespace TimeGun
 
         #region 角色移动、姿态、射击
 
-        private void HandleCrouch(bool crouchPressed, bool crouchHeld, float dt)
+        private void HandleCrouch(float dt)
         {
-            bool desiredCrouch = holdToCrouch ? crouchHeld : (crouchPressed ? !IsCrouching : IsCrouching);
-
-            if (IsCrouching && !desiredCrouch)
-            {
-                if (!CanStandUp())
-                    desiredCrouch = true;
-            }
-
-            IsCrouching = desiredCrouch;
-
+            // 状态已在 Update 中被设置，这里只处理物理形态的平滑变化
             float targetHeight = IsCrouching ? crouchHeight : standHeight;
             float targetCenterY = IsCrouching ? crouchCenterY : standCenterY;
 
@@ -480,7 +494,11 @@ namespace TimeGun
 
         #region 死亡系统
 
-        public void Die()
+        /// <summary>
+        /// 玩家死亡
+        /// </summary>
+        /// <param name="killerEnemy">击杀玩家的敌人Transform（可选）</param>
+        public void Die(Transform killerEnemy = null)
         {
             if (IsDead) return;
 
@@ -491,8 +509,20 @@ namespace TimeGun
 
             OnDeath?.Invoke();
 
-            Debug.Log("[PlayerController] 玩家死亡");
+            Debug.Log($"[PlayerController] 玩家死亡{(killerEnemy != null ? $"，被 {killerEnemy.name} 击杀" : "")}");
 
+            // 显示死亡面板（传递击杀者信息）
+            var mainMenu = UnityEngine.Object.FindFirstObjectByType<MainMenu>();
+            if (mainMenu != null)
+            {
+                mainMenu.OpenDeadPanel(killerEnemy);
+            }
+            else
+            {
+                Debug.LogWarning("[PlayerController] 未找到 MainMenu 组件，无法显示死亡面板");
+            }
+
+            // 如果设置了自动重生，延迟重生
             if (respawnDelay > 0)
             {
                 Invoke(nameof(Respawn), respawnDelay);
@@ -526,9 +556,6 @@ namespace TimeGun
         private void UpdateAnimator()
         {
             if (animator == null) return;
-
-            animator.SetFloat("MoveX", _characterController.velocity.x);
-            animator.SetFloat("MoveZ", _characterController.velocity.z);
             animator.SetFloat("Speed", _characterController.velocity.magnitude);
             animator.SetBool("isCrouching", IsCrouching);
         }
