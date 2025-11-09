@@ -166,6 +166,18 @@ namespace TimeGun
                 _cameraYaw = transform.eulerAngles.y;
                 cameraRoot.rotation = Quaternion.Euler(_cameraPitch, _cameraYaw, 0f);
             }
+
+            // ✅ 订阅全局回溯事件
+            if (TimeRewind.GlobalTimeRewindManager.Instance != null)
+            {
+                TimeRewind.GlobalTimeRewindManager.OnGlobalRewindStarted += OnGlobalRewindStarted;
+                TimeRewind.GlobalTimeRewindManager.OnGlobalRewindStopped += OnGlobalRewindStopped;
+                Debug.Log("[PlayerController] 已订阅全局回溯事件");
+            }
+            else
+            {
+                Debug.LogWarning("[PlayerController] GlobalTimeRewindManager 不存在，无法订阅回溯事件");
+            }
         }
 
         private void Start()
@@ -201,6 +213,17 @@ namespace TimeGun
             DisableAction(_look);
             DisableAction(_grendeLaunch);
             DisableAction(_fire);
+        }
+
+        private void OnDestroy()
+        {
+            // ✅ 取消订阅全局回溯事件
+            if (TimeRewind.GlobalTimeRewindManager.Instance != null)
+            {
+                TimeRewind.GlobalTimeRewindManager.OnGlobalRewindStarted -= OnGlobalRewindStarted;
+                TimeRewind.GlobalTimeRewindManager.OnGlobalRewindStopped -= OnGlobalRewindStopped;
+                Debug.Log("[PlayerController] 已取消订阅全局回溯事件");
+            }
         }
 
         private void Update()
@@ -510,6 +533,42 @@ namespace TimeGun
             animator.SetBool("isCrouching", IsCrouching);
         }
 
+        #endregion
+
+        #region 全局回溯事件处理
+        /// <summary>
+        /// 全局回溯开始时触发（✅ 最简单方案：禁用组件 + 暂停动画）
+        /// </summary>
+        private void OnGlobalRewindStarted()
+        {
+            // ✅ 禁用组件 = Update/LateUpdate 不会执行 = 完全冻结玩家输入
+            enabled = false;
+
+            // ✅ 暂停动画（防止动画继续播放）
+            if (animator != null)
+            {
+                animator.speed = 0f;
+            }
+
+            Debug.Log("[PlayerController] 全局回溯开始，已禁用玩家控制器并暂停动画");
+        }
+
+        /// <summary>
+        /// 全局回溯结束时触发（✅ 重新启用组件 + 恢复动画）
+        /// </summary>
+        private void OnGlobalRewindStopped()
+        {
+            // ✅ 重新启用组件 = 恢复所有控制
+            enabled = true;
+
+            // ✅ 恢复动画（恢复正常播放速度）
+            if (animator != null)
+            {
+                animator.speed = 1f;
+            }
+
+            Debug.Log("[PlayerController] 全局回溯结束，已恢复玩家控制器并恢复动画");
+        }
         #endregion
     }
 }

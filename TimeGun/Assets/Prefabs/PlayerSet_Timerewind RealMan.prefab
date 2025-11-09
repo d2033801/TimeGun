@@ -183,6 +183,7 @@ GameObject:
   - component: {fileID: 4105170724966091967}
   - component: {fileID: 1468787496407663201}
   - component: {fileID: 6237846764130860236}
+  - component: {fileID: 8795026607564332610}
   m_Layer: 3
   m_Name: Player
   m_TagString: Player
@@ -355,6 +356,26 @@ MonoBehaviour:
   fixedWeapon: {fileID: 5743956744337381373}
   handTransform: {fileID: 6552120568773906190}
   gunPrefab: {fileID: 7170290143868527869}
+--- !u!114 &8795026607564332610
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3856936890080468311}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 4275e47b4a33bc74da21253bcb420395, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::TimeGun.AmmoSystem
+  maxBullets: 2
+  bulletRestoreTime: 40
+  maxGrenades: 1
+  grenadeRestoreTime: 40
+  currentBullets: 2
+  currentGrenades: 1
+  bulletRestoreTimer: 0
+  grenadeRestoreTimer: 0
 --- !u!1 &4433264997626604830
 GameObject:
   m_ObjectHideFlags: 0

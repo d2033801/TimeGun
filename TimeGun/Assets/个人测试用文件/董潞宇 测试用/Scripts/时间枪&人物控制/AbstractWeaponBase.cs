@@ -29,12 +29,14 @@ namespace TimeGun
         /// 方向通常由 targetPoint - muzzlePoint.position 决定。
         /// </summary>
         /// <param name="targetPoint">目标点（世界坐标）。</param>
-        public abstract void Fire(Vector3 targetPoint);
+        /// <returns>是否成功发射（true=发射成功，false=CD未到或其他原因）</returns>
+        public abstract bool Fire(Vector3 targetPoint);
 
         /// <summary>
         /// 无目标点版本的开火（朝当前枪口正前方射击或由武器自身决定方向）。
         /// </summary>
-        public abstract void Fire();
+        /// <returns>是否成功发射（true=发射成功，false=CD未到或其他原因）</returns>
+        public abstract bool Fire();
 
         /// <summary>
         /// [已弃用] 应用俯仰角到武器（仅修改本地 X 轴），用于让武器跟随相机俯仰。

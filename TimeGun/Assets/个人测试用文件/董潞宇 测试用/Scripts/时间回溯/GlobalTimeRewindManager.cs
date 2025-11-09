@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.InputSystem;
 using UnityEngine.Rendering;
@@ -17,6 +18,18 @@ namespace TimeRewind
     [AddComponentMenu("TimeRewind/Global Time Rewind Manager")]
     public class GlobalTimeRewindManager : MonoBehaviour
     {
+        #region 全局事件
+        /// <summary>
+        /// 全局回溯开始事件（任何方式触发全局回溯时触发）
+        /// </summary>
+        public static event Action OnGlobalRewindStarted;
+
+        /// <summary>
+        /// 全局回溯结束事件（全局回溯停止时触发）
+        /// </summary>
+        public static event Action OnGlobalRewindStopped;
+        #endregion
+
         #region 单例模式
         private static GlobalTimeRewindManager _instance;
         public static GlobalTimeRewindManager Instance
@@ -44,13 +57,31 @@ namespace TimeRewind
                 return;
             }
             _instance = this;
-            DontDestroyOnLoad(gameObject);
+            // ✅ 移除：作为关卡工具，随场景生命周期管理，不需要DontDestroyOnLoad
 
             // 缓存输入动作
             _globalRewindAction = globalRewindAction?.action;
 
-            // ✅ 新增：订阅全局事件
+            // ✅ 订阅全局事件
             AbstractTimeRewindObject.OnAnyObjectStoppedRewind += OnTrackedObjectStoppedRewind;
+            Debug.Log("[GlobalTimeRewindManager] 已订阅 OnAnyObjectStoppedRewind 事件");
+        }
+
+        private void OnDestroy()
+        {
+            StopGlobalRewind();
+            CleanupRewindVolume();
+
+            // ✅ 取消订阅（防止内存泄漏）
+            AbstractTimeRewindObject.OnAnyObjectStoppedRewind -= OnTrackedObjectStoppedRewind;
+            
+            // ✅ 新增：清空单例引用，允许下一个场景重新创建
+            if (_instance == this)
+            {
+                _instance = null;
+            }
+            
+            Debug.Log("[GlobalTimeRewindManager] 已取消订阅事件并清空单例引用");
         }
         #endregion
 
@@ -159,13 +190,39 @@ namespace TimeRewind
             UpdateVolumeEffect();
         }
 
-        private void OnDestroy()
+        /// <summary>
+        /// 当任意物体停止回溯时触发（立即停止全局回溯）
+        /// </summary>
+        private void OnTrackedObjectStoppedRewind(AbstractTimeRewindObject stoppedObject)
         {
-            StopGlobalRewind();
-            CleanupRewindVolume();
+            Debug.Log($"[GlobalTimeRewindManager] 收到物体停止回溯事件: {stoppedObject.name}");
 
-            // ✅ 新增：取消订阅（防止内存泄漏）
-            AbstractTimeRewindObject.OnAnyObjectStoppedRewind -= OnTrackedObjectStoppedRewind;
+            // 如果不在全局回溯模式，忽略
+            if (!isGlobalRewinding) 
+            {
+                Debug.Log($"[GlobalTimeRewindManager] 不在全局回溯模式，忽略此事件");
+                return;
+            }
+
+            // ✅ 修复：只要有一个物体停止，立即停止全局回溯
+            Debug.Log($"[GlobalTimeRewindManager] ✅ 物体 {stoppedObject.name} 历史耗尽，立即停止全局回溯");
+            
+            isGlobalRewinding = false;
+            
+            // 停止所有其他正在回溯的物体
+            var objectsToStop = new List<AbstractTimeRewindObject>(_activeRewindingObjects);
+            foreach (var obj in objectsToStop)
+            {
+                if (obj != null && obj != stoppedObject)
+                {
+                    obj.StopRewind();
+                }
+            }
+            
+            _activeRewindingObjects.Clear();
+            
+            // 触发全局停止事件
+            OnGlobalRewindStopped?.Invoke();
         }
         #endregion
 
@@ -297,6 +354,9 @@ namespace TimeRewind
                     _activeRewindingObjects.Add(obj);
                 }
             }
+
+            // ✅ 新增：触发全局事件
+            OnGlobalRewindStarted?.Invoke();
         }
 
         /// <summary>
@@ -322,6 +382,9 @@ namespace TimeRewind
             }
 
             _activeRewindingObjects.Clear();
+
+            // ✅ 新增：触发全局事件
+            OnGlobalRewindStopped?.Invoke();
         }
 
         /// <summary>
@@ -360,42 +423,37 @@ namespace TimeRewind
                 return;
             }
 
+            // ✅ 修复：如果已经在全局回溯中，先停止
+            if (isGlobalRewinding)
+            {
+                Debug.LogWarning("[GlobalTimeRewindManager] 全局回溯已在进行中，先停止旧回溯");
+                StopGlobalRewind();
+            }
+
+            // ✅ 修复：设置全局回溯状态
+            isGlobalRewinding = true;
             float rewindSpeed = speed ?? globalRewindSpeed;
 
             _trackedObjects.RemoveWhere(obj => obj == null);
             trackedObjectsCount = _trackedObjects.Count;
 
-            Debug.Log($"[GlobalTimeRewindManager] 启动全局限时回溯 {duration} 秒，速度 x{rewindSpeed}");
+            // ✅ 修复：清空旧记录
+            _activeRewindingObjects.Clear();
+
+            Debug.Log($"[GlobalTimeRewindManager] 启动全局限时回溯 {duration} 秒，速度 x{rewindSpeed}，影响 {trackedObjectsCount} 个物体");
 
             foreach (var obj in _trackedObjects)
             {
                 if (obj != null)
                 {
                     obj.StartRewindByTime(duration, rewindSpeed);
+                    // ✅ 修复：记录正在回溯的物体
+                    _activeRewindingObjects.Add(obj);
                 }
             }
-        }
-        #endregion
 
-        // ✅ 新增：事件处理方法
-        #region 事件处理
-        /// <summary>
-        /// 当任意物体停止回溯时触发（自动检测是否所有物体都停止）
-        /// </summary>
-        private void OnTrackedObjectStoppedRewind(AbstractTimeRewindObject stoppedObject)
-        {
-            // 如果不在全局回溯模式，忽略
-            if (!isGlobalRewinding) return;
-
-            // 从活跃集合移除
-            _activeRewindingObjects.Remove(stoppedObject);
-
-            // ✅ 如果所有物体都停止了，自动停止全局特效
-            if (_activeRewindingObjects.Count == 0)
-            {
-                Debug.Log("[GlobalTimeRewindManager] 所有物体回溯完成，自动停止全局特效");
-                isGlobalRewinding = false; // 这会让 UpdateVolumeEffect() 将 weight 平滑降至 0
-            }
+            // ✅ 修复：触发全局事件
+            OnGlobalRewindStarted?.Invoke();
         }
         #endregion
 

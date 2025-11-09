@@ -62,56 +62,78 @@ namespace TimeGun
         /// 开火
         /// </summary>
         /// <param name="targetPoint">目标点</param>
-        public override void Fire(Vector3 targetPoint)
+        /// <returns>是否成功发射（true=发射成功，false=CD未到或弹药不足）</returns>
+        public override bool Fire(Vector3 targetPoint)
         {
-            if (!TryConsume(ref bulletIntervalTimer, bulletFireInterval)) return;
+            // ✅ 1. 检查CD
+            if (!TryConsume(ref bulletIntervalTimer, bulletFireInterval)) 
+                return false;
             
+            // ✅ 2. 检查并消耗弹药（在武器内部直接扣除）
+            if (manager != null && !manager.TryConsumeBullet())
+            {
+                Debug.Log("[TimeGun] 子弹不足，无法开火");
+                return false;
+            }
+            
+            // ✅ 3. 发射子弹
             var dir = (targetPoint - muzzlePoint.position).normalized;
             Rigidbody rb = InstantiateAmmoRigidbody(bulletPrefab, muzzlePoint.position, Quaternion.LookRotation(dir,Vector3.up));
-            
             rb.AddForce(dir * bulletSpeed, ForceMode.VelocityChange);
 
-            // ✅ 播放枪口火光特效
+            // ✅ 4. 播放特效音效
             PlayMuzzleFlash(muzzlePoint);
-
-            // ✅ 播放子弹发射音效
             PlayFireSound(bulletFireSound);
+
+            return true;
         }
         
         /// <summary>
         /// 开火, 对准枪正前方
         /// </summary>
-        public override void Fire()
+        /// <returns>是否成功发射（true=发射成功，false=CD未到或弹药不足）</returns>
+        public override bool Fire()
         {
-            Fire(muzzlePoint.forward);
+            return Fire(muzzlePoint.position + muzzlePoint.forward * 100f);
         }
 
         /// <summary>
         /// 投掷榴弹, 向着发射口正前方 
         /// </summary>
-        public void Throw()
+        /// <returns>是否成功投掷（true=投掷成功，false=CD未到或弹药不足）</returns>
+        public bool Throw()
         {
-            Throw(grenadeLaunchPoint.forward);
+            return Throw(grenadeLaunchPoint.position + grenadeLaunchPoint.forward * 100f);
         }
 
         /// <summary>
         /// 投掷榴弹, 朝向目标点
         /// </summary>
         /// <param name="targetPoint">瞄准的目标位置</param>
-        public void Throw(Vector3 targetPoint)
+        /// <returns>是否成功投掷（true=投掷成功，false=CD未到或弹药不足）</returns>
+        public bool Throw(Vector3 targetPoint)
         {
-            if(!TryConsume(ref grenadeIntervalTimer, grenadeFireInterval)) return;
+            // ✅ 1. 检查CD
+            if(!TryConsume(ref grenadeIntervalTimer, grenadeFireInterval)) 
+                return false;
             
-            Rigidbody rb = InstantiateAmmoRigidbody(grenadePrefab, grenadeLaunchPoint.position ,
-                Quaternion.identity);
+            // ✅ 2. 检查并消耗榴弹（在武器内部直接扣除）
+            if (manager != null && !manager.TryConsumeGrenade())
+            {
+                Debug.Log("[TimeGun] 榴弹不足，无法投掷");
+                return false;
+            }
+            
+            // ✅ 3. 投掷榴弹
+            Rigidbody rb = InstantiateAmmoRigidbody(grenadePrefab, grenadeLaunchPoint.position, Quaternion.identity);
             var dir = (targetPoint - grenadeLaunchPoint.position).normalized;
             rb.AddForce(dir * grenadeSpeed + Vector3.up * 5f, ForceMode.VelocityChange);
 
-            // ✅ 播放榴弹发射特效
+            // ✅ 4. 播放特效音效
             PlayGrenadeLaunchEffect(grenadeLaunchPoint);
-
-            // ✅ 播放榴弹发射音效
             PlayFireSound(grenadeFireSound);
+
+            return true;
         }
 
         /// <summary>

@@ -1,0 +1,15 @@
+fileFormatVersion: 2
+guid: 864b4601798719c48acc54f709e79416
+MonoImporter:
+  externalObjects: {}
+  serializedVersion: 2
+  defaultReferences:
+  - rewindEffectPrefab: {fileID: 863509563378627453, guid: ec10b22567f639a4a9fbc684a436d8fe, type: 3}
+  - pauseEffectPrefab: {fileID: 863509563378627453, guid: aa6c3264048da5a45bd62b0d48df1f4f, type: 3}
+  - effectSpawnPoint: {instanceID: 0}
+  - dropSound: {fileID: 8300000, guid: 0add5fe65167bfe4caf88e9437d5b18c, type: 3}
+  executionOrder: 0
+  icon: {instanceID: 0}
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 

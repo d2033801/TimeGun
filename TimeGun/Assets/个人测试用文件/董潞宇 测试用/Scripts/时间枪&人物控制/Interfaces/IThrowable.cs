@@ -16,15 +16,17 @@ namespace TimeGun
         /// <summary>
         /// 按武器的默认方向与力度执行投掷。
         /// </summary>
+        /// <returns>是否成功投掷（true=投掷成功，false=CD未到或其他原因）</returns>
         /// <remarks>
         /// 典型实现会以发射点的 forward 为方向进行投掷。
         /// </remarks>
-        void Throw();
+        bool Throw();
 
         /// <summary>
         /// 朝给定世界坐标的目标点执行投掷（实现可据此计算方向或初速度）。
         /// </summary>
-        /// <param name="targetPoint">目标点（世界坐标）。实现应将其视为“期望命中点”或“瞄准参考点”。</param>
-        void Throw(Vector3 targetPoint);
+        /// <param name="targetPoint">目标点（世界坐标）。实现应将其视为"期望命中点"或"瞄准参考点"。</param>
+        /// <returns>是否成功投掷（true=投掷成功，false=CD未到或其他原因）</returns>
+        bool Throw(Vector3 targetPoint);
     }
 }

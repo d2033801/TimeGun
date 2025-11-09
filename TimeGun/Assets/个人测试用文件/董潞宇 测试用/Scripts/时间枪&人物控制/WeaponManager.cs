@@ -7,7 +7,9 @@ namespace TimeGun
     /// 负责：
     /// 1) 装备/切换武器（实例化预制体并放到手部挂点）；
     /// 2) 转发开火/投掷请求到当前武器；
+    /// 3) 集成弹药系统（管理子弹和榴弹的消耗）
     /// </summary>
+    [RequireComponent(typeof(AmmoSystem))]
     public class WeaponManager : MonoBehaviour
     {
         /// <summary>
@@ -51,9 +53,22 @@ namespace TimeGun
         private AbstractWeaponBase currentAbstractWeapon;
         public AbstractWeaponBase CurrentWeapon => currentAbstractWeapon;
 
+        // ✅ 新增：弹药系统引用
+        private AmmoSystem _ammoSystem;
+
         /// <summary>
         /// 启动时根据模式初始化武器。
         /// </summary>
+        private void Awake()
+        {
+            // ✅ 新增：获取弹药系统
+            _ammoSystem = GetComponent<AmmoSystem>();
+            if (_ammoSystem == null)
+            {
+                Debug.LogError("[WeaponManager] 未找到 AmmoSystem 组件！");
+            }
+        }
+
         private void Start()
         {
             switch (weaponMode)
@@ -109,29 +124,28 @@ namespace TimeGun
 
         /// <summary>
         /// 请求当前武器朝给定目标点开火（通常由相机射线计算得到命中点）。
+        /// ✅ 最简洁方案：直接调用武器，武器自己负责所有逻辑
         /// </summary>
         /// <param name="targetPoint">目标点（世界坐标）。</param>
         public void TryFireWeapon(Vector3 targetPoint)
         {
-            if (currentAbstractWeapon != null)
-            {
-                currentAbstractWeapon.Fire(targetPoint);
-            }
+            if (currentAbstractWeapon == null) return;
+            currentAbstractWeapon.Fire(targetPoint);
         }
 
         /// <summary>
         /// 请求当前武器按其自身默认方向开火（无需目标点）。
+        /// ✅ 最简洁方案：直接调用武器，武器自己负责所有逻辑
         /// </summary>
         public void TryFireWeapon()
         {
-            if (currentAbstractWeapon != null)
-            {
-                currentAbstractWeapon.Fire();
-            }
+            if (currentAbstractWeapon == null) return;
+            currentAbstractWeapon.Fire();
         }
 
         /// <summary>
         /// 尝试执行投掷（若当前武器实现了 <see cref="IThrowable"/>）。
+        /// ✅ 最简洁方案：直接调用武器，武器自己负责所有逻辑
         /// </summary>
         public void TryThrow()
         {
@@ -143,6 +157,7 @@ namespace TimeGun
 
         /// <summary>
         /// 尝试朝指定目标点执行投掷（若当前武器实现了 <see cref="IThrowable"/>）。
+        /// ✅ 最简洁方案：直接调用武器，武器自己负责所有逻辑
         /// </summary>
         /// <param name="targetPoint">投掷目标点（世界坐标）。</param>
         public void TryThrow(Vector3 targetPoint)
@@ -151,6 +166,24 @@ namespace TimeGun
             {
                 throwable.Throw(targetPoint);
             }
+        }
+
+        /// <summary>
+        /// ✅ 新增：武器内部调用的弹药消耗接口
+        /// </summary>
+        public bool TryConsumeBullet()
+        {
+            if (_ammoSystem == null) return true;  // 没有弹药系统，直接通过
+            return _ammoSystem.TryConsumeBullet();
+        }
+
+        /// <summary>
+        /// ✅ 新增：武器内部调用的榴弹消耗接口
+        /// </summary>
+        public bool TryConsumeGrenade()
+        {
+            if (_ammoSystem == null) return true;  // 没有弹药系统，直接通过
+            return _ammoSystem.TryConsumeGrenade();
         }
 
         #endregion
