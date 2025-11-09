@@ -42,6 +42,9 @@ namespace TimeGun
         public float moveSpeed = 5f;
         public float sprintSpeed = 7.5f;
         public float rotationSpeed = 12f;
+        [Tooltip("加速和减速的速率（值越大加速越快）")]
+        [Range(5f, 30f)]
+        public float speedChangeRate = 10f;
         public float gravity = -20f;
         [Tooltip("是否允许跳跃")]
         public bool enableJump = true;
@@ -127,6 +130,11 @@ namespace TimeGun
         private const float _cameraRootVerticalOffset = 0.3f;
         private Transform _shootCameraTransform;
         private int _maxShootPointRange = 100;
+
+        // ✅ 加速度系统
+        private float _currentSpeed;      // 当前平滑后的水平移动速度
+        private float _targetSpeed;       // 目标速度
+        private float _speedVelocity;     // SmoothDamp 内部使用的速度变化率
 
         // 相机旋转相关
         private float _cameraYaw;
@@ -329,9 +337,30 @@ namespace TimeGun
             if (inputWorld.sqrMagnitude > 1f)
                 inputWorld.Normalize();
 
-            float speed = IsCrouching ? moveSpeed * 0.6f : (wantsSprint ? sprintSpeed : moveSpeed);
-            Vector3 horizontalVel = inputWorld * speed;
+            // ✅ 计算目标速度
+            _targetSpeed = IsCrouching ? moveSpeed * 0.6f : (wantsSprint ? sprintSpeed : moveSpeed);
 
+            // ✅ 如果没有输入，目标速度为0（减速）
+            bool hasInput = move.sqrMagnitude > 0.0001f;
+            if (!hasInput)
+            {
+                _targetSpeed = 0f;
+            }
+
+            // ✅ 使用 Lerp 平滑过渡到目标速度（模拟加速度）
+            // speedChangeRate 控制加速/减速的快慢
+            _currentSpeed = Mathf.Lerp(_currentSpeed, _targetSpeed, dt * speedChangeRate);
+
+            // ✅ 当速度非常接近0时，直接设为0，避免浮点精度问题
+            if (_currentSpeed < 0.01f)
+            {
+                _currentSpeed = 0f;
+            }
+
+            // ✅ 应用平滑后的速度到移动向量
+            Vector3 horizontalVel = inputWorld.normalized * _currentSpeed;
+
+            // 垂直速度处理（跳跃与重力）
             if (_characterController.isGrounded)
             {
                 _verticalVelocity = -2f;
@@ -548,6 +577,11 @@ namespace TimeGun
             }
 
             _verticalVelocity = 0f;
+            
+            // ✅ 重置速度，避免重生时保留死亡前的速度
+            _currentSpeed = 0f;
+            _targetSpeed = 0f;
+            _speedVelocity = 0f;
 
             if (_characterController != null)
                 _characterController.enabled = true;
@@ -571,7 +605,10 @@ namespace TimeGun
         private void UpdateAnimator()
         {
             if (animator == null) return;
-            animator.SetFloat("Speed", _characterController.velocity.magnitude);
+            
+            // ✅ 使用平滑后的当前速度，而不是 CharacterController.velocity
+            // 这样动画过渡会更平滑，避免瞬间切换导致的跳变
+            animator.SetFloat("Speed", _currentSpeed);
             animator.SetBool("isCrouching", IsCrouching);
         }
 
