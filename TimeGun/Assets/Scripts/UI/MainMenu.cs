@@ -304,7 +304,7 @@ public class MainMenu : MonoBehaviour
     private System.Collections.IEnumerator DeathCameraSequence(Transform killerEnemy)
     {
         Debug.Log($"[MainMenu] ========== 开始死亡摄像机序列 ==========");
-        Debug.Log($"[MainMenu] 目标敌人: {killerEnemy.name}");
+        Debug.Log($"[MainMenu] 目标击杀者: {killerEnemy.name}");
 
         // 隐藏游戏 HUD
         gameHUDPanel?.SetActive(false);
@@ -317,49 +317,84 @@ public class MainMenu : MonoBehaviour
             Debug.Log("[MainMenu] 已临时禁用 TPSCameraController");
         }
 
-        // 选择最佳 LookAt 目标：优先 Enemy.headTransform → 名为"Headeye" → 名为"Head" → 敌人自身
-        Transform lookAtTarget = killerEnemy;
-        var enemyComp = killerEnemy.GetComponentInParent<Enemy>();
-        if (enemyComp != null && enemyComp.headTransform != null)
+        Transform cameraFollow = killerEnemy;  // 摄像机跟随的目标
+        Transform cameraLookAt = null;         // 摄像机看向的目标
+        
+        // 1. 检查是否是 SecurityCamera
+        var cameraComp = killerEnemy.GetComponent<SecurityCamera>();
+        if (cameraComp != null)
         {
-            lookAtTarget = enemyComp.headTransform;
-            Debug.Log($"[MainMenu] ✅ 使用敌人的 headTransform: {lookAtTarget.name}");
-        }
-        else
-        {
-            var headEye = FindChildRecursive(killerEnemy, "Headeye");
-            if (headEye != null)
+            // ✅ SecurityCamera：从 lookAtTarget 位置看向玩家
+            if (cameraComp.lookAtTarget != null)
             {
-                lookAtTarget = headEye;
-                Debug.Log($"[MainMenu] ✅ 找到 Headeye: {lookAtTarget.name}");
+                cameraFollow = cameraComp.lookAtTarget;  // 从 lookAtTarget 位置
+                cameraLookAt = playerController != null ? playerController.transform : killerEnemy;  // 看向玩家
+                Debug.Log($"[MainMenu] ✅ 摄像头模式：从 {cameraFollow.name} 看向玩家");
+            }
+            else if (cameraComp.cameraHead != null)
+            {
+                cameraFollow = cameraComp.cameraHead;
+                cameraLookAt = playerController != null ? playerController.transform : killerEnemy;
+                Debug.Log($"[MainMenu] ✅ 摄像头模式（降级）：从 {cameraFollow.name} 看向玩家");
             }
             else
             {
-                var head = FindChildRecursive(killerEnemy, "Head");
-                if (head != null)
+                cameraFollow = killerEnemy;
+                cameraLookAt = killerEnemy;
+                Debug.LogWarning($"[MainMenu] ⚠️ 摄像头未设置lookAtTarget/cameraHead，使用根节点");
+            }
+        }
+        // 2. 检查是否是 Enemy
+        else
+        {
+            var enemyComp = killerEnemy.GetComponentInParent<Enemy>();
+            if (enemyComp != null && enemyComp.headTransform != null)
+            {
+                cameraFollow = killerEnemy;
+                cameraLookAt = enemyComp.headTransform;
+                Debug.Log($"[MainMenu] ✅ 敌人模式：跟随 {cameraFollow.name}，看向 {cameraLookAt.name}");
+            }
+            else
+            {
+                // 3. 尝试查找常见的头部节点名称
+                var headEye = FindChildRecursive(killerEnemy, "Headeye");
+                if (headEye != null)
                 {
-                    lookAtTarget = head;
-                    Debug.Log($"[MainMenu] ✅ 找到 Head: {lookAtTarget.name}");
+                    cameraFollow = killerEnemy;
+                    cameraLookAt = headEye;
+                    Debug.Log($"[MainMenu] ✅ 找到 Headeye: 跟随 {cameraFollow.name}，看向 {cameraLookAt.name}");
                 }
                 else
                 {
-                    Debug.LogWarning($"[MainMenu] ⚠️ 未找到头部节点，使用敌人根节点: {killerEnemy.name}");
+                    var head = FindChildRecursive(killerEnemy, "Head");
+                    if (head != null)
+                    {
+                        cameraFollow = killerEnemy;
+                        cameraLookAt = head;
+                        Debug.Log($"[MainMenu] ✅ 找到 Head: 跟随 {cameraFollow.name}，看向 {cameraLookAt.name}");
+                    }
+                    else
+                    {
+                        cameraFollow = killerEnemy;
+                        cameraLookAt = killerEnemy;
+                        Debug.LogWarning($"[MainMenu] ⚠️ 未找到头部节点，使用根节点");
+                    }
                 }
             }
         }
 
-        // ✅ 设置死亡摄像机同时跟随和看向敌人
+        // ✅ 设置死亡摄像机
         if (deathCam != null)
         {
             // 确保摄像机激活
             deathCam.gameObject.SetActive(true);
             
-            // ✅ 先设置 Follow 和 LookAt（在提升优先级之前）
-            deathCam.Follow = killerEnemy;
-            deathCam.LookAt = lookAtTarget;
+            // ✅ 设置 Follow 和 LookAt
+            deathCam.Follow = cameraFollow;
+            deathCam.LookAt = cameraLookAt;
 
-            Debug.Log($"[MainMenu] 📍 死亡摄像机 Follow 目标: {killerEnemy.name} (Position: {killerEnemy.position})");
-            Debug.Log($"[MainMenu] 👁️ 死亡摄像机 LookAt 目标: {lookAtTarget.name} (Position: {lookAtTarget.position})");
+            Debug.Log($"[MainMenu] 📍 死亡摄像机 Follow（位置）: {cameraFollow.name} (Position: {cameraFollow.position})");
+            Debug.Log($"[MainMenu] 👁️ 死亡摄像机 LookAt（目标）: {(cameraLookAt != null ? cameraLookAt.name : "NULL")} (Position: {(cameraLookAt != null ? cameraLookAt.position.ToString() : "NULL")})");
 
             // ✅ 强制更新 Cinemachine 状态（重要！）
             deathCam.enabled = false;
