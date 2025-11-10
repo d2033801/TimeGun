@@ -1,0 +1,16 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<linker>
+  <!-- 防止 EnemyVisionVisualizer3D 被代码剥离 -->
+  <assembly fullname="Assembly-CSharp">
+    <type fullname="EnemyVisionVisualizer3D" preserve="all"/>
+    <type fullname="Enemy" preserve="all"/>
+    <type fullname="SecurityCameraVisualizer" preserve="all"/>
+    <type fullname="EnemyStateMachine" preserve="all"/>
+    <type fullname="IEnemyState" preserve="all"/>
+    <type fullname="EnemyIdleState" preserve="all"/>
+    <type fullname="GlobalTimeRewindManager" preserve="all"/>
+    <type fullname="EnemyPatrolState" preserve="all"/>
+    <type fullname="EnemyAlertState" preserve="all"/>
+    <type fullname="EnemyDeathState" preserve="all"/>
+  </assembly>
+</linker>

@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.InputSystem;
@@ -15,6 +16,7 @@ namespace TimeRewind
     /// - 支持按键触发全局回溯 + 自动触发
     /// - 可选：URP Volume 后处理特效（时间扭曲视觉反馈）
     /// </summary>
+    [DefaultExecutionOrder(-100)] // ✅ 新增：比其他脚本早100个单位执行
     [AddComponentMenu("TimeRewind/Global Time Rewind Manager")]
     public class GlobalTimeRewindManager : MonoBehaviour
     {
@@ -22,40 +24,40 @@ namespace TimeRewind
         /// <summary>
         /// 全局回溯开始事件（任何方式触发全局回溯时触发）
         /// </summary>
-        public static event Action OnGlobalRewindStarted;
+        public event Action OnGlobalRewindStarted;
 
         /// <summary>
         /// 全局回溯结束事件（全局回溯停止时触发）
         /// </summary>
-        public static event Action OnGlobalRewindStopped;
+        public  event Action OnGlobalRewindStopped;
         #endregion
 
         #region 单例模式
         private static GlobalTimeRewindManager _instance;
         
         /// <summary>
-        /// 标记是否正在销毁（防止OnDestroy时重新创建实例）
+        /// 标记应用程序是否正在退出（防止在退出时访问单例）
         /// </summary>
-        private static bool _isDestroying = false;
+        private static bool _applicationIsQuitting = false;
         
         public static GlobalTimeRewindManager Instance
         {
             get
             {
-                // ✅ 防止在销毁过程中重新创建实例
-                if (_isDestroying)
+                // ✅ 防止在应用退出或场景卸载时创建新实例
+                if (_applicationIsQuitting)
                 {
-                    Debug.LogWarning("[GlobalTimeRewindManager] 正在销毁中，不允许访问单例");
                     return null;
                 }
                 
+                // ✅ 修复：只查找，不自动创建（避免覆盖场景中已配置的实例）
                 if (_instance == null)
                 {
                     _instance = FindFirstObjectByType<GlobalTimeRewindManager>();
+                    
                     if (_instance == null)
                     {
-                        var go = new GameObject("GlobalTimeRewindManager");
-                        _instance = go.AddComponent<GlobalTimeRewindManager>();
+                        // 可能是已经被销毁了
                     }
                 }
                 return _instance;
@@ -64,16 +66,21 @@ namespace TimeRewind
 
         private void Awake()
         {
+            // ✅ 修复：更严格的重复实例检测（使用静态引用判断）
             if (_instance != null && _instance != this)
             {
+                Debug.LogError($"[GlobalTimeRewindManager] ❌ 检测到重复实例！场景中有多个 GlobalTimeRewindManager，销毁 {gameObject.name}");
                 Destroy(gameObject);
                 return;
             }
+            
+            // ✅ 修复：立即设置静态引用（防止竞态条件）
             _instance = this;
-            // ✅ 移除：作为关卡工具，随场景生命周期管理，不需要DontDestroyOnLoad
+            
+            Debug.Log($"[GlobalTimeRewindManager] ✅ 单例初始化完成: {gameObject.name}");
 
-            // 缓存输入动作
-            _globalRewindAction = globalRewindAction?.action;
+            // ✅ 修复：显式等待资源加载完成（而非盲目延迟1帧）
+            StartCoroutine(InitializeInputActionDelayed());
 
             // ✅ 订阅全局事件
             AbstractTimeRewindObject.OnAnyObjectStoppedRewind += OnTrackedObjectStoppedRewind;
@@ -82,33 +89,33 @@ namespace TimeRewind
 
         private void OnDestroy()
         {
-            // ✅ 标记正在销毁，防止重新创建
-            _isDestroying = true;
+            Debug.Log("[GlobalTimeRewindManager] OnDestroy 开始清理");
             
+            // ✅ 先禁用 Input Action
+            DisableInputAction();
+            
+            // ✅ 停止所有回溯操作
             StopGlobalRewind();
+            
+            // ✅ 清理 Volume
             CleanupRewindVolume();
 
             // ✅ 取消订阅（防止内存泄漏）
             AbstractTimeRewindObject.OnAnyObjectStoppedRewind -= OnTrackedObjectStoppedRewind;
             
-            // ✅ 清空单例引用，允许下一个场景重新创建
+            // ✅ 清空单例引用
             if (_instance == this)
             {
                 _instance = null;
             }
             
-            Debug.Log("[GlobalTimeRewindManager] 已取消订阅事件并清空单例引用");
+            Debug.Log("[GlobalTimeRewindManager] 清理完成");
         }
-        
-        /// <summary>
-        /// 场景卸载时重置销毁标记（通过 RuntimeInitializeOnLoadMethod 在新场景加载时调用）
-        /// </summary>
-        [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
-        private static void ResetStatics()
+
+        private void OnApplicationQuit()
         {
-            _instance = null;
-            _isDestroying = false;
-            Debug.Log("[GlobalTimeRewindManager] 静态变量已重置");
+            // ✅ 标记应用程序正在退出
+            _applicationIsQuitting = true;
         }
         #endregion
 
@@ -186,6 +193,63 @@ namespace TimeRewind
         #endregion
 
         #region 初始化与更新
+        
+        /// <summary>
+        /// ✅ 修复：显式等待资源加载完成（而非盲目延迟）
+        /// </summary>
+        private IEnumerator InitializeInputActionDelayed()
+        {
+            // 显式等待 InputActionReference 和其资源完全加载
+            while (globalRewindAction == null || 
+                   globalRewindAction.asset == null || 
+                   globalRewindAction.action == null)
+            {
+                yield return null;
+            }
+            
+            InitializeInputAction();
+        }
+
+        /// <summary>
+        /// ✅ 修复：初始化 Input Action（简化逻辑）
+        /// </summary>
+        private void InitializeInputAction()
+        {
+            if (globalRewindAction == null)
+            {
+                Debug.LogError("[GlobalTimeRewindManager] ⚠️ 未分配 Input Action Reference！请在 Inspector 中配置");
+                return;
+            }
+
+            // 获取 InputAction
+            _globalRewindAction = globalRewindAction.action;
+
+            if (_globalRewindAction == null)
+            {
+                Debug.LogError("[GlobalTimeRewindManager] ⚠️ InputActionReference.action 为 null！");
+                return;
+            }
+
+            // 启用 InputAction
+            if (!_globalRewindAction.enabled)
+            {
+                _globalRewindAction.Enable();
+                Debug.Log($"[GlobalTimeRewindManager] ✅ Input Action 已启用: {_globalRewindAction.name}");
+            }
+        }
+
+        /// <summary>
+        /// ✅ 新增：禁用 Input Action
+        /// </summary>
+        private void DisableInputAction()
+        {
+            if (_globalRewindAction != null && _globalRewindAction.enabled)
+            {
+                _globalRewindAction.Disable();
+                Debug.Log("[GlobalTimeRewindManager] Input Action 已禁用");
+            }
+        }
+
         private void Start()
         {
             RefreshTrackedObjects();
@@ -194,10 +258,11 @@ namespace TimeRewind
 
         private void OnEnable()
         {
-            // 启用输入动作
+            // ✅ 简化：只处理重新启用场景
             if (_globalRewindAction != null && !_globalRewindAction.enabled)
             {
                 _globalRewindAction.Enable();
+                Debug.Log("[GlobalTimeRewindManager] Input Action 重新启用");
             }
         }
 
@@ -212,6 +277,7 @@ namespace TimeRewind
 
         private void Update()
         {
+            // ✅ 移除：运行时轮询修复（企业级不应该有）
             HandleManualTrigger();
             HandleAutoTrigger();
             UpdateVolumeEffect();
@@ -303,7 +369,11 @@ namespace TimeRewind
         /// </summary>
         private void HandleManualTrigger()
         {
-            if (_globalRewindAction == null) return;
+            // ✅ 简化：只做空值检查（不再尝试修复）
+            if (_globalRewindAction == null)
+            {
+                return;
+            }
 
             // 按下 → 启动全局回溯
             if (_globalRewindAction.WasPressedThisFrame())

@@ -178,8 +178,8 @@ namespace TimeGun
             // ✅ 订阅全局回溯事件
             if (TimeRewind.GlobalTimeRewindManager.Instance != null)
             {
-                TimeRewind.GlobalTimeRewindManager.OnGlobalRewindStarted += OnGlobalRewindStarted;
-                TimeRewind.GlobalTimeRewindManager.OnGlobalRewindStopped += OnGlobalRewindStopped;
+                TimeRewind.GlobalTimeRewindManager.Instance.OnGlobalRewindStarted += OnGlobalRewindStarted;
+                TimeRewind.GlobalTimeRewindManager.Instance.OnGlobalRewindStopped += OnGlobalRewindStopped;
                 Debug.Log("[PlayerController] 已订阅全局回溯事件");
             }
             else
@@ -194,6 +194,7 @@ namespace TimeGun
             {
                 animator = GetComponentInChildren<Animator>();
             }
+
 
             UnityEngine.Cursor.lockState = CursorLockMode.Locked;
             UnityEngine.Cursor.visible = false;
@@ -228,8 +229,8 @@ namespace TimeGun
             // ✅ 取消订阅全局回溯事件
             if (TimeRewind.GlobalTimeRewindManager.Instance != null)
             {
-                TimeRewind.GlobalTimeRewindManager.OnGlobalRewindStarted -= OnGlobalRewindStarted;
-                TimeRewind.GlobalTimeRewindManager.OnGlobalRewindStopped -= OnGlobalRewindStopped;
+                TimeRewind.GlobalTimeRewindManager.Instance.OnGlobalRewindStarted -= OnGlobalRewindStarted;
+                TimeRewind.GlobalTimeRewindManager.Instance.OnGlobalRewindStopped -= OnGlobalRewindStopped;
                 Debug.Log("[PlayerController] 已取消订阅全局回溯事件");
             }
         }

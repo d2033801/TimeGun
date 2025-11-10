@@ -5958,6 +5958,7 @@ MonoBehaviour:
   alarmColor: {r: 1, g: 0, b: 0, a: 0.7}
   updateRate: 30
   maxRenderDistance: 50
+  enableDebugLog: 0
 --- !u!4 &274051994 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: -8679921383154817045, guid: 2008fb3d5e7d5cb4fa210abc55845d74, type: 3}

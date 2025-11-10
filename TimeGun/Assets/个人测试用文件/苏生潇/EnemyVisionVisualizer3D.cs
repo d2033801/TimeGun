@@ -11,6 +11,7 @@ using System.Collections.Generic;
 /// - 遮挡检测（墙壁后不绘制）
 /// - 自动材质生成（无需手动配置）
 /// - 敌人死亡时自动关闭
+/// - ✅ 支持发布版本控制
 /// </summary>
 [RequireComponent(typeof(Enemy))]
 [AddComponentMenu("Enemy/Vision Visualizer 3D")]
@@ -20,6 +21,9 @@ public class EnemyVisionVisualizer3D : MonoBehaviour
     [Header("可视化设置")]
     [Tooltip("是否启用视野可视化")]
     public bool enableVisualization = true;
+
+    [Tooltip("是否在发布版本中启用（取消勾选可以在最终游戏中隐藏调试视图）")]
+    public bool enableInBuild = true;  // ✅ 改为 true
 
     [Tooltip("视锥体分段数（越高越平滑，建议 20-40）")]
     [Range(10, 60)]
@@ -91,6 +95,16 @@ public class EnemyVisionVisualizer3D : MonoBehaviour
     #region 初始化
     private void Awake()
     {
+        // ✅ 新增：发布版本控制
+#if !UNITY_EDITOR
+        if (!enableInBuild)
+        {
+            Debug.Log($"[EnemyVisionVisualizer3D] 发布版本中已禁用可视化 ({gameObject.name})");
+            enabled = false;
+            return;
+        }
+#endif
+
         _enemy = GetComponent<Enemy>();
         _head = _enemy.headTransform;
         _radius = _enemy.viewRadius;
@@ -114,14 +128,14 @@ public class EnemyVisionVisualizer3D : MonoBehaviour
             lineObj.transform.localPosition = Vector3.zero;
             lineObj.transform.localRotation = Quaternion.identity;
             lineObj.transform.localScale = Vector3.one;
-            
+
             _lineRenderer = lineObj.AddComponent<LineRenderer>();
             _lineRenderer.useWorldSpace = true;
             _lineRenderer.startWidth = _lineRenderer.endWidth = 0.05f;
             _lineRenderer.shadowCastingMode = ShadowCastingMode.Off;
             _lineRenderer.receiveShadows = false;
             _lineRenderer.allowOcclusionWhenDynamic = false;
-            
+
             _lineRenderer.material = CreateOptimizedLineMaterial(normalColor);
         }
 
@@ -132,12 +146,12 @@ public class EnemyVisionVisualizer3D : MonoBehaviour
             volObj.transform.position = Vector3.zero;
             volObj.transform.rotation = Quaternion.identity;
             volObj.transform.localScale = Vector3.one;
-            
+
             _volumeFilter = volObj.AddComponent<MeshFilter>();
             _volumeRenderer = volObj.AddComponent<MeshRenderer>();
             _volumeMesh = new Mesh { name = "FrustumVolume" };
             _volumeFilter.mesh = _volumeMesh;
-            
+
             _volumeRenderer.material = CreateOptimizedTransparentMaterial(normalColor);
             _volumeRenderer.shadowCastingMode = ShadowCastingMode.Off;
             _volumeRenderer.receiveShadows = false;
@@ -150,12 +164,12 @@ public class EnemyVisionVisualizer3D : MonoBehaviour
             blindObj.transform.position = Vector3.zero;
             blindObj.transform.rotation = Quaternion.identity;
             blindObj.transform.localScale = Vector3.one;
-            
+
             _blindSpotFilter = blindObj.AddComponent<MeshFilter>();
             _blindSpotRenderer = blindObj.AddComponent<MeshRenderer>();
             _blindSpotMesh = new Mesh { name = "BlindSpot" };
             _blindSpotFilter.mesh = _blindSpotMesh;
-            
+
             _blindSpotRenderer.material = CreateOptimizedTransparentMaterial(blindSpotColor);
             _blindSpotRenderer.shadowCastingMode = ShadowCastingMode.Off;
             _blindSpotRenderer.receiveShadows = false;
@@ -195,7 +209,7 @@ public class EnemyVisionVisualizer3D : MonoBehaviour
         {
             name = "EnemyVision_Transparent_Auto"
         };
-        
+
         mat.SetFloat("_Surface", 1);
         mat.SetFloat("_Blend", 0);
         mat.SetFloat("_AlphaClip", 0);
@@ -204,10 +218,10 @@ public class EnemyVisionVisualizer3D : MonoBehaviour
         mat.SetFloat("_ZWrite", 0);
         mat.SetFloat("_Cull", 0);
         mat.renderQueue = (int)RenderQueue.Transparent;
-        
+
         mat.EnableKeyword("_SURFACE_TYPE_TRANSPARENT");
         mat.EnableKeyword("_ALPHAPREMULTIPLY_ON");
-        
+
         mat.color = color;
 
         return mat;
@@ -303,7 +317,7 @@ public class EnemyVisionVisualizer3D : MonoBehaviour
         _volumeMesh.Clear();
 
         Vector3 origin = _head.position + Vector3.up * planeHeightOffset + _head.forward * nearClip;
-        
+
         if (enableOcclusionTest)
         {
             GenerateOccludedFrustumMesh(origin, color);
@@ -333,7 +347,7 @@ public class EnemyVisionVisualizer3D : MonoBehaviour
         float hStartAngle = -_hFOV / 2f;
 
         int vertIndex = 1;
-        
+
         // 对每个水平角度生成一条"射线"
         for (int h = 0; h < hSegs; h++)
         {
@@ -344,14 +358,14 @@ public class EnemyVisionVisualizer3D : MonoBehaviour
             {
                 float vAngle = Mathf.Lerp(-verticalFOV / 2f, verticalFOV / 2f, v / (float)vSegs) + verticalOffset;
                 Vector3 dir = GetDirection(hAngle, vAngle);
-                
+
                 // 每个顶点独立检测遮挡
                 float actualDist = _radius;
                 if (Physics.Raycast(origin, dir, out RaycastHit hit, _radius, occlusionMask))
                 {
                     actualDist = hit.distance;
                 }
-                
+
                 // 从近裁剪到实际距离插值
                 float distance = Mathf.Lerp(nearClip, actualDist, v / (float)vSegs);
                 verts[vertIndex++] = origin + dir * distance;
@@ -439,7 +453,7 @@ public class EnemyVisionVisualizer3D : MonoBehaviour
         float hStartAngle = -_hFOV / 2f;
 
         int vertIndex = 1;
-        
+
         for (int h = 0; h < hSegs; h++)
         {
             float hAngle = hStartAngle + hAngleStep * h;
@@ -448,7 +462,7 @@ public class EnemyVisionVisualizer3D : MonoBehaviour
             {
                 float vAngle = Mathf.Lerp(-verticalFOV / 2f, verticalFOV / 2f, v / (float)vSegs) + verticalOffset;
                 Vector3 dir = GetDirection(hAngle, vAngle);
-                
+
                 float distance = Mathf.Lerp(nearClip, _radius, v / (float)vSegs);
                 verts[vertIndex++] = origin + dir * distance;
             }
@@ -522,7 +536,7 @@ public class EnemyVisionVisualizer3D : MonoBehaviour
         _blindSpotMesh.Clear();
 
         Vector3 origin = _head.position + Vector3.up * planeHeightOffset;
-        
+
         // 盲区角度范围
         float blindAngleStart = _hFOV / 2f;
         float blindAngleEnd = 360f - _hFOV / 2f;
@@ -545,11 +559,11 @@ public class EnemyVisionVisualizer3D : MonoBehaviour
 
             for (int v = 0; v <= vSegs; v++)
             {
-                float vAngle = Mathf.Lerp(-verticalFOV / 2f, verticalFOV / 2f, 
+                float vAngle = Mathf.Lerp(-verticalFOV / 2f, verticalFOV / 2f,
                                           v / (float)vSegs) + verticalOffset;
-                
+
                 Vector3 dir = GetDirection(hAngle, vAngle);
-                
+
                 // 从中心向外扩展
                 float distance = Mathf.Lerp(0.1f, _radius * 0.7f, v / (float)vSegs);
                 verts[vIdx++] = origin + dir * distance;
@@ -660,17 +674,17 @@ public class EnemyVisionVisualizer3D : MonoBehaviour
         if (_blindSpotFilter != null) Destroy(_blindSpotFilter.gameObject);
 
         // ✅ 修复：检查渲染器是否仍然存在再访问材质
-        if (_lineRenderer != null && _lineRenderer.material != null) 
+        if (_lineRenderer != null && _lineRenderer.material != null)
         {
             Destroy(_lineRenderer.material);
         }
-        
-        if (_volumeRenderer != null && _volumeRenderer.material != null) 
+
+        if (_volumeRenderer != null && _volumeRenderer.material != null)
         {
             Destroy(_volumeRenderer.material);
         }
-        
-        if (_blindSpotRenderer != null && _blindSpotRenderer.material != null) 
+
+        if (_blindSpotRenderer != null && _blindSpotRenderer.material != null)
         {
             Destroy(_blindSpotRenderer.material);
         }

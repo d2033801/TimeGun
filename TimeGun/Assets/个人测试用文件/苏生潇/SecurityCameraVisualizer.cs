@@ -1,90 +1,90 @@
-using UnityEngine;
+ï»¿using UnityEngine;
 using UnityEngine.Rendering;
 using System.Collections.Generic;
 
 /// <summary>
-/// °²È«ÉãÏñÍ·3DÊÓ×¶Ìå¿ÉÊÓ»¯×é¼ş£¨Unity 6.2 + URP£©
-/// À©Õ¹¹¦ÄÜ£º
-/// - 3DÊÓ×¶ÌåÏÔÊ¾£¨Ö§³Ö´¹Ö±ÊÓ½Ç£©
-/// - ´¹Ö±ÊÓÒ°£¨6µãÖÓ·½ÏòÏòÏÂ£©µ½9µãÖÓ·½ÏòË®Æ½£©
-/// - ¿É¿ØÖÆµÄ´¹Ö±Æ«ÒÆºÍÆ½Ãæ¸ß¶È
-/// - ÕÚµ²¼ì²â£¨Ç½±Úºó²»»æÖÆ£©
-/// - ×Ô¶¯²ÄÖÊÉú³É£¨ÎŞĞèÊÖ¶¯ÅäÖÃ£©
-/// - ÉãÏñÍ·°Ú¶¯¸úËæ
-/// - ¼ì²â×´Ì¬ÑÕÉ«±ä»¯
+/// å®‰å…¨æ‘„åƒå¤´3Dè§†é”¥ä½“å¯è§†åŒ–ç»„ä»¶ï¼ˆUnity 6.2 + URPï¼‰
+/// æ‰©å±•åŠŸèƒ½ï¼š
+/// - 3Dè§†é”¥ä½“æ˜¾ç¤ºï¼ˆæ”¯æŒå‚ç›´è§†è§’ï¼‰
+/// - å‚ç›´è§†é‡ï¼ˆ6ç‚¹é’Ÿæ–¹å‘å‘ä¸‹ï¼‰åˆ°9ç‚¹é’Ÿæ–¹å‘æ°´å¹³ï¼‰
+/// - å¯æ§åˆ¶çš„å‚ç›´åç§»å’Œå¹³é¢é«˜åº¦
+/// - é®æŒ¡æ£€æµ‹ï¼ˆå¢™å£åä¸ç»˜åˆ¶ï¼‰
+/// - è‡ªåŠ¨æè´¨ç”Ÿæˆï¼ˆæ— éœ€æ‰‹åŠ¨é…ç½®ï¼‰
+/// - æ‘„åƒå¤´æ‘†åŠ¨è·Ÿéš
+/// - æ£€æµ‹çŠ¶æ€é¢œè‰²å˜åŒ–
 /// </summary>
 [RequireComponent(typeof(SecurityCamera))]
 [AddComponentMenu("Security/Camera Visualizer 3D")]
 public class SecurityCameraVisualizer : MonoBehaviour
 {
-    #region ÅäÖÃ²ÎÊı
-    [Header("¿ÉÊÓ»¯ÉèÖÃ")]
-    [Tooltip("ÊÇ·ñÆôÓÃÊÓÒ°¿ÉÊÓ»¯")]
+    #region é…ç½®å‚æ•°
+    [Header("å¯è§†åŒ–è®¾ç½®")]
+    [Tooltip("æ˜¯å¦å¯ç”¨è§†é‡å¯è§†åŒ–")]
     public bool enableVisualization = true;
 
-    [Tooltip("ÊÓ×¶Ìå·Ö¶ÎÊı£¨Ô½¸ßÔ½Æ½»¬£¬½¨Òé 20-40£©")]
+    [Tooltip("è§†é”¥ä½“åˆ†æ®µæ•°ï¼ˆè¶Šé«˜è¶Šå¹³æ»‘ï¼Œå»ºè®® 20-40ï¼‰")]
     [Range(10, 60)]
     public int segments = 30;
 
-    [Tooltip("ÊÇ·ñ»æÖÆÊÓ×¶ÌåÏß¿ò")]
+    [Tooltip("æ˜¯å¦ç»˜åˆ¶è§†é”¥ä½“çº¿æ¡†")]
     public bool showWireframe = true;
 
-    [Tooltip("ÊÇ·ñÌî³äÊÓ×¶ÌåÌå»ı")]
+    [Tooltip("æ˜¯å¦å¡«å……è§†é”¥ä½“ä½“ç§¯")]
     public bool fillVolume = true;
 
-    [Tooltip("ÊÇ·ñÆôÓÃÕÚµ²¼ì²â£¨Ç½±Úºó²»»æÖÆ£©")]
+    [Tooltip("æ˜¯å¦å¯ç”¨é®æŒ¡æ£€æµ‹ï¼ˆå¢™å£åä¸ç»˜åˆ¶ï¼‰")]
     public bool enableOcclusionTest = true;
 
-    [Header("3D ÊÓ×¶ÌåÅäÖÃ")]
-    [Tooltip("´¹Ö±ÊÓÒ°½Ç¶È£¨¶È£©- ´Ó6µãÖÓµ½9µãÖÓ£¬½¨Òé90¶È")]
+    [Header("3D è§†é”¥ä½“é…ç½®")]
+    [Tooltip("å‚ç›´è§†é‡è§’åº¦ï¼ˆåº¦ï¼‰- ä»6ç‚¹é’Ÿåˆ°9ç‚¹é’Ÿï¼Œå»ºè®®90åº¦")]
     [Range(0f, 90f)]
     public float verticalFOV = 90f;
 
-    [Tooltip("´¹Ö±Æ«ÒÆ£¨¶È£¬¸ºÖµ=ÏòÏÂ£©- ½¨Òé-45¶ÈÊ¹ÊÓÒ°¸²¸ÇÏÂ·½Ë®Æ½")]
+    [Tooltip("å‚ç›´åç§»ï¼ˆåº¦ï¼Œè´Ÿå€¼=å‘ä¸‹ï¼‰- å»ºè®®-45åº¦ä½¿è§†é‡è¦†ç›–ä¸‹æ–¹æ°´å¹³")]
     [Range(-90f, 45f)]
     public float verticalOffset = -45f;
 
-    [Tooltip("Æ½Ãæ¸ß¶ÈÆ«ÒÆ£¨Ã×£¬µ÷ÕûÊÓ×¶ÌåÀëµØ¸ß¶È£©")]
+    [Tooltip("å¹³é¢é«˜åº¦åç§»ï¼ˆç±³ï¼Œè°ƒæ•´è§†é”¥ä½“ç¦»åœ°é«˜åº¦ï¼‰")]
     [Range(-2f, 2f)]
     public float planeHeightOffset = 0f;
 
-    [Tooltip("½ü²Ã¼ô¾àÀë£¨Ã×£©")]
+    [Tooltip("è¿‘è£å‰ªè·ç¦»ï¼ˆç±³ï¼‰")]
     [Min(0.1f)]
     public float nearClip = 0.5f;
 
-    [Header("ÕÚµ²¼ì²âÅäÖÃ")]
-    [Tooltip("ÕÚµ²¼ì²âµÄÉäÏßÊıÁ¿£¨Ô½¶àÔ½¾«È·µ«ĞÔÄÜÏûºÄÔ½´ó£©")]
+    [Header("é®æŒ¡æ£€æµ‹é…ç½®")]
+    [Tooltip("é®æŒ¡æ£€æµ‹çš„å°„çº¿æ•°é‡ï¼ˆè¶Šå¤šè¶Šç²¾ç¡®ä½†æ€§èƒ½æ¶ˆè€—è¶Šå¤§ï¼‰")]
     [Range(5, 30)]
     public int occlusionRayCount = 15;
 
-    [Tooltip("ÕÚµ²¼ì²âÊ¹ÓÃµÄLayerMask")]
+    [Tooltip("é®æŒ¡æ£€æµ‹ä½¿ç”¨çš„LayerMask")]
     public LayerMask occlusionMask = -1;
 
-    [Header("ÑÕÉ«ÅäÖÃ")]
-    [Tooltip("Õı³£Ñ²Âß×´Ì¬ÊÓÒ°ÑÕÉ«")]
-    public Color normalColor = new Color(0f, 1f, 0f, 0.3f); // ÂÌÉ«°ëÍ¸Ã÷
+    [Header("é¢œè‰²é…ç½®")]
+    [Tooltip("æ­£å¸¸å·¡é€»çŠ¶æ€è§†é‡é¢œè‰²")]
+    public Color normalColor = new Color(0f, 1f, 0f, 0.3f); // ç»¿è‰²åŠé€æ˜
 
-    [Tooltip("¼ì²âÖĞ×´Ì¬ÊÓÒ°ÑÕÉ«")]
-    public Color detectingColor = new Color(1f, 0.65f, 0f, 0.5f); // ³ÈÉ«
+    [Tooltip("æ£€æµ‹ä¸­çŠ¶æ€è§†é‡é¢œè‰²")]
+    public Color detectingColor = new Color(1f, 0.65f, 0f, 0.5f); // æ©™è‰²
 
-    [Tooltip("¾¯±¨×´Ì¬ÊÓÒ°ÑÕÉ«")]
-    public Color alarmColor = new Color(1f, 0f, 0f, 0.7f); // ºìÉ«
+    [Tooltip("è­¦æŠ¥çŠ¶æ€è§†é‡é¢œè‰²")]
+    public Color alarmColor = new Color(1f, 0f, 0f, 0.7f); // çº¢è‰²
 
-    [Header("ĞÔÄÜÓÅ»¯")]
-    [Tooltip("¸üĞÂÆµÂÊ£¨Ö¡/Ãë£©£¬0 ±íÊ¾Ã¿Ö¡¸üĞÂ")]
+    [Header("æ€§èƒ½ä¼˜åŒ–")]
+    [Tooltip("æ›´æ–°é¢‘ç‡ï¼ˆå¸§/ç§’ï¼‰ï¼Œ0 è¡¨ç¤ºæ¯å¸§æ›´æ–°")]
     [Range(0, 60)]
     public int updateRate = 30;
 
-    [Tooltip("×î´óäÖÈ¾¾àÀë£¨³¬¹ı¸Ã¾àÀë²»äÖÈ¾£¬0 ±íÊ¾ÎŞÏŞÖÆ£©")]
+    [Tooltip("æœ€å¤§æ¸²æŸ“è·ç¦»ï¼ˆè¶…è¿‡è¯¥è·ç¦»ä¸æ¸²æŸ“ï¼Œ0 è¡¨ç¤ºæ— é™åˆ¶ï¼‰")]
     [Min(0)]
     public float maxRenderDistance = 50f;
 
-    [Header("µ÷ÊÔÑ¡Ïî")]
-    [Tooltip("ÆôÓÃµ÷ÊÔÈÕÖ¾")]
+    [Header("è°ƒè¯•é€‰é¡¹")]
+    [Tooltip("å¯ç”¨è°ƒè¯•æ—¥å¿—")]
     public bool enableDebugLog = false;
     #endregion
 
-    #region ÄÚ²¿±äÁ¿
+    #region å†…éƒ¨å˜é‡
     private SecurityCamera _camera;
     private LineRenderer _lineRenderer;
     private MeshFilter _volumeFilter;
@@ -97,13 +97,13 @@ public class SecurityCameraVisualizer : MonoBehaviour
     private bool _isInitialized = false;
     #endregion
 
-    #region ³õÊ¼»¯
+    #region åˆå§‹åŒ–
     private void Awake()
     {
         _camera = GetComponent<SecurityCamera>();
         if (_camera == null)
         {
-            Debug.LogError("[SecurityCameraVisualizer] Î´ÕÒµ½SecurityCamera×é¼ş£¡", this);
+            Debug.LogError("[SecurityCameraVisualizer] æœªæ‰¾åˆ°SecurityCameraç»„ä»¶ï¼", this);
             return;
         }
 
@@ -121,13 +121,13 @@ public class SecurityCameraVisualizer : MonoBehaviour
 
         if (enableDebugLog)
         {
-            Debug.Log($"[SecurityCameraVisualizer] ³õÊ¼»¯Íê³É - vFOV:{verticalFOV}, vOffset:{verticalOffset}, hFOV:{_hFOV}, radius:{_radius}", this);
+            Debug.Log($"[SecurityCameraVisualizer] åˆå§‹åŒ–å®Œæˆ - vFOV:{verticalFOV}, vOffset:{verticalOffset}, hFOV:{_hFOV}, radius:{_radius}", this);
         }
     }
 
     private void InitComponents()
     {
-        // LineRenderer - Ê¹ÓÃ transform ×÷Îª¸¸¼¶
+        // LineRenderer - ä½¿ç”¨ transform ä½œä¸ºçˆ¶çº§
         if (showWireframe)
         {
             var lineObj = new GameObject("Frustum_Wireframe");
@@ -147,15 +147,15 @@ public class SecurityCameraVisualizer : MonoBehaviour
 
             if (enableDebugLog)
             {
-                Debug.Log("[SecurityCameraVisualizer] LineRenderer ÒÑ´´½¨", this);
+                Debug.Log("[SecurityCameraVisualizer] LineRenderer å·²åˆ›å»º", this);
             }
         }
 
-        // Volume Mesh - ¶ÀÁ¢´æÔÚ
+        // Volume Mesh - ç‹¬ç«‹å­˜åœ¨
         if (fillVolume)
         {
             var volObj = new GameObject("Frustum_Volume");
-            volObj.transform.SetParent(null); // ²»ÉèÖÃ¸¸¼¶£¬Ê¹Æä¶ÀÁ¢´æÔÚ
+            volObj.transform.SetParent(null); // ä¸è®¾ç½®çˆ¶çº§ï¼Œä½¿å…¶ç‹¬ç«‹å­˜åœ¨
             volObj.transform.position = Vector3.zero;
             volObj.transform.rotation = Quaternion.identity;
             volObj.transform.localScale = Vector3.one;
@@ -171,7 +171,7 @@ public class SecurityCameraVisualizer : MonoBehaviour
 
             if (enableDebugLog)
             {
-                Debug.Log($"[SecurityCameraVisualizer] Volume Mesh ÒÑ´´½¨ - Material:{_volumeRenderer.material.name}, Color:{_volumeRenderer.material.color}", this);
+                Debug.Log($"[SecurityCameraVisualizer] Volume Mesh å·²åˆ›å»º - Material:{_volumeRenderer.material.name}, Color:{_volumeRenderer.material.color}", this);
             }
         }
     }
@@ -181,7 +181,7 @@ public class SecurityCameraVisualizer : MonoBehaviour
         var shader = Shader.Find("Universal Render Pipeline/Unlit");
         if (shader == null)
         {
-            Debug.LogWarning("[SecurityCameraVisualizer] Î´ÕÒµ½URP/Unlit×ÅÉ«Æ÷£¬Ê¹ÓÃÄ¬ÈÏ×ÅÉ«Æ÷");
+            Debug.LogWarning("[SecurityCameraVisualizer] æœªæ‰¾åˆ°URP/Unlitç€è‰²å™¨ï¼Œä½¿ç”¨é»˜è®¤ç€è‰²å™¨");
             shader = Shader.Find("Unlit/Color");
         }
 
@@ -199,7 +199,7 @@ public class SecurityCameraVisualizer : MonoBehaviour
         var shader = Shader.Find("Universal Render Pipeline/Unlit");
         if (shader == null)
         {
-            Debug.LogWarning("[SecurityCameraVisualizer] Î´ÕÒµ½URP/Unlit×ÅÉ«Æ÷£¬Ê¹ÓÃÄ¬ÈÏÍ¸Ã÷×ÅÉ«Æ÷");
+            Debug.LogWarning("[SecurityCameraVisualizer] æœªæ‰¾åˆ°URP/Unlitç€è‰²å™¨ï¼Œä½¿ç”¨é»˜è®¤é€æ˜ç€è‰²å™¨");
             shader = Shader.Find("Transparent/Diffuse");
             var fallbackMat = new Material(shader) { color = color };
             return fallbackMat;
@@ -228,7 +228,7 @@ public class SecurityCameraVisualizer : MonoBehaviour
     }
     #endregion
 
-    #region ¸üĞÂ
+    #region æ›´æ–°
     private void Update()
     {
         if (!_isInitialized || !enableVisualization || _camera == null)
@@ -237,7 +237,7 @@ public class SecurityCameraVisualizer : MonoBehaviour
             return;
         }
 
-        // ¾àÀë²Ã¼ô
+        // è·ç¦»è£å‰ª
         if (maxRenderDistance > 0 && Camera.main != null)
         {
             if (Vector3.Distance(transform.position, Camera.main.transform.position) > maxRenderDistance)
@@ -247,7 +247,7 @@ public class SecurityCameraVisualizer : MonoBehaviour
             }
         }
 
-        // ¸üĞÂÆµÂÊ¿ØÖÆ
+        // æ›´æ–°é¢‘ç‡æ§åˆ¶
         if (updateRate > 0)
         {
             _updateTimer += Time.deltaTime;
@@ -276,7 +276,7 @@ public class SecurityCameraVisualizer : MonoBehaviour
             _volumeRenderer.enabled = true;
             UpdateVolumeMesh(color);
             
-            // È·±£²ÄÖÊÑÕÉ«ÊµÊ±¸üĞÂ
+            // ç¡®ä¿æè´¨é¢œè‰²å®æ—¶æ›´æ–°
             if (_volumeRenderer.material != null)
             {
                 _volumeRenderer.material.color = color;
@@ -288,13 +288,13 @@ public class SecurityCameraVisualizer : MonoBehaviour
     {
         if (_camera.IsDetectingPlayer)
         {
-            // ¼ì²âÖĞ£¬¸ù¾İ½ø¶ÈÔÚ¼ì²âÉ«ºÍ¾¯±¨É«Ö®¼ä²åÖµ
+            // æ£€æµ‹ä¸­ï¼Œæ ¹æ®è¿›åº¦åœ¨æ£€æµ‹è‰²å’Œè­¦æŠ¥è‰²ä¹‹é—´æ’å€¼
             float progress = _camera.DetectionProgress;
             Color currentColor = Color.Lerp(detectingColor, alarmColor, progress);
             
             if (enableDebugLog && progress > 0f)
             {
-                Debug.Log($"[SecurityCameraVisualizer] ¼ì²âÍæ¼ÒÖĞ - Progress:{progress:F2}, Color:{currentColor}", this);
+                Debug.Log($"[SecurityCameraVisualizer] æ£€æµ‹ç©å®¶ä¸­ - Progress:{progress:F2}, Color:{currentColor}", this);
             }
             
             return currentColor;
@@ -303,7 +303,7 @@ public class SecurityCameraVisualizer : MonoBehaviour
     }
     #endregion
 
-    #region ÊÓ×¶Ìå»æÖÆ
+    #region è§†é”¥ä½“ç»˜åˆ¶
     private void DrawWireframe(Color color)
     {
         _lineRenderer.startColor = _lineRenderer.endColor = color;
@@ -313,14 +313,14 @@ public class SecurityCameraVisualizer : MonoBehaviour
         Vector3[] corners = GetFrustumCorners(origin);
 
         int idx = 0;
-        // ´ÓÖĞĞÄµãµ½ËÄ¸ö½ÇµÄÉäÏß
+        // ä»ä¸­å¿ƒç‚¹åˆ°å››ä¸ªè§’çš„å°„çº¿
         for (int i = 0; i < 4; i++)
         {
             _lineRenderer.SetPosition(idx++, origin);
             _lineRenderer.SetPosition(idx++, corners[i]);
         }
 
-        // ËÄ¸ö½ÇÖ®¼äµÄÁ¬Ïß
+        // å››ä¸ªè§’ä¹‹é—´çš„è¿çº¿
         for (int i = 0; i < 4; i++)
         {
             _lineRenderer.SetPosition(idx++, corners[i]);
@@ -344,19 +344,19 @@ public class SecurityCameraVisualizer : MonoBehaviour
     }
 
     /// <summary>
-    /// ? ÉÈĞÎÊÓ×¶Ìå£¨ÇĞÆ¬ĞÎ×´£©- ´øÕÚµ²¼ì²â
-    /// ÍêÈ«Ä£·Â EnemyVisionVisualizer3D µÄÊµÏÖ
+    /// ? æ‰‡å½¢è§†é”¥ä½“ï¼ˆåˆ‡ç‰‡å½¢çŠ¶ï¼‰- å¸¦é®æŒ¡æ£€æµ‹
+    /// å®Œå…¨æ¨¡ä»¿ EnemyVisionVisualizer3D çš„å®ç°
     /// </summary>
     private void GenerateOccludedFrustumMesh(Vector3 origin, Color color)
     {
         int hSegs = occlusionRayCount;
         int vSegs = Mathf.Max(2, segments / 10);
 
-        // ¶¥µãÊı£ºÖĞĞÄµã + Ã¿ÌõÉäÏßµÄ¶¥µã£¨´Ó½üµ½Ô¶£©
+        // é¡¶ç‚¹æ•°ï¼šä¸­å¿ƒç‚¹ + æ¯æ¡å°„çº¿çš„é¡¶ç‚¹ï¼ˆä»è¿‘åˆ°è¿œï¼‰
         int totalVerts = 1 + hSegs * (vSegs + 1);
         Vector3[] verts = new Vector3[totalVerts];
 
-        // ÖĞĞÄµã£¨ÉÈĞÎµÄ¶¥µã£©
+        // ä¸­å¿ƒç‚¹ï¼ˆæ‰‡å½¢çš„é¡¶ç‚¹ï¼‰
         verts[0] = origin;
 
         float hAngleStep = _hFOV / (hSegs - 1);
@@ -364,49 +364,49 @@ public class SecurityCameraVisualizer : MonoBehaviour
 
         int vertIndex = 1;
         
-        // ¶ÔÃ¿¸öË®Æ½½Ç¶ÈÉú³ÉÒ»Ìõ"ÉäÏß"
+        // å¯¹æ¯ä¸ªæ°´å¹³è§’åº¦ç”Ÿæˆä¸€æ¡"å°„çº¿"
         for (int h = 0; h < hSegs; h++)
         {
             float hAngle = hStartAngle + hAngleStep * h;
 
-            // ÑØÃ¿ÌõÉäÏß´Ó½üµ½Ô¶Éú³É¶¥µã
+            // æ²¿æ¯æ¡å°„çº¿ä»è¿‘åˆ°è¿œç”Ÿæˆé¡¶ç‚¹
             for (int v = 0; v <= vSegs; v++)
             {
-                // ? ¹Ø¼üĞŞ¸Ä£º´¹Ö±½Ç¶È´Ó -verticalFOV/2 µ½ +verticalFOV/2£¬¼ÓÉÏÆ«ÒÆ
-                // µ± verticalOffset = -45, verticalFOV = 90 Ê±£º
-                // ·¶Î§´Ó -45 + (-45) = -90¶È£¨ÏòÏÂ£¬6µãÖÓ£©µ½ -45 + 45 = 0¶È£¨Ë®Æ½£¬9µãÖÓ£©
+                // ? å…³é”®ä¿®æ”¹ï¼šå‚ç›´è§’åº¦ä» -verticalFOV/2 åˆ° +verticalFOV/2ï¼ŒåŠ ä¸Šåç§»
+                // å½“ verticalOffset = -45, verticalFOV = 90 æ—¶ï¼š
+                // èŒƒå›´ä» -45 + (-45) = -90åº¦ï¼ˆå‘ä¸‹ï¼Œ6ç‚¹é’Ÿï¼‰åˆ° -45 + 45 = 0åº¦ï¼ˆæ°´å¹³ï¼Œ9ç‚¹é’Ÿï¼‰
                 float vAngle = Mathf.Lerp(-verticalFOV / 2f, verticalFOV / 2f, v / (float)vSegs) + verticalOffset;
                 Vector3 dir = GetDirection(hAngle, vAngle);
                 
-                // Ã¿¸ö¶¥µã¶ÀÁ¢¼ì²âÕÚµ²
+                // æ¯ä¸ªé¡¶ç‚¹ç‹¬ç«‹æ£€æµ‹é®æŒ¡
                 float actualDist = _radius;
                 if (Physics.Raycast(origin, dir, out RaycastHit hit, _radius, occlusionMask))
                 {
                     actualDist = hit.distance;
                 }
                 
-                // ´Ó½ü²Ã¼ôµ½Êµ¼Ê¾àÀë²åÖµ
+                // ä»è¿‘è£å‰ªåˆ°å®é™…è·ç¦»æ’å€¼
                 float distance = Mathf.Lerp(nearClip, actualDist, v / (float)vSegs);
                 verts[vertIndex++] = origin + dir * distance;
             }
         }
 
-        // ? Éú³ÉÉÈĞÎÈı½ÇĞÎ£¨´ÓÖĞĞÄµã·øÉä£©- ÍêÈ«ÏàÍ¬µÄÍØÆË
+        // ? ç”Ÿæˆæ‰‡å½¢ä¸‰è§’å½¢ï¼ˆä»ä¸­å¿ƒç‚¹è¾å°„ï¼‰- å®Œå…¨ç›¸åŒçš„æ‹“æ‰‘
         List<int> trisList = new List<int>();
 
-        // 1. Á¬½ÓÖĞĞÄµãµ½µÚÒ»È¦¶¥µã£¨ĞÎ³ÉÉÈĞÎµ×²¿£©
+        // 1. è¿æ¥ä¸­å¿ƒç‚¹åˆ°ç¬¬ä¸€åœˆé¡¶ç‚¹ï¼ˆå½¢æˆæ‰‡å½¢åº•éƒ¨ï¼‰
         for (int h = 0; h < hSegs - 1; h++)
         {
             int baseIndex = 1 + h * (vSegs + 1);
             int nextBaseIndex = 1 + (h + 1) * (vSegs + 1);
 
-            // ´ÓÖĞĞÄµãµ½½ü²Ã¼ôÈ¦µÄÈı½ÇĞÎ
+            // ä»ä¸­å¿ƒç‚¹åˆ°è¿‘è£å‰ªåœˆçš„ä¸‰è§’å½¢
             trisList.Add(0);
             trisList.Add(baseIndex);
             trisList.Add(nextBaseIndex);
         }
 
-        // 2. ÑØÉäÏß·½ÏòÁ¬½ÓĞÎ³É²àÃæ
+        // 2. æ²¿å°„çº¿æ–¹å‘è¿æ¥å½¢æˆä¾§é¢
         for (int h = 0; h < hSegs - 1; h++)
         {
             for (int v = 0; v < vSegs; v++)
@@ -414,20 +414,20 @@ public class SecurityCameraVisualizer : MonoBehaviour
                 int i0 = 1 + h * (vSegs + 1) + v;
                 int i1 = 1 + (h + 1) * (vSegs + 1) + v;
 
-                // µÚÒ»¸öÈı½ÇĞÎ
+                // ç¬¬ä¸€ä¸ªä¸‰è§’å½¢
                 trisList.Add(i0);
                 trisList.Add(i1);
                 trisList.Add(i0 + 1);
 
-                // µÚ¶ş¸öÈı½ÇĞÎ
+                // ç¬¬äºŒä¸ªä¸‰è§’å½¢
                 trisList.Add(i0 + 1);
                 trisList.Add(i1);
                 trisList.Add(i1 + 1);
             }
         }
 
-        // 3. ·â±Õ×óÓÒÁ½²à£¨ÉÈĞÎµÄÁ½Ìõ±ß£©
-        // ×ó²àÃæ
+        // 3. å°é—­å·¦å³ä¸¤ä¾§ï¼ˆæ‰‡å½¢çš„ä¸¤æ¡è¾¹ï¼‰
+        // å·¦ä¾§é¢
         for (int v = 0; v < vSegs; v++)
         {
             int i0 = 1 + v;
@@ -436,7 +436,7 @@ public class SecurityCameraVisualizer : MonoBehaviour
             trisList.Add(i0);
         }
 
-        // ÓÒ²àÃæ
+        // å³ä¾§é¢
         int rightStart = 1 + (hSegs - 1) * (vSegs + 1);
         for (int v = 0; v < vSegs; v++)
         {
@@ -456,8 +456,8 @@ public class SecurityCameraVisualizer : MonoBehaviour
     }
 
     /// <summary>
-    /// ? ¼òµ¥ÉÈĞÎÊÓ×¶Ìå£¨ÎŞÕÚµ²¼ì²â£©
-    /// ÍêÈ«Ä£·Â EnemyVisionVisualizer3D µÄÊµÏÖ
+    /// ? ç®€å•æ‰‡å½¢è§†é”¥ä½“ï¼ˆæ— é®æŒ¡æ£€æµ‹ï¼‰
+    /// å®Œå…¨æ¨¡ä»¿ EnemyVisionVisualizer3D çš„å®ç°
     /// </summary>
     private void GenerateSimpleFrustumMesh(Vector3 origin, Color color)
     {
@@ -480,7 +480,7 @@ public class SecurityCameraVisualizer : MonoBehaviour
 
             for (int v = 0; v <= vSegs; v++)
             {
-                // ? ÏàÍ¬µÄ´¹Ö±½Ç¶È¼ÆËã
+                // ? ç›¸åŒçš„å‚ç›´è§’åº¦è®¡ç®—
                 float vAngle = Mathf.Lerp(-verticalFOV / 2f, verticalFOV / 2f, v / (float)vSegs) + verticalOffset;
                 Vector3 dir = GetDirection(hAngle, vAngle);
                 
@@ -489,10 +489,10 @@ public class SecurityCameraVisualizer : MonoBehaviour
             }
         }
 
-        // Éú³ÉÈı½ÇĞÎ£¨ÓëÕÚµ²°æ±¾ÏàÍ¬µÄÍØÆË£©
+        // ç”Ÿæˆä¸‰è§’å½¢ï¼ˆä¸é®æŒ¡ç‰ˆæœ¬ç›¸åŒçš„æ‹“æ‰‘ï¼‰
         List<int> trisList = new List<int>();
 
-        // ´ÓÖĞĞÄµãµ½µÚÒ»È¦
+        // ä»ä¸­å¿ƒç‚¹åˆ°ç¬¬ä¸€åœˆ
         for (int h = 0; h < hSegs - 1; h++)
         {
             int baseIndex = 1 + h * (vSegs + 1);
@@ -503,7 +503,7 @@ public class SecurityCameraVisualizer : MonoBehaviour
             trisList.Add(nextBaseIndex);
         }
 
-        // ²àÃæ
+        // ä¾§é¢
         for (int h = 0; h < hSegs - 1; h++)
         {
             for (int v = 0; v < vSegs; v++)
@@ -521,7 +521,7 @@ public class SecurityCameraVisualizer : MonoBehaviour
             }
         }
 
-        // ×ó²àÃæ
+        // å·¦ä¾§é¢
         for (int v = 0; v < vSegs; v++)
         {
             int i0 = 1 + v;
@@ -530,7 +530,7 @@ public class SecurityCameraVisualizer : MonoBehaviour
             trisList.Add(i0);
         }
 
-        // ÓÒ²àÃæ
+        // å³ä¾§é¢
         int rightStart = 1 + (hSegs - 1) * (vSegs + 1);
         for (int v = 0; v < vSegs; v++)
         {
@@ -555,7 +555,7 @@ public class SecurityCameraVisualizer : MonoBehaviour
         float halfH = _hFOV / 2f;
         float halfV = verticalFOV / 2f;
 
-        // ? ËÄ¸ö½Ç£º×óÉÏ¡¢ÓÒÉÏ¡¢ÓÒÏÂ¡¢×óÏÂ
+        // ? å››ä¸ªè§’ï¼šå·¦ä¸Šã€å³ä¸Šã€å³ä¸‹ã€å·¦ä¸‹
         corners[0] = origin + GetDirection(-halfH, halfV + verticalOffset) * (_radius * scale);
         corners[1] = origin + GetDirection(halfH, halfV + verticalOffset) * (_radius * scale);
         corners[2] = origin + GetDirection(halfH, -halfV + verticalOffset) * (_radius * scale);
@@ -565,7 +565,7 @@ public class SecurityCameraVisualizer : MonoBehaviour
     }
 
     /// <summary>
-    /// ? ¼ÆËã·½ÏòÏòÁ¿ - ÍêÈ«Ä£·Â EnemyVisionVisualizer3D
+    /// ? è®¡ç®—æ–¹å‘å‘é‡ - å®Œå…¨æ¨¡ä»¿ EnemyVisionVisualizer3D
     /// </summary>
     private Vector3 GetDirection(float hAngle, float vAngle)
     {
@@ -580,7 +580,7 @@ public class SecurityCameraVisualizer : MonoBehaviour
     }
     #endregion
 
-    #region ÇåÀí
+    #region æ¸…ç†
     private void HideAll()
     {
         if (_lineRenderer != null) _lineRenderer.enabled = false;
@@ -591,21 +591,68 @@ public class SecurityCameraVisualizer : MonoBehaviour
 
     private void OnDestroy()
     {
-        if (_volumeMesh != null) Destroy(_volumeMesh);
+        if (enableDebugLog)
+        {
+            Debug.Log("[SecurityCameraVisualizer] å¼€å§‹é”€æ¯ç»„ä»¶", this);
+        }
 
-        if (_volumeFilter != null) Destroy(_volumeFilter.gameObject);
+        // âœ… ä¿®å¤ï¼šå…ˆé”€æ¯ Meshï¼Œé¿å…å¼•ç”¨é—®é¢˜
+        if (_volumeMesh != null)
+        {
+            Destroy(_volumeMesh);
+            _volumeMesh = null;
+        }
 
-        if (_lineRenderer?.material != null) Destroy(_lineRenderer.material);
-        if (_volumeRenderer?.material != null) Destroy(_volumeRenderer.material);
+        // âœ… ä¿®å¤ï¼šå®‰å…¨é”€æ¯ Volume GameObjectï¼ˆåŒ…å« MeshFilter å’Œ MeshRendererï¼‰
+        if (_volumeFilter != null)
+        {
+            // å…ˆæ¸…ç©º MeshFilter çš„å¼•ç”¨
+            if (_volumeFilter.sharedMesh != null)
+            {
+                _volumeFilter.sharedMesh = null;
+            }
+            
+            // é”€æ¯æ•´ä¸ª GameObject
+            if (_volumeFilter.gameObject != null)
+            {
+                Destroy(_volumeFilter.gameObject);
+            }
+            _volumeFilter = null;
+            _volumeRenderer = null; // MeshRenderer ä¼šéš GameObject ä¸€èµ·é”€æ¯
+        }
+
+        // âœ… ä¿®å¤ï¼šå®‰å…¨é”€æ¯ LineRenderer çš„ Material
+        if (_lineRenderer != null)
+        {
+            // æ£€æŸ¥ Material æ˜¯å¦ä»ç„¶æœ‰æ•ˆ
+            try
+            {
+                Material mat = _lineRenderer.sharedMaterial;
+                if (mat != null)
+                {
+                    // åªé”€æ¯åç§°åŒ…å« "_Auto" çš„è‡ªåŠ¨åˆ›å»ºæè´¨
+                    if (mat.name.Contains("_Auto"))
+                    {
+                        Destroy(mat);
+                    }
+                }
+            }
+            catch (MissingReferenceException)
+            {
+                // Material å·²è¢«é”€æ¯ï¼Œå¿½ç•¥
+            }
+            
+            _lineRenderer = null;
+        }
 
         if (enableDebugLog)
         {
-            Debug.Log("[SecurityCameraVisualizer] ×é¼şÒÑÏú»Ù", this);
+            Debug.Log("[SecurityCameraVisualizer] ç»„ä»¶é”€æ¯å®Œæˆ", this);
         }
     }
     #endregion
 
-    #region ±à¼­Æ÷Ô¤ÀÀ
+    #region ç¼–è¾‘å™¨é¢„è§ˆ
 #if UNITY_EDITOR
     private void OnDrawGizmosSelected()
     {
@@ -621,14 +668,14 @@ public class SecurityCameraVisualizer : MonoBehaviour
         Vector3 origin = _head.position + Vector3.up * planeHeightOffset + _head.forward * nearClip;
         Vector3[] corners = GetFrustumCorners(origin);
 
-        // »æÖÆÊÓ×¶ÌåÏß¿ò
+        // ç»˜åˆ¶è§†é”¥ä½“çº¿æ¡†
         for (int i = 0; i < 4; i++)
         {
             Gizmos.DrawLine(origin, corners[i]);
             Gizmos.DrawLine(corners[i], corners[(i + 1) % 4]);
         }
 
-        // »æÖÆÕÚµ²¼ì²âÉäÏßÔ¤ÀÀ£¨»ÆÉ«£©
+        // ç»˜åˆ¶é®æŒ¡æ£€æµ‹å°„çº¿é¢„è§ˆï¼ˆé»„è‰²ï¼‰
         if (enableOcclusionTest && occlusionRayCount > 0)
         {
             Gizmos.color = new Color(1f, 1f, 0f, 0.3f);
@@ -637,27 +684,27 @@ public class SecurityCameraVisualizer : MonoBehaviour
 
             Vector3 rayOrigin = _head.position + Vector3.up * planeHeightOffset;
             
-            // ÏÔÊ¾´¹Ö±É¨Ãè·¶Î§£¨6µãÖÓµ½9µãÖÓ£©
+            // æ˜¾ç¤ºå‚ç›´æ‰«æèŒƒå›´ï¼ˆ6ç‚¹é’Ÿåˆ°9ç‚¹é’Ÿï¼‰
             for (int i = 0; i < occlusionRayCount; i++)
             {
                 float angle = startAngle + angleStep * i;
                 
-                // »æÖÆÉÏ±ß½ç£¨½Ó½ü9µãÖÓ£¬Ë®Æ½£©
+                // ç»˜åˆ¶ä¸Šè¾¹ç•Œï¼ˆæ¥è¿‘9ç‚¹é’Ÿï¼Œæ°´å¹³ï¼‰
                 Vector3 dirTop = GetDirection(angle, verticalFOV / 2f + verticalOffset);
                 Gizmos.DrawRay(rayOrigin, dirTop * _radius);
                 
-                // »æÖÆÏÂ±ß½ç£¨½Ó½ü6µãÖÓ£¬ÏòÏÂ£©
+                // ç»˜åˆ¶ä¸‹è¾¹ç•Œï¼ˆæ¥è¿‘6ç‚¹é’Ÿï¼Œå‘ä¸‹ï¼‰
                 Vector3 dirBottom = GetDirection(angle, -verticalFOV / 2f + verticalOffset);
                 Gizmos.DrawRay(rayOrigin, dirBottom * _radius);
             }
 
-            // »æÖÆÖĞ¼ä¼¸ÌõÉäÏß£¨ÏÔÊ¾´¹Ö±É¨Ãè£©
+            // ç»˜åˆ¶ä¸­é—´å‡ æ¡å°„çº¿ï¼ˆæ˜¾ç¤ºå‚ç›´æ‰«æï¼‰
             Gizmos.color = new Color(1f, 0.5f, 0f, 0.5f);
             int vRayCount = 5;
             for (int v = 0; v <= vRayCount; v++)
             {
                 float vAngle = Mathf.Lerp(-verticalFOV / 2f, verticalFOV / 2f, v / (float)vRayCount) + verticalOffset;
-                Vector3 dir = GetDirection(0f, vAngle); // ÖĞ¼äË®Æ½½Ç¶È
+                Vector3 dir = GetDirection(0f, vAngle); // ä¸­é—´æ°´å¹³è§’åº¦
                 Gizmos.DrawRay(rayOrigin, dir * _radius * 0.8f);
             }
         }

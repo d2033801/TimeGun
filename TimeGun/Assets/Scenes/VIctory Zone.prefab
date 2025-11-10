@@ -4848,7 +4848,7 @@ GameObject:
   - component: {fileID: 3653352710337720913}
   - component: {fileID: 2723454866288000096}
   - component: {fileID: 5979566424037764751}
-  m_Layer: 0
+  m_Layer: 7
   m_Name: VIctory Zone
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -4863,7 +4863,7 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 2125407601310956724}
   serializedVersion: 2
-  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: 72.13896, y: 0, z: 18.84609}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
@@ -4904,7 +4904,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 851dbd402d7d3f446a921197cb5da4f1, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::TimeGun.HoldToInteract
-  holdDuration: 2
+  holdDuration: 7
   interactAction: {fileID: 1781555164194001046, guid: 052faaac586de48259a63d0c4782560b, type: 3}
   playerTag: Player
   showWorldUI: 1
@@ -4936,7 +4936,19 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::TimeGun.VectoryZone
   OnVictory:
     m_PersistentCalls:
-      m_Calls: []
+      m_Calls:
+      - m_Target: {fileID: 0}
+        m_TargetAssemblyTypeName: MainMenu, Assembly-CSharp
+        m_MethodName: showVictoryMenu
+        m_Mode: 1
+        m_Arguments:
+          m_ObjectArgument: {fileID: 0}
+          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
+          m_IntArgument: 0
+          m_FloatArgument: 0
+          m_StringArgument: 
+          m_BoolArgument: 0
+        m_CallState: 2
 --- !u!1 &2604971976544647687
 GameObject:
   m_ObjectHideFlags: 0
@@ -14620,7 +14632,7 @@ GameObject:
   - component: {fileID: 8600361871944170556}
   - component: {fileID: 7228605911494515814}
   - component: {fileID: 3777983500533409559}
-  m_Layer: 0
+  m_Layer: 7
   m_Name: "Vector Zone\u7C92\u5B50\u7279\u6548"
   m_TagString: Untagged
   m_Icon: {fileID: 0}
