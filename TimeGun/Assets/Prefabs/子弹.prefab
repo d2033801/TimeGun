@@ -377,8 +377,8 @@ MonoBehaviour:
     m_Bits: 4294967295
   impactSound: {fileID: 0}
   soundVolume: 0.5
-  rewindSecondsOnHit: 3
-  rewindSpeedOnHit: 1
+  rewindSecondsOnHit: 4
+  rewindSpeedOnHit: 2
   rewindMode: 2
   impactEffectPrefab: {fileID: 362261158077530393, guid: 20fda529c996a334da7fd65b48ea40df, type: 3}
 --- !u!136 &2995030300168043169

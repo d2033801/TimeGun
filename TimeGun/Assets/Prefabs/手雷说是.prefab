@@ -119,7 +119,7 @@ MonoBehaviour:
   explosionRadius: 5
   explosionMode: 0
   effectMode: 1
-  pauseDuration: 3
+  pauseDuration: 3.5
   explosionEffectPrefab: {fileID: 5010538147874347424, guid: 6adfa711e32444b4498a74b9d0b03275, type: 3}
   drawExplosionGizmo: 1
   explosionGizmoColor: {r: 1, g: 0.6, b: 0, a: 0.15}
