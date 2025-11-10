@@ -72,19 +72,24 @@ namespace TimeGun
         [SerializeField, Range(0f, 1f)] private float rewindVolume = 0.5f;
 
         [Header("过渡时间")]
-        [SerializeField] private float volumeFadeTime = 1f;
-        [SerializeField] private float musicCrossfadeTime = 2f;
+        [SerializeField] private float volumeFadeTime = 0.5f;
+        [SerializeField] private float musicCrossfadeTime = 1f;
 
         [Header("AudioMixer（可选 - 用于回溯效果）")]
         [SerializeField] private AudioMixer audioMixer;
+        [SerializeField] private string bgmGroupName = "BackgroundMusic";
+        [SerializeField] private string effectsGroupName = "RewindEffects";
         [SerializeField] private string bgmLowpassParameter = "BGMLowpassCutoff";
         [SerializeField] private string bgmPitchParameter = "BGMPitch";
+        [SerializeField] private string bgmEchoParameter = "BGMEchoWetMix";
 
         [Header("回溯效果参数")]
         [SerializeField, Range(100f, 5000f)] private float rewindLowpassCutoff = 800f;
         [SerializeField, Range(0.5f, 1.5f)] private float rewindPitch = 0.85f;
+        [SerializeField, Range(0f, 1f)] private float rewindEchoWetMix = 0.3f;
         [SerializeField] private float normalLowpassCutoff = 22000f;
         [SerializeField] private float normalPitch = 1f;
+        [SerializeField] private float normalEchoWetMix = 0f;
 
         [Header("调试")]
         [SerializeField] private bool showDebugLogs = true;
@@ -120,21 +125,28 @@ namespace TimeGun
                 return;
             }
 
-            // 查找 BackgroundMusic 组
-            var groups = audioMixer.FindMatchingGroups("BackgroundMusic");
-            if (groups != null && groups.Length > 0)
+            // 查找 BGM 输出组（用于音频播放）
+            var bgmGroups = audioMixer.FindMatchingGroups(bgmGroupName);
+            if (bgmGroups != null && bgmGroups.Length > 0)
             {
-                _audioSource.outputAudioMixerGroup = groups[0];
+                _audioSource.outputAudioMixerGroup = bgmGroups[0];
                 _hasMixer = true;
                 
                 // 初始化 Mixer 参数到正常状态
                 ResetMixerToNormal();
                 
-                Log($"AudioMixer 配置成功: {groups[0].name}");
+                Log($"AudioMixer 配置成功: {bgmGroups[0].name}");
+                
+                // 检查是否有独立的效果组
+                var effectGroups = audioMixer.FindMatchingGroups(effectsGroupName);
+                if (effectGroups != null && effectGroups.Length > 0)
+                {
+                    Log($"检测到独立效果组: {effectGroups[0].name}（推荐架构）");
+                }
             }
             else
             {
-                LogWarning("未找到 'BackgroundMusic' Mixer Group");
+                LogWarning($"未找到 '{bgmGroupName}' Mixer Group");
             }
         }
         #endregion
@@ -304,22 +316,35 @@ namespace TimeGun
 
             float targetCutoff = enable ? rewindLowpassCutoff : normalLowpassCutoff;
             float targetPitch = enable ? rewindPitch : normalPitch;
+            float targetEcho = enable ? rewindEchoWetMix : normalEchoWetMix;
 
-            // 🔑 关键修复：Mixer 参数变化也使用 unscaled time
+            // 🔑 Lowpass（低通滤波器）
             if (audioMixer.GetFloat(bgmLowpassParameter, out float currentCutoff))
             {
                 DOVirtual.Float(currentCutoff, targetCutoff, volumeFadeTime, value =>
                     audioMixer.SetFloat(bgmLowpassParameter, value)
                 ).SetEase(Ease.InOutQuad)
-                 .SetUpdate(true);  // 🎯 不受 timeScale 影响
+                 .SetUpdate(true);
             }
 
+            // 🔑 Pitch Shifter（音调变换）
             if (audioMixer.GetFloat(bgmPitchParameter, out float currentPitch))
             {
                 DOVirtual.Float(currentPitch, targetPitch, volumeFadeTime, value =>
                     audioMixer.SetFloat(bgmPitchParameter, value)
                 ).SetEase(Ease.InOutQuad)
-                 .SetUpdate(true);  // 🎯 不受 timeScale 影响
+                 .SetUpdate(true);
+            }
+
+            // 🔑 Echo（回声效果 - 新增）
+            if (audioMixer.GetFloat(bgmEchoParameter, out float currentEcho))
+            {
+                DOVirtual.Float(currentEcho, targetEcho, volumeFadeTime, value =>
+                    audioMixer.SetFloat(bgmEchoParameter, value)
+                ).SetEase(Ease.InOutQuad)
+                 .SetUpdate(true);
+                
+                Log($"Echo 效果: {currentEcho:F2} → {targetEcho:F2}");
             }
         }
 
@@ -329,6 +354,12 @@ namespace TimeGun
 
             audioMixer.SetFloat(bgmLowpassParameter, normalLowpassCutoff);
             audioMixer.SetFloat(bgmPitchParameter, normalPitch);
+            
+            // 尝试重置 Echo（如果参数存在）
+            if (audioMixer.GetFloat(bgmEchoParameter, out _))
+            {
+                audioMixer.SetFloat(bgmEchoParameter, normalEchoWetMix);
+            }
         }
         #endregion
 

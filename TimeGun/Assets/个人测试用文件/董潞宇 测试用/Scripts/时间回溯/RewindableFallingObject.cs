@@ -38,7 +38,7 @@ namespace TimeGun
         [Tooltip("掉落碰撞时播放的音效")]
         [SerializeField] private AudioClip dropSound;
 
-        [Tooltip("掉落音效音量"), Range(0f, 1f)]
+        [Tooltip("掉落音效音量"), Range(0f, 5f)]
         [SerializeField] private float dropSoundVolume = 0.5f;
 
         [Header("物理状态（运行时）")]

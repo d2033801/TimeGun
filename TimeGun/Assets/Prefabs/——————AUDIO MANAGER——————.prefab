@@ -47,24 +47,22 @@ MonoBehaviour:
   mainMenuMusic: {fileID: 8300000, guid: d76882462d643dc4795aa79efe4fc69f, type: 3}
   gameplayMusic: {fileID: 8300000, guid: bbe0d1319c595f24fa7225c0488fa035, type: 3}
   victoryMusic: {fileID: 8300000, guid: fe8a7d985c67bf843a656e01f84188d1, type: 3}
-  defaultVolume: 0.7
+  normalVolume: 0.7
   pauseVolume: 0.3
-  rewindBGMVolume: 0.4
-  fadeTime: 1
-  crossfadeTime: 2
+  victoryVolume: 0.7
+  rewindVolume: 0.5
+  volumeFadeTime: 0.5
+  musicCrossfadeTime: 1
   audioMixer: {fileID: 24100000, guid: 89e73f61e71ef0c4aa64e959abeead88, type: 2}
-  masterVolumeParameter: MasterVolume
-  musicVolumeParameter: MusicVolume
-  bgmVolumeParameter: BGMVolume
+  bgmGroupName: BackgroundMusic
+  effectsGroupName: RewindEffects
   bgmLowpassParameter: BGMLowpassCutoff
   bgmPitchParameter: BGMPitch
+  bgmEchoParameter: BGMEchoWetMix
   rewindLowpassCutoff: 800
   rewindPitch: 0.85
+  rewindEchoWetMix: 0.3
   normalLowpassCutoff: 22000
   normalPitch: 1
-  enableDebugMode: 0
-  debugRewindIntensity: 1
-  currentMusicState: 0
-  isPaused: 0
-  isRewinding: 0
-  audioMixerValid: 0
+  normalEchoWetMix: 0
+  showDebugLogs: 1

@@ -94,7 +94,7 @@ LightmapSettings:
     m_TrainingDataDestination: TrainingData
     m_LightProbeSampleCountMultiplier: 4
   m_LightingDataAsset: {fileID: 112000000, guid: 3f44287f4b9de06408a1a47b1a28e759, type: 2}
-  m_LightingSettings: {fileID: 4890085278179872738, guid: dcab00f7a23f88942886140c1e1e5dbc, type: 2}
+  m_LightingSettings: {fileID: 4890085278179872738, guid: 97f56f4f120db744a9d79088d02c3357, type: 2}
 --- !u!196 &4
 NavMeshSettings:
   serializedVersion: 2
@@ -3888,7 +3888,7 @@ Transform:
   m_GameObject: {fileID: 191500262}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 15.064362, y: 1.0405455, z: 5.773514}
+  m_LocalPosition: {x: 15.064362, y: 1.0405455, z: 4.4306717}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -3909,8 +3909,8 @@ ReflectionProbe:
   m_TimeSlicingMode: 0
   m_Resolution: 512
   m_UpdateFrequency: 0
-  m_BoxSize: {x: 16.051449, y: 11.156649, z: 47.1771}
-  m_BoxOffset: {x: 0.37527657, y: -0.46222115, z: 0.11153793}
+  m_BoxSize: {x: 16.849024, y: 11.298386, z: 43.890804}
+  m_BoxOffset: {x: 0.774066, y: -0.39135265, z: -0.18876839}
   m_NearClip: 0.3
   m_FarClip: 1000
   m_ShadowDistance: 100
@@ -7114,8 +7114,8 @@ ReflectionProbe:
   m_TimeSlicingMode: 0
   m_Resolution: 512
   m_UpdateFrequency: 0
-  m_BoxSize: {x: 21.251324, y: 10, z: 47.1771}
-  m_BoxOffset: {x: -0.015451431, y: 0.60784435, z: 0.11153793}
+  m_BoxSize: {x: 21.251324, y: 11.309037, z: 47.1771}
+  m_BoxOffset: {x: -0.015451431, y: 0.2963748, z: 0.11153793}
   m_NearClip: 0.3
   m_FarClip: 1000
   m_ShadowDistance: 100
@@ -42489,8 +42489,8 @@ ReflectionProbe:
   m_TimeSlicingMode: 0
   m_Resolution: 512
   m_UpdateFrequency: 0
-  m_BoxSize: {x: 9.557451, y: 10, z: 18.538616}
-  m_BoxOffset: {x: 0.22127461, y: 0, z: -1.2694988}
+  m_BoxSize: {x: 8.543764, y: 10, z: 18.538616}
+  m_BoxOffset: {x: 0.72811806, y: 0, z: -1.2694988}
   m_NearClip: 0.3
   m_FarClip: 1000
   m_ShadowDistance: 100
@@ -48291,14 +48291,6 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 0}
     m_Modifications:
-    - target: {fileID: 777833634881631051, guid: ee718dac29eff934b850778ac0c4fc40, type: 3}
-      propertyPath: victoryVolume
-      value: 0.7
-      objectReference: {fileID: 0}
-    - target: {fileID: 777833634881631051, guid: ee718dac29eff934b850778ac0c4fc40, type: 3}
-      propertyPath: enableDebugMode
-      value: 1
-      objectReference: {fileID: 0}
     - target: {fileID: 1572688877522356716, guid: ee718dac29eff934b850778ac0c4fc40, type: 3}
       propertyPath: m_LocalPosition.x
       value: 577.5
