@@ -659,9 +659,21 @@ public class EnemyVisionVisualizer3D : MonoBehaviour
         if (_volumeFilter != null) Destroy(_volumeFilter.gameObject);
         if (_blindSpotFilter != null) Destroy(_blindSpotFilter.gameObject);
 
-        if (_lineRenderer?.material != null) Destroy(_lineRenderer.material);
-        if (_volumeRenderer?.material != null) Destroy(_volumeRenderer.material);
-        if (_blindSpotRenderer?.material != null) Destroy(_blindSpotRenderer.material);
+        // ✅ 修复：检查渲染器是否仍然存在再访问材质
+        if (_lineRenderer != null && _lineRenderer.material != null) 
+        {
+            Destroy(_lineRenderer.material);
+        }
+        
+        if (_volumeRenderer != null && _volumeRenderer.material != null) 
+        {
+            Destroy(_volumeRenderer.material);
+        }
+        
+        if (_blindSpotRenderer != null && _blindSpotRenderer.material != null) 
+        {
+            Destroy(_blindSpotRenderer.material);
+        }
     }
     #endregion
 

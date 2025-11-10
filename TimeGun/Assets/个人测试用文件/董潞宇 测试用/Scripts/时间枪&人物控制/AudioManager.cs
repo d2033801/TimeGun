@@ -80,7 +80,7 @@ namespace TimeGun
             Debug.Log($"[AudioManager] Audio Mixer Configured: {_audioMixerConfigured}");
             Debug.Log($"[AudioManager] Default Volume: {defaultVolume}");
             
-            PlayGameplayMusic();
+            // PlayGameplayMusic();
             
             Debug.Log("[AudioManager] ==================== Start() 结束 ====================");
         }
@@ -108,6 +108,9 @@ namespace TimeGun
 
         [Tooltip("暂停菜单时的音量"), Range(0f, 1f)]
         [SerializeField] private float pauseVolume = 0.3f;
+
+        [Tooltip("胜利音乐音量"), Range(0f, 1f)]
+        [SerializeField] private float victoryVolume = 1.0f;
 
         [Tooltip("回溯时背景音乐音量"), Range(0f, 1f)]
         [SerializeField] private float rewindBGMVolume = 0.5f;
@@ -229,18 +232,21 @@ namespace TimeGun
             Instance.isPaused = true;
 
             Instance._originalVolume = Instance._mainAudioSource.volume;
+            Debug.Log($"[AudioManager] 暂停: AudioSource {Instance._originalVolume} → {Instance.pauseVolume}");
             
+            // 降低 AudioSource 音量
+            Instance._mainAudioSource.DOFade(Instance.pauseVolume, Instance.fadeTime);
+            
+            // 同时降低 AudioMixer 音量（如果配置了）
             if (Instance._audioMixerConfigured)
             {
                 float currentDB;
                 Instance.audioMixer.GetFloat(Instance.bgmVolumeParameter, out currentDB);
                 float targetDB = Instance.LinearToDecibel(Instance.pauseVolume);
+                Debug.Log($"[AudioManager] 暂停: AudioMixer {currentDB} dB → {targetDB} dB");
+                
                 DOTween.To(() => currentDB, x => Instance.audioMixer.SetFloat(Instance.bgmVolumeParameter, x), 
                     targetDB, Instance.fadeTime);
-            }
-            else
-            {
-                Instance._mainAudioSource.DOFade(Instance.pauseVolume, Instance.fadeTime);
             }
         }
 
@@ -252,17 +258,21 @@ namespace TimeGun
             if (!Instance.isPaused) return;
             Instance.isPaused = false;
 
+            Debug.Log($"[AudioManager] 恢复: AudioSource {Instance._mainAudioSource.volume} → {Instance._originalVolume}");
+            
+            // 恢复 AudioSource 音量
+            Instance._mainAudioSource.DOFade(Instance._originalVolume, Instance.fadeTime);
+            
+            // 同时恢复 AudioMixer 音量（如果配置了）
             if (Instance._audioMixerConfigured)
             {
                 float currentDB;
                 Instance.audioMixer.GetFloat(Instance.bgmVolumeParameter, out currentDB);
                 float targetDB = Instance.LinearToDecibel(Instance._originalVolume);
+                Debug.Log($"[AudioManager] 恢复: AudioMixer {currentDB} dB → {targetDB} dB");
+                
                 DOTween.To(() => currentDB, x => Instance.audioMixer.SetFloat(Instance.bgmVolumeParameter, x), 
                     targetDB, Instance.fadeTime);
-            }
-            else
-            {
-                Instance._mainAudioSource.DOFade(Instance._originalVolume, Instance.fadeTime);
             }
         }
 
@@ -279,6 +289,21 @@ namespace TimeGun
             else
             {
                 Instance._mainAudioSource.volume = volume;
+            }
+        }
+
+        /// <summary>
+        /// 设置胜利音乐音量（0-1）
+        /// </summary>
+        public static void SetVictoryVolume(float volume)
+        {
+            Instance.victoryVolume = Mathf.Clamp01(volume);
+            Debug.Log($"[AudioManager] 胜利音乐音量设置为: {Instance.victoryVolume}");
+            
+            // 如果当前正在播放胜利音乐，立即应用
+            if (Instance.currentMusicState == MusicState.Victory && Instance._mainAudioSource.isPlaying)
+            {
+                Instance._mainAudioSource.DOFade(Instance.victoryVolume, 0.5f);
             }
         }
 
@@ -435,77 +460,33 @@ namespace TimeGun
 
         private IEnumerator CrossfadeMusic(AudioClip newClip)
         {
-            Debug.Log($"[AudioManager] CrossfadeMusic() 协程开始 - Clip: {newClip.name}");
+            Debug.Log($"[AudioManager] 切换音乐: {newClip.name}");
             
-            // 如果主音源正在播放，交叉淡入淡出
+            float targetVolume = (currentMusicState == MusicState.Victory) ? victoryVolume : defaultVolume;
+            Debug.Log($"[AudioManager] 目标音量: {targetVolume}");
+            
             if (_mainAudioSource.isPlaying)
             {
-                Debug.Log("[AudioManager] 主音源正在播放，执行交叉淡入淡出");
-                _secondAudioSource.clip = newClip;
-                _secondAudioSource.Play();
-                
-                if (_audioMixerConfigured)
-                {
-                    float currentDB;
-                    audioMixer.GetFloat(bgmVolumeParameter, out currentDB);
-                    float targetDB = LinearToDecibel(defaultVolume);
-                    Debug.Log($"[AudioManager] AudioMixer 交叉淡入淡出: {currentDB} dB → {targetDB} dB");
-                    
-                    DOTween.Sequence()
-                        .Append(DOTween.To(() => currentDB, x => audioMixer.SetFloat(bgmVolumeParameter, x), 
-                            -80f, crossfadeTime))
-                        .Join(DOTween.To(() => -80f, x => audioMixer.SetFloat(bgmVolumeParameter, x), 
-                            targetDB, crossfadeTime).SetDelay(crossfadeTime * 0.5f));
-                }
-                else
-                {
-                    Debug.Log("[AudioManager] 使用 AudioSource 音量淡入淡出");
-                    _secondAudioSource.DOFade(defaultVolume, crossfadeTime);
-                    _mainAudioSource.DOFade(0f, crossfadeTime);
-                }
-
+                Debug.Log($"[AudioManager] 停止旧音乐");
+                _mainAudioSource.DOFade(0f, crossfadeTime);
                 yield return new WaitForSeconds(crossfadeTime);
-
                 _mainAudioSource.Stop();
-                (_mainAudioSource, _secondAudioSource) = (_secondAudioSource, _mainAudioSource);
-                Debug.Log("[AudioManager] 交叉淡入淡出完成，交换音源");
             }
-            else
+            
+            if (_secondAudioSource.isPlaying)
             {
-                // 直接播放
-                Debug.Log($"[AudioManager] 主音源未播放，直接播放新音乐: {newClip.name}");
-                _mainAudioSource.clip = newClip;
-                _mainAudioSource.Play();
-                
-                Debug.Log($"[AudioManager] AudioSource 状态: Playing={_mainAudioSource.isPlaying}, Clip={_mainAudioSource.clip.name}");
-                
-                if (_audioMixerConfigured)
-                {
-                    float targetDB = LinearToDecibel(defaultVolume);
-                    Debug.Log($"[AudioManager] 使用 AudioMixer 淡入: -80 dB → {targetDB} dB");
-                    
-                    // 先设置初始音量为-80dB
-                    audioMixer.SetFloat(bgmVolumeParameter, -80f);
-                    
-                    DOTween.To(() => -80f, x => 
-                    {
-                        audioMixer.SetFloat(bgmVolumeParameter, x);
-                        Debug.Log($"[AudioManager] AudioMixer 音量: {x} dB");
-                    }, targetDB, fadeTime)
-                    .OnComplete(() => Debug.Log($"[AudioManager] ✅ AudioMixer 淡入完成"));
-                }
-                else
-                {
-                    Debug.Log($"[AudioManager] 使用 AudioSource 音量淡入: 0 → {defaultVolume}");
-                    _mainAudioSource.volume = 0f;
-                    _mainAudioSource.DOFade(defaultVolume, fadeTime)
-                        .OnUpdate(() => Debug.Log($"[AudioManager] AudioSource 音量: {_mainAudioSource.volume}"))
-                        .OnComplete(() => Debug.Log($"[AudioManager] ✅ 音量淡入完成: {_mainAudioSource.volume}"));
-                }
+                _secondAudioSource.Stop();
             }
-
+            _secondAudioSource.volume = 0f;
+            
+            _mainAudioSource.clip = newClip;
+            _mainAudioSource.volume = 0f;
+            _mainAudioSource.Play();
+            
+            _mainAudioSource.DOFade(targetVolume, fadeTime);
+            
+            Debug.Log($"[AudioManager] ✅ 完成");
             _currentTransition = null;
-            Debug.Log("[AudioManager] CrossfadeMusic() 协程结束");
         }
         #endregion
 
@@ -545,75 +526,47 @@ namespace TimeGun
         private void EnterRewindState()
         {
             isRewinding = true;
-            Debug.Log("[AudioManager] 🔄 进入回溯状态 - 对BGM应用音效处理");
+            Debug.Log("[AudioManager] 🔄 进入回溯状态");
+
+            _mainAudioSource.DOFade(rewindBGMVolume, fadeTime);
 
             if (_audioMixerConfigured)
             {
-                // 降低BGM音量
-                float currentDB;
-                audioMixer.GetFloat(bgmVolumeParameter, out currentDB);
-                float targetDB = LinearToDecibel(rewindBGMVolume);
-                DOTween.To(() => currentDB, x => audioMixer.SetFloat(bgmVolumeParameter, x), 
-                    targetDB, fadeTime);
-
-                // 应用低通滤波器（沉闷效果）
                 float currentCutoff;
                 audioMixer.GetFloat(bgmLowpassParameter, out currentCutoff);
                 DOTween.To(() => currentCutoff, x => audioMixer.SetFloat(bgmLowpassParameter, x), 
-                    rewindLowpassCutoff, fadeTime)
-                    .OnComplete(() => Debug.Log($"[AudioManager] 低通滤波器已设置为 {rewindLowpassCutoff} Hz"));
+                    rewindLowpassCutoff, fadeTime);
 
-                // 应用音调变换（低沉效果）
                 float currentPitch;
                 if (audioMixer.GetFloat(bgmPitchParameter, out currentPitch))
                 {
                     DOTween.To(() => currentPitch, x => audioMixer.SetFloat(bgmPitchParameter, x), 
-                        rewindPitch, fadeTime)
-                        .OnComplete(() => Debug.Log($"[AudioManager] 音调已设置为 {rewindPitch}"));
+                        rewindPitch, fadeTime);
                 }
-            }
-            else
-            {
-                Debug.LogWarning("[AudioManager] AudioMixer未配置，只能降低音量");
-                _mainAudioSource.DOFade(rewindBGMVolume, fadeTime);
             }
         }
 
         private void ExitRewindState()
         {
             isRewinding = false;
-            Debug.Log("[AudioManager] ⏹️ 退出回溯状态 - 恢复BGM正常播放");
+            Debug.Log("[AudioManager] ⏹️ 退出回溯状态");
+
+            float targetVolume = isPaused ? pauseVolume : defaultVolume;
+            _mainAudioSource.DOFade(targetVolume, fadeTime);
 
             if (_audioMixerConfigured)
             {
-                // 恢复BGM音量
-                float targetVolume = isPaused ? pauseVolume : defaultVolume;
-                float targetDB = LinearToDecibel(targetVolume);
-                float currentDB;
-                audioMixer.GetFloat(bgmVolumeParameter, out currentDB);
-                DOTween.To(() => currentDB, x => audioMixer.SetFloat(bgmVolumeParameter, x), 
-                    targetDB, fadeTime);
-
-                // 恢复低通滤波器（全频段）
                 float currentCutoff;
                 audioMixer.GetFloat(bgmLowpassParameter, out currentCutoff);
                 DOTween.To(() => currentCutoff, x => audioMixer.SetFloat(bgmLowpassParameter, x), 
-                    normalLowpassCutoff, fadeTime)
-                    .OnComplete(() => Debug.Log($"[AudioManager] 低通滤波器已恢复为 {normalLowpassCutoff} Hz"));
+                    normalLowpassCutoff, fadeTime);
 
-                // 恢复正常音调
                 float currentPitch;
                 if (audioMixer.GetFloat(bgmPitchParameter, out currentPitch))
                 {
                     DOTween.To(() => currentPitch, x => audioMixer.SetFloat(bgmPitchParameter, x), 
-                        normalPitch, fadeTime)
-                        .OnComplete(() => Debug.Log($"[AudioManager] 音调已恢复为 {normalPitch}"));
+                        normalPitch, fadeTime);
                 }
-            }
-            else
-            {
-                float targetVolume = isPaused ? pauseVolume : defaultVolume;
-                _mainAudioSource.DOFade(targetVolume, fadeTime);
             }
         }
         #endregion

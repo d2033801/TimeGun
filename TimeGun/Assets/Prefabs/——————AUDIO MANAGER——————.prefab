@@ -49,7 +49,7 @@ MonoBehaviour:
   victoryMusic: {fileID: 8300000, guid: fe8a7d985c67bf843a656e01f84188d1, type: 3}
   defaultVolume: 0.7
   pauseVolume: 0.3
-  rewindBGMVolume: 0.2
+  rewindBGMVolume: 0.4
   fadeTime: 1
   crossfadeTime: 2
   audioMixer: {fileID: 24100000, guid: 89e73f61e71ef0c4aa64e959abeead88, type: 2}
