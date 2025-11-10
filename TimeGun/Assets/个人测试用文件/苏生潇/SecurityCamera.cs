@@ -222,13 +222,14 @@ public class SecurityCamera : MonoBehaviour
     {
         if (_player == null || cameraHead == null) return false;
 
+        // 使用真实的3D方向向量（包含Y轴），不强制Y=0
         Vector3 dirToPlayer = (_player.position - cameraHead.position).normalized;
         float distToPlayer = Vector3.Distance(cameraHead.position, _player.position);
 
         // 1. 距离检查
         if (distToPlayer > viewRadius) return false;
 
-        // 2. 角度检查
+        // 2. 角度检查（使用完整的3D向量，支持垂直角度检测）
         float angle = Vector3.Angle(cameraHead.forward, dirToPlayer);
         if (angle > viewAngle / 2f) return false;
 
@@ -348,6 +349,7 @@ public class SecurityCamera : MonoBehaviour
 
     /// <summary>
     /// 计算视野边界方向（模仿Enemy.DirFromAngle）
+    /// 注意：此方法仅用于Gizmos可视化（水平面扇形），实际检测使用完整的3D向量
     /// </summary>
     private Vector3 DirFromAngle(float angleDeg, Transform reference)
     {

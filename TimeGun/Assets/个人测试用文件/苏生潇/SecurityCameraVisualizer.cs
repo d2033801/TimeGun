@@ -6,12 +6,12 @@ using System.Collections.Generic;
 /// 安全摄像头3D视锥体可视化组件（Unity 6.2 + URP）
 /// 扩展功能：
 /// - 3D视锥体显示（支持垂直视角）
-/// - 垂直视野从6点钟方向（向下）到9点钟方向（水平）
+/// - 垂直视野（6点钟方向向下）到9点钟方向水平）
 /// - 可控制的垂直偏移和平面高度
 /// - 遮挡检测（墙壁后不绘制）
 /// - 自动材质生成（无需手动配置）
 /// - 摄像头摆动跟随
-/// - 检测状态颜色渐变
+/// - 检测状态颜色变化
 /// </summary>
 [RequireComponent(typeof(SecurityCamera))]
 [AddComponentMenu("Security/Camera Visualizer 3D")]
@@ -40,7 +40,7 @@ public class SecurityCameraVisualizer : MonoBehaviour
     [Range(0f, 90f)]
     public float verticalFOV = 90f;
 
-    [Tooltip("垂直偏移（度，负值=向下）- 建议-45度使视野从向下到水平")]
+    [Tooltip("垂直偏移（度，负值=向下）- 建议-45度使视野覆盖下方水平")]
     [Range(-90f, 45f)]
     public float verticalOffset = -45f;
 
@@ -61,13 +61,13 @@ public class SecurityCameraVisualizer : MonoBehaviour
     public LayerMask occlusionMask = -1;
 
     [Header("颜色配置")]
-    [Tooltip("正常巡逻状态的视野颜色")]
+    [Tooltip("正常巡逻状态视野颜色")]
     public Color normalColor = new Color(0f, 1f, 0f, 0.3f); // 绿色半透明
 
-    [Tooltip("检测中状态的视野颜色")]
+    [Tooltip("检测中状态视野颜色")]
     public Color detectingColor = new Color(1f, 0.65f, 0f, 0.5f); // 橙色
 
-    [Tooltip("警报状态的视野颜色")]
+    [Tooltip("警报状态视野颜色")]
     public Color alarmColor = new Color(1f, 0f, 0f, 0.7f); // 红色
 
     [Header("性能优化")]
@@ -75,9 +75,13 @@ public class SecurityCameraVisualizer : MonoBehaviour
     [Range(0, 60)]
     public int updateRate = 30;
 
-    [Tooltip("最大渲染距离（超出此距离不渲染，0 表示无限制）")]
+    [Tooltip("最大渲染距离（超过该距离不渲染，0 表示无限制）")]
     [Min(0)]
     public float maxRenderDistance = 50f;
+
+    [Header("调试选项")]
+    [Tooltip("启用调试日志")]
+    public bool enableDebugLog = false;
     #endregion
 
     #region 内部变量
@@ -90,12 +94,19 @@ public class SecurityCameraVisualizer : MonoBehaviour
     private float _updateTimer;
     private Transform _head;
     private float _radius, _hFOV;
+    private bool _isInitialized = false;
     #endregion
 
     #region 初始化
     private void Awake()
     {
         _camera = GetComponent<SecurityCamera>();
+        if (_camera == null)
+        {
+            Debug.LogError("[SecurityCameraVisualizer] 未找到SecurityCamera组件！", this);
+            return;
+        }
+
         _head = _camera.cameraHead != null ? _camera.cameraHead : transform;
         _radius = _camera.viewRadius;
         _hFOV = _camera.viewAngle;
@@ -106,6 +117,12 @@ public class SecurityCameraVisualizer : MonoBehaviour
         }
 
         InitComponents();
+        _isInitialized = true;
+
+        if (enableDebugLog)
+        {
+            Debug.Log($"[SecurityCameraVisualizer] 初始化完成 - vFOV:{verticalFOV}, vOffset:{verticalOffset}, hFOV:{_hFOV}, radius:{_radius}", this);
+        }
     }
 
     private void InitComponents()
@@ -127,12 +144,18 @@ public class SecurityCameraVisualizer : MonoBehaviour
             _lineRenderer.allowOcclusionWhenDynamic = false;
             
             _lineRenderer.material = CreateOptimizedLineMaterial(normalColor);
+
+            if (enableDebugLog)
+            {
+                Debug.Log("[SecurityCameraVisualizer] LineRenderer 已创建", this);
+            }
         }
 
         // Volume Mesh - 独立存在
         if (fillVolume)
         {
             var volObj = new GameObject("Frustum_Volume");
+            volObj.transform.SetParent(null); // 不设置父级，使其独立存在
             volObj.transform.position = Vector3.zero;
             volObj.transform.rotation = Quaternion.identity;
             volObj.transform.localScale = Vector3.one;
@@ -145,6 +168,11 @@ public class SecurityCameraVisualizer : MonoBehaviour
             _volumeRenderer.material = CreateOptimizedTransparentMaterial(normalColor);
             _volumeRenderer.shadowCastingMode = ShadowCastingMode.Off;
             _volumeRenderer.receiveShadows = false;
+
+            if (enableDebugLog)
+            {
+                Debug.Log($"[SecurityCameraVisualizer] Volume Mesh 已创建 - Material:{_volumeRenderer.material.name}, Color:{_volumeRenderer.material.color}", this);
+            }
         }
     }
 
@@ -203,13 +231,13 @@ public class SecurityCameraVisualizer : MonoBehaviour
     #region 更新
     private void Update()
     {
-        if (!enableVisualization || _camera == null)
+        if (!_isInitialized || !enableVisualization || _camera == null)
         {
             HideAll();
             return;
         }
 
-        // 距离剔除
+        // 距离裁剪
         if (maxRenderDistance > 0 && Camera.main != null)
         {
             if (Vector3.Distance(transform.position, Camera.main.transform.position) > maxRenderDistance)
@@ -239,13 +267,20 @@ public class SecurityCameraVisualizer : MonoBehaviour
         if (showWireframe && _lineRenderer != null)
         {
             _lineRenderer.enabled = true;
+            _lineRenderer.startColor = _lineRenderer.endColor = color;
             DrawWireframe(color);
         }
 
-        if (fillVolume && _volumeMesh != null)
+        if (fillVolume && _volumeMesh != null && _volumeRenderer != null)
         {
             _volumeRenderer.enabled = true;
             UpdateVolumeMesh(color);
+            
+            // 确保材质颜色实时更新
+            if (_volumeRenderer.material != null)
+            {
+                _volumeRenderer.material.color = color;
+            }
         }
     }
 
@@ -253,9 +288,16 @@ public class SecurityCameraVisualizer : MonoBehaviour
     {
         if (_camera.IsDetectingPlayer)
         {
-            // 检测中：根据进度在检测色和警报色之间插值
+            // 检测中，根据进度在检测色和警报色之间插值
             float progress = _camera.DetectionProgress;
-            return Color.Lerp(detectingColor, alarmColor, progress);
+            Color currentColor = Color.Lerp(detectingColor, alarmColor, progress);
+            
+            if (enableDebugLog && progress > 0f)
+            {
+                Debug.Log($"[SecurityCameraVisualizer] 检测玩家中 - Progress:{progress:F2}, Color:{currentColor}", this);
+            }
+            
+            return currentColor;
         }
         return normalColor;
     }
@@ -555,6 +597,11 @@ public class SecurityCameraVisualizer : MonoBehaviour
 
         if (_lineRenderer?.material != null) Destroy(_lineRenderer.material);
         if (_volumeRenderer?.material != null) Destroy(_volumeRenderer.material);
+
+        if (enableDebugLog)
+        {
+            Debug.Log("[SecurityCameraVisualizer] 组件已销毁", this);
+        }
     }
     #endregion
 
@@ -590,7 +637,7 @@ public class SecurityCameraVisualizer : MonoBehaviour
 
             Vector3 rayOrigin = _head.position + Vector3.up * planeHeightOffset;
             
-            // ? 显示垂直扫描范围（6点钟到9点钟）
+            // 显示垂直扫描范围（6点钟到9点钟）
             for (int i = 0; i < occlusionRayCount; i++)
             {
                 float angle = startAngle + angleStep * i;
@@ -604,7 +651,7 @@ public class SecurityCameraVisualizer : MonoBehaviour
                 Gizmos.DrawRay(rayOrigin, dirBottom * _radius);
             }
 
-            // 绘制中间的射线（显示垂直扫描）
+            // 绘制中间几条射线（显示垂直扫描）
             Gizmos.color = new Color(1f, 0.5f, 0f, 0.5f);
             int vRayCount = 5;
             for (int v = 0; v <= vRayCount; v++)

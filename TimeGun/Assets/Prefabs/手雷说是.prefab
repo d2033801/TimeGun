@@ -116,7 +116,7 @@ MonoBehaviour:
   rewindSpeedOnHit: 2
   rewindMode: 1
   fuseSeconds: 1
-  explosionRadius: 4
+  explosionRadius: 5
   explosionMode: 0
   effectMode: 1
   pauseDuration: 3

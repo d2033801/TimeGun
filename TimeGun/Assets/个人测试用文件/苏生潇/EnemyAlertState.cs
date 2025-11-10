@@ -31,7 +31,7 @@ public class EnemyAlertState : IEnemyState
             // 发现玩家 0.5 秒后杀死玩家
             if (enemy.SeePlayerTimer >= killPlayerDelay)
             {
-                //KillPlayer(enemy);
+                KillPlayer(enemy);
             }
         }
         else
