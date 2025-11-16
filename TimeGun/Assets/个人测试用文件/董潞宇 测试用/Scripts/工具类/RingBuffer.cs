@@ -102,12 +102,13 @@ namespace Utility
         /// <summary> 清空缓冲区 </summary>
         public void Clear()
         {
-            // 如果 T 为引用类型，建议手动清理以避免内存保持
+            // ✅ 优化：对于所有类型都清理（结构体可能包含引用类型字段）
             if (Count > 0)
             {
-                if (typeof(T).IsClass)
+                // 清理数组中的所有元素，防止引用保持
+                for (int i = 0; i < Capacity; i++)
                 {
-                    for (int i = 0; i < Capacity; i++) buffer[i] = default;
+                    buffer[i] = default;
                 }
                 head = 0;
                 Count = 0;

@@ -658,6 +658,10 @@ namespace TimeRewind
             // 清理特效实例
             StopRewindEffect();
             StopPauseEffect();
+
+            // ✅ 新增：清理历史缓冲区（防止引用类型内存泄漏）
+            transformHistory?.Clear();
+            transformHistory = null;
         }
 
         #endregion

@@ -325,8 +325,21 @@ namespace TimeRewind.Editor
                 totalSize += CalculateAnimatorSnapshotSize();
             }
 
-            // 4. 添加 RingBuffer 开销 (约10%)
-            totalSize = (int)(totalSize * 1.1f);
+            // ✅ 4. 添加 RingBuffer 开销（更准确的估算）
+            // - RingBuffer 对象本身：约 40 字节（对象头 + 字段）
+            // - T[] 数组对象头：24 字节（对象头 + Length 字段）
+            // - GC 堆对齐损耗：约 5%
+            int ringBufferOverhead = 40 + 24; // 每个 RingBuffer 固定开销
+            totalSize = (int)(totalSize * 1.05f) + ringBufferOverhead; // 加上对齐损耗
+
+            // ✅ 5. 如果包含引用类型数组（如 AnimatorRecorder.Snapshot），额外计算
+            if (objectType.Name == "EnemyTimeRewind" || objectType.Name == "AnimatorTimeRewind")
+            {
+                // 每个 Snapshot 中的数组都有对象开销
+                // AnimatorSnapshot: 3 个数组对象 × 24 字节 = 72 字节/帧
+                // EnemyTimeRewind 有 3 个 RingBuffer，每个都有开销
+                totalSize += 72; // 数组对象开销
+            }
 
             // 缓存结果
             _snapshotSizeCache[objectType] = totalSize;
@@ -356,8 +369,8 @@ namespace TimeRewind.Editor
         }
 
         /// <summary>
-        /// 计算 EnemyTimeRewind 的所有快照大小
-        /// AgentSnapshot + AnimatorSnapshot + EnemySnapshot
+        /// 计算 EnemyTimeRewind 的所有快照大小（修正版）
+        /// AgentSnapshot + AnimatorSnapshot + EnemySnapshot + 引用开销
         /// </summary>
         private int CalculateEnemySnapshotSize()
         {
@@ -367,47 +380,38 @@ namespace TimeRewind.Editor
             // bool*3 + float*3 + Vector3*2 + bool*2 ≈ 3 + 12 + 24 + 2 = 41 字节
             size += 44; // 对齐到4字节边界
 
-            // AnimatorSnapshot (动态,按平均估算)
-            // 假设: 3层*2个int + 3层*1个float + 10个参数*12字节 ≈ 24 + 12 + 120 = 156
+            // AnimatorSnapshot (包含3个数组的引用，实际数据在堆上)
+            // ✅ 修正：快照本身只存储数组引用（8字节×3）+ 数据
+            // 假设: 3层*4字节(StateHash) + 3层*4字节(NormalizedTime) + 10个参数*4字节(ParamValue) 
+            // = 12 + 12 + 40 = 64 字节（数组元素数据）
+            // + 24字节×3（每个数组的对象头） = 72 字节
+            // + 24字节（Snapshot 结构体中的3个引用） = 24 字节
+            // 总计: 64 + 72 + 24 = 160 字节
             size += 160;
 
             // EnemySnapshot
             // bool + float*4 + int*2 ≈ 1 + 16 + 8 = 25
             size += 28;
 
-            return size; // 总计 232 字节/帧
+            // ✅ 新增：EnemyTimeRewind 有 3 个独立的 RingBuffer
+            // 每个都有额外的对象开销（上面已在 GetSnapshotSizeForType 中统一处理）
+
+            return size; // 单个完整快照: 232 字节/帧
         }
 
         /// <summary>
-        /// 计算 AnimatorTimeRewind 的快照大小
+        /// 计算 AnimatorTimeRewind 的快照大小（修正版）
         /// </summary>
         private int CalculateAnimatorSnapshotSize()
         {
             // AnimatorRecorder.Snapshot
-            // LayerStateHashes(int[]) + LayerNormalizedTimes(float[]) + ParameterValues(ParamValue[])
-            // 假设: 3层*4字节 + 3层*4字节 + 10参数*12字节 = 12 + 12 + 120 = 144
+            // ✅ 修正：包含数组对象开销
+            // LayerStateHashes(int[3]): 12 字节数据 + 24 字节对象头 = 36
+            // LayerNormalizedTimes(float[3]): 12 字节数据 + 24 字节对象头 = 36
+            // ParameterValues(ParamValue[10]): 40 字节数据 + 24 字节对象头 = 64
+            // Snapshot 本身: 24 字节（3个引用）
+            // 总计: 36 + 36 + 64 + 24 = 160
             return 160; // 对齐后
-        }
-
-        /// <summary>
-        /// 检查类型是否继承自指定基类名
-        /// </summary>
-        private bool IsSubclassOf(System.Type type, string baseClassName)
-        {
-            while (type != null && type != typeof(MonoBehaviour))
-            {
-                if (type.Name == baseClassName)
-                    return true;
-                type = type.BaseType;
-            }
-            return false;
-        }
-
-        private string FormatBytes(long bytes)
-        {
-            if (bytes < 1024) return $"{bytes} B";
-            if (bytes < 1024 * 1024) return $"{bytes / 1024f:F2} KB";
-            return $"{bytes / (1024f * 1024f):F2} MB";
         }
 
         #endregion
@@ -677,6 +681,30 @@ private void SetRewindSpeed(AbstractTimeRewindObject obj, float value)
         so.ApplyModifiedProperties();
     }
 }
+
+        /// <summary>
+        /// 格式化字节数为可读字符串
+        /// </summary>
+        private string FormatBytes(long bytes)
+        {
+            if (bytes < 1024) return $"{bytes} B";
+            if (bytes < 1024 * 1024) return $"{bytes / 1024f:F2} KB";
+            return $"{bytes / (1024f * 1024f):F2} MB";
+        }
+
+        /// <summary>
+        /// 检查类型是否继承自指定基类名
+        /// </summary>
+        private bool IsSubclassOf(System.Type type, string baseClassName)
+        {
+            while (type != null && type != typeof(MonoBehaviour))
+            {
+                if (type.Name == baseClassName)
+                    return true;
+                type = type.BaseType;
+            }
+            return false;
+        }
 
 #endregion
     }
